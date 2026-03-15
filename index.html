@@ -392,7 +392,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 // ═══════════════════════════════════════════════════════
 const SB_URL  = 'https://svhgvvwbhmheqylmjzub.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aGd2dndiaG1oZXF5bG1qenViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNDU2NTgsImV4cCI6MjA4ODgyMTY1OH0.9RrwV0kje63N6KBBfO2iAdgvvHX8gooh-G6kTwvIr78';
-const sb      = supabase.createClient(SB_URL, SB_ANON);
+const sb      = (window.supabase && window.supabase.createClient)
+  ? window.supabase.createClient(SB_URL, SB_ANON)
+  : null;
 
 const API    = 'https://ai-keyboard-backend.vishwajeetadkine705.workers.dev';
 const MAX_H  = 20;
@@ -416,42 +418,86 @@ var sbOpen        = true;
 //  BOOT
 // ═══════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', async function() {
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  } else {
+    console.warn('PDF library is unavailable. PDF attachments will be disabled.');
+  }
+
+  if (!sb) {
+    showAuthScreen('Could not load authentication service. Please refresh and try again.');
+    return;
+  }
+
+  var bootTimer = setTimeout(function() {
+    showAuthScreen('Still loading… please check your connection and refresh.');
+  }, 8000);
 
   // Listen for auth state
   sb.auth.onAuthStateChange(async function(event, session) {
-    if (session && session.user) {
-      currentUser = session.user;
-      await onSignedIn();
-    } else {
-      currentUser = null;
-      showAuthScreen();
+    try {
+      if (session && session.user) {
+        currentUser = session.user;
+        await onSignedIn();
+      } else {
+        currentUser = null;
+        showAuthScreen();
+      }
+    } catch (err) {
+      console.error('Auth state handling failed:', err);
+      showAuthScreen('Could not finish sign-in. Please refresh and try again.');
     }
   });
 
   // Check initial session
-  var sessionRes = await sb.auth.getSession();
-  if (!sessionRes.data.session) {
-    hideLoading();
-    showAuthScreen();
+  try {
+    var sessionRes = await sb.auth.getSession();
+    if (!sessionRes.data.session) {
+      showAuthScreen();
+    }
+  } catch (err) {
+    console.error('Initial session check failed:', err);
+    showAuthScreen('Could not connect to authentication service.');
+  } finally {
+    clearTimeout(bootTimer);
   }
 });
 
 function hideLoading() { document.getElementById('loading').style.display = 'none'; }
-function showAuthScreen() {
+function showAuthScreen(message) {
+  var msgEl = document.getElementById('auth-err');
+  if (msgEl) {
+    msgEl.style.color = '#dc2626';
+    msgEl.textContent = message || '';
+  }
   hideLoading();
   document.getElementById('auth-screen').style.display = 'flex';
   document.getElementById('app').style.display = 'none';
 }
 
 async function onSignedIn() {
+  if (!sb) {
+    showAuthScreen('Auth service is unavailable. Please refresh and try again.');
+    return;
+  }
   hideLoading();
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   updateUserUI();
-  await Promise.all([loadUserContext(), loadChats()]);
+  try {
+    await Promise.all([loadUserContext(), loadChats()]);
+  } catch (err) {
+    console.error('Failed to load user data:', err);
+    toast('Some data could not be loaded. Please refresh.');
+  }
   resize(document.getElementById('inp'));
+}
+
+function requireAuthService() {
+  if (sb) return true;
+  showAuthScreen('Authentication service is unavailable. Please refresh.');
+  return false;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -468,6 +514,8 @@ function switchTab(tab) {
 }
 
 async function doAuth() {
+  if (!requireAuthService()) return;
+
   var email = document.getElementById('auth-email').value.trim();
   var pass  = document.getElementById('auth-password').value;
   var btn   = document.getElementById('auth-btn');
@@ -492,10 +540,12 @@ async function doAuth() {
 }
 
 async function doGoogle() {
+  if (!requireAuthService()) return;
   await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
 }
 
 async function signOut() {
+  if (!requireAuthService()) return;
   await sb.auth.signOut();
   chats = {}; activeId = null; messages = []; userContext = '';
 }
@@ -522,6 +572,7 @@ async function loadUserContext() {
 }
 
 async function saveContext() {
+  if (!requireAuthService()) return;
   userContext = document.getElementById('ctx-text').value.trim();
   await sb.from('stremini_user_context').upsert({
     user_id:    currentUser.id,
@@ -905,8 +956,11 @@ async function onFile(e) {
 }
 
 async function extractPDF(file) {
+  if (!window.pdfjsLib || !window.pdfjsLib.getDocument) {
+    throw new Error('PDF support is currently unavailable. Please refresh and try again.');
+  }
   var buf = await file.arrayBuffer();
-  var pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  var pdf = await window.pdfjsLib.getDocument({data:buf}).promise;
   var text='';
   for(var p=1;p<=pdf.numPages;p++){var pg=await pdf.getPage(p);var ct=await pg.getTextContent();text+=ct.items.map(function(x){return x.str;}).join(' ')+'\n\n';}
   return text.trim();
