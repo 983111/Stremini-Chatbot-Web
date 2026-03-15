@@ -411,14 +411,21 @@ var ROUTER_AGENT_IDS = [
 ];
 
 var BASE_RESPONSE_FORMAT = [
-  'Do not use research-paper style prose.',
-  'Use markdown headings with short bullets only.',
+  'Write visually clean, executive-style markdown.',
+  'Avoid long paragraphs: use concise bullets, spacing, and scannable structure.',
   'Always structure output exactly as:',
   '## Executive Summary',
+  '- 3 bullets max. Each bullet starts with **bold label** + short explanation.',
   '## Findings',
+  '- Use grouped bullets with mini sub-heads (###) when needed.',
+  '- Highlight key numbers/decisions with bold text.',
   '## Action Plan (prioritized)',
+  '- Provide a markdown table with columns: Priority | Action | Owner | Timeline | Success Metric.',
   '## Risks & Mitigations',
-  '## Next 7-Days'
+  '- Provide a markdown table with columns: Risk | Impact | Mitigation.',
+  '## Next 7-Days',
+  '- Day-wise checklist style bullets (Day 1-2, Day 3-4, Day 5-7).',
+  'Keep tone crisp, practical, and visually pleasing.'
 ].join('\n');
 
 var PROMPT_LIBRARY = {
