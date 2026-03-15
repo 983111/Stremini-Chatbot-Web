@@ -138,12 +138,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 
 /* ── CHAT AREA ── */
 #chat-area{flex:1;overflow-y:auto;display:flex;flex-direction:column;scroll-behavior:smooth;}
-#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px 20px;gap:24px;animation:fu .4s ease both;}
+#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px 20px;gap:20px;animation:fu .4s ease both;text-align:center;}
 @keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .wicon{width:52px;height:52px;background:var(--tx);border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:26px;color:#fff;box-shadow:0 6px 24px rgba(26,24,20,.14);}
 .wtitle{font-family:var(--serif);font-size:32px;font-weight:400;letter-spacing:-.02em;text-align:center;line-height:1.25;}
-.wsub{font-size:13.5px;color:var(--tx3);text-align:center;margin-top:-14px;}
-.sugs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:660px;width:100%;}
+.wsub{font-size:13.5px;color:var(--tx3);text-align:center;margin-top:4px;}
+.whead{display:flex;flex-direction:column;align-items:center;gap:6px;max-width:660px;width:100%;}
+.sugs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:660px;width:100%;margin-top:2px;}
 .sc{background:var(--bg);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;cursor:pointer;text-align:left;font-family:var(--font);transition:background var(--ease),border-color var(--ease),box-shadow var(--ease);}
 .sc:hover{background:var(--bg-sub);border-color:#d5cfc7;box-shadow:var(--sh-sm);}
 .sc strong{display:block;font-size:13.5px;font-weight:600;color:var(--tx);margin-bottom:3px;letter-spacing:-.01em;}
@@ -203,13 +204,14 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 #inp{display:block;width:100%;background:none;border:none;outline:none;resize:none;font-family:var(--font);font-size:15px;color:var(--tx);line-height:1.6;padding:14px 16px 6px;max-height:200px;overflow-y:auto;min-height:54px;}
 #inp::placeholder{color:var(--tx3);}
 .ibar{display:flex;align-items:center;padding:7px 10px 10px;gap:4px;}
+.ibar-actions{margin-left:auto;display:flex;align-items:center;gap:8px;}
 .bb{background:none;border:none;cursor:pointer;color:var(--tx3);padding:6px 9px;border-radius:8px;font-size:13px;font-family:var(--font);display:flex;align-items:center;gap:5px;transition:background var(--ease),color var(--ease);}
 .bb:hover{background:var(--bg-hov);color:var(--tx);}
-#sendbtn{margin-left:auto;width:32px;height:32px;border-radius:9px;background:var(--tx);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:background var(--ease),transform var(--ease),box-shadow var(--ease);flex-shrink:0;box-shadow:0 2px 6px rgba(26,24,20,.18);}
+#sendbtn{width:32px;height:32px;border-radius:9px;background:var(--tx);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:background var(--ease),transform var(--ease),box-shadow var(--ease);flex-shrink:0;box-shadow:0 2px 6px rgba(26,24,20,.18);}
 #sendbtn:hover{background:#3a3630;box-shadow:0 3px 10px rgba(26,24,20,.22);}
 #sendbtn:active{transform:scale(.94);}
 #sendbtn:disabled{background:var(--bg-hov);color:var(--tx3);cursor:not-allowed;box-shadow:none;}
-#stopbtn{margin-left:auto;background:none;border:1.5px solid var(--bdr);border-radius:8px;color:var(--tx);font-family:var(--font);font-size:13px;cursor:pointer;padding:5px 12px;display:none;align-items:center;gap:5px;transition:background var(--ease);}
+#stopbtn{background:none;border:1.5px solid var(--bdr);border-radius:8px;color:var(--tx);font-family:var(--font);font-size:13px;cursor:pointer;padding:5px 12px;display:none;align-items:center;gap:5px;transition:background var(--ease);}
 #stopbtn.on{display:flex;}
 #stopbtn:hover{background:var(--bg-hov);}
 .disc{text-align:center;font-size:11.5px;color:var(--tx3);padding-top:7px;letter-spacing:.01em;}
@@ -331,7 +333,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     <div id="chat-area">
       <div id="welcome">
         <div class="wicon">S</div>
-        <div>
+        <div class="whead">
           <h1 class="wtitle">What can I help with?</h1>
           <p class="wsub">Powered by StreminiAI — think smarter, build faster.</p>
         </div>
@@ -369,13 +371,15 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
               Attach
             </button>
             <input type="file" id="finput" accept=".pdf,.doc,.docx" onchange="onFile(event)">
-            <button id="stopbtn" onclick="doStop()">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
-              Stop
-            </button>
-            <button id="sendbtn" onclick="sendMsg()">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
-            </button>
+            <div class="ibar-actions">
+              <button id="stopbtn" onclick="doStop()">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                Stop
+              </button>
+              <button id="sendbtn" onclick="sendMsg()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+              </button>
+            </div>
           </div>
         </div>
         <p class="disc">StreminiAI can make mistakes. Verify important information.</p>
@@ -413,6 +417,20 @@ var streamRdr     = null;
 var userContext   = '';
 var authTab       = 'signin';
 var sbOpen        = true;
+
+function contextKey() {
+  return currentUser ? 'stremini_ctx_' + currentUser.id : 'stremini_ctx_guest';
+}
+
+function loadLocalContext() {
+  try { return localStorage.getItem(contextKey()) || ''; }
+  catch (e) { return ''; }
+}
+
+function saveLocalContext(value) {
+  try { localStorage.setItem(contextKey(), value || ''); }
+  catch (e) {}
+}
 
 // ═══════════════════════════════════════════════════════
 //  BOOT
@@ -564,21 +582,42 @@ function updateUserUI() {
 //  USER CONTEXT
 // ═══════════════════════════════════════════════════════
 async function loadUserContext() {
-  var res = await sb.from('stremini_user_context').select('context').eq('user_id', currentUser.id).single();
-  if (res.data) {
-    userContext = res.data.context || '';
+  if (!currentUser) return;
+
+  var localContext = loadLocalContext();
+  if (localContext) {
+    userContext = localContext;
     document.getElementById('ctx-text').value = userContext;
+  }
+
+  var res = await sb.from('stremini_user_context').select('context').eq('user_id', currentUser.id).maybeSingle();
+  if (res.error) throw new Error(res.error.message);
+
+  if (res.data && typeof res.data.context === 'string') {
+    userContext = res.data.context;
+    document.getElementById('ctx-text').value = userContext;
+    saveLocalContext(userContext);
   }
 }
 
 async function saveContext() {
-  if (!requireAuthService()) return;
+  if (!requireAuthService() || !currentUser) return;
+
   userContext = document.getElementById('ctx-text').value.trim();
-  await sb.from('stremini_user_context').upsert({
+  saveLocalContext(userContext);
+
+  var res = await sb.from('stremini_user_context').upsert({
     user_id:    currentUser.id,
     context:    userContext,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
+
+  if (res.error) {
+    toast('Context saved locally. Cloud sync failed.');
+    console.error('Failed to save context remotely:', res.error);
+    return;
+  }
+
   toast('Context saved');
   toggleCtx();
 }
@@ -857,8 +896,11 @@ async function sendMsg() {
 
   // Build history for API (last MAX_H messages, excluding just-saved one)
   var hist = messages.slice(-MAX_H-1, -1).map(function(m){ return {role:m.role, content:m.content}; });
+  if (userContext) {
+    hist.unshift({ role: 'system', content: 'User context: ' + userContext });
+  }
 
-  // Prepend user context if set
+  // Prepend user context for routes that only use the latest message
   var msgToSend = text;
   if (userContext) {
     msgToSend = '[User context: ' + userContext + ']\n\n' + text;
