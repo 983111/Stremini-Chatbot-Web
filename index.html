@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="renderer.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -401,6 +402,7 @@ var MAX_H   = 20;
 
 var sb = null, currentUser = null, chats = {}, activeId = null;
 var messages = [], busy = false, stopFlag = false;
+var _lastUserQuery = "";
 var docFile = null, streamRdr = null, userContext = '', sbOpen = true, booted = false;
 var _activeTab = 'signin';
 
@@ -1203,18 +1205,44 @@ function showWelcome() {
 }
 
 function addMsgRow(role, content, animate) {
-  if(animate===undefined)animate=true;
+  if(animate===undefined) animate=true;
   var wrap=document.getElementById('msgs-wrap');
   wrap.style.display='flex';
   document.getElementById('welcome').style.display='none';
-  var isAI=role==='assistant', row=document.createElement('div');
-  row.className='mr'; if(!animate)row.style.animation='none';
-  row.innerHTML='<div class="mav '+(isAI?'ai':'usr')+'">'+(isAI?'S':'U')+'</div>'
-    +'<div class="mbody"><div class="mname">'+(isAI?'StreminiAI':'You')+'</div>'
-    +'<div class="mc">'+renderMd(content)+'</div>'
-    +(isAI?'<div class="macts"><button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div>':'')
-    +'</div>';
-  wrap.appendChild(row); return row;
+  var isAI = role==='assistant';
+  var row = document.createElement('div');
+  row.className='mr';
+  if(!animate) row.style.animation='none';
+
+  var avDiv = '<div class="mav '+(isAI?'ai':'usr')+'">'+(isAI?'S':'U')+'</div>';
+  var actsHtml = isAI
+    ? '<div class="macts"><button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div>'
+    : '';
+
+  row.innerHTML = avDiv
+    + '<div class="mbody">'
+    + '<div class="mname">'+(isAI?'StreminiAI':'You')+'</div>'
+    + '<div class="mc"></div>'
+    + actsHtml
+    + '</div>';
+
+  wrap.appendChild(row);
+
+  var mc = row.querySelector('.mc');
+  if (isAI && window.StreminiRenderer) {
+    // Find the last user message that corresponds to this reply
+    var lastUser = _lastUserQuery || '';
+    if (!lastUser) {
+      for(var i = messages.length - 1; i >= 0; i--) {
+        if (messages[i].role === 'user') { lastUser = messages[i].content; break; }
+      }
+    }
+    window.StreminiRenderer.render(lastUser, content, mc);
+  } else {
+    mc.innerHTML = renderMd(content);
+  }
+
+  return row;
 }
 
 function addStreamRow() {
@@ -1226,15 +1254,35 @@ function addStreamRow() {
   wrap.appendChild(row); scrollBottom();
 }
 
-function updateStream(text){ var el=document.getElementById('sc'); if(el){el.innerHTML=renderMd(text);scrollBottom();} }
+function updateStream(text) {
+  var el = document.getElementById('sc');
+  if (el) {
+    if (window.StreminiRenderer) {
+      window.StreminiRenderer.updateStream(text, el);
+    } else {
+      el.innerHTML = renderMd(text);
+    }
+    scrollBottom();
+  }
+}
 
 function finalizeStream(text) {
-  var row=document.getElementById('srow'); if(!row)return; row.id='';
-  var c=row.querySelector('.mc'); if(c)c.innerHTML=renderMd(text);
-  var body=row.querySelector('.mbody');
-  if(body&&!body.querySelector('.macts')){
-    var a=document.createElement('div'); a.className='macts';
-    a.innerHTML='<button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>';
+  var row = document.getElementById('srow');
+  if (!row) return;
+  row.id = '';
+  var c = row.querySelector('.mc');
+
+  if (c && window.StreminiRenderer) {
+    window.StreminiRenderer.finalizeStream(_lastUserQuery, text, c);
+  } else if (c) {
+    c.innerHTML = renderMd(text);
+  }
+
+  var body = row.querySelector('.mbody');
+  if (body && !body.querySelector('.macts')) {
+    var a = document.createElement('div');
+    a.className = 'macts';
+    a.innerHTML = '<button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>';
     body.appendChild(a);
   }
 }
@@ -1298,6 +1346,7 @@ function renderMd(raw){
 async function sendMsg() {
   if(busy||!currentUser)return;
   var inp=document.getElementById('inp'), text=inp.value.trim();
+  _lastUserQuery = text;
   if(!text)return;
 
   if(!activeId){
