@@ -170,6 +170,15 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 #finput{display:none;}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--tx);color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;opacity:0;pointer-events:none;z-index:999;transition:opacity .2s,transform .2s;white-space:nowrap;box-shadow:var(--sh);}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.step-item{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border:1px solid var(--bdr);border-radius:10px;background:var(--bg-sub);margin:8px 0;}
+.step-item strong{font-size:12.5px;color:var(--tx2);white-space:nowrap;}
+.step-item span{font-size:14px;color:var(--tx);}
+.rs-kv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:8px 0;}
+.kv-item{border:1px solid var(--bdr);border-radius:10px;padding:8px 10px;background:var(--bg-sub);display:flex;flex-direction:column;gap:2px;}
+.kv-item strong{font-size:12px;color:var(--tx2);}
+.kv-item span{font-size:13px;color:var(--tx);}
+.math-block{font-family:var(--mono);background:var(--code-bg);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;overflow:auto;}
+pre.mermaid{background:var(--code-bg);border:1px dashed var(--acc-bdr);border-radius:10px;padding:10px 12px;}
 @media(max-width:720px){
   #sb{position:absolute;height:100%;transform:translateX(calc(-1 * var(--sw)));}
   #sb.open{transform:translateX(0);box-shadow:0 12px 40px rgba(0,0,0,.12);}
@@ -325,6 +334,168 @@ var sb = null, currentUser = null, chats = {}, activeId = null;
 var messages = [], busy = false, stopFlag = false;
 var docFile = null, streamRdr = null, userContext = '', sbOpen = true, booted = false;
 var _activeTab = 'signin';
+
+var ROUTER_AGENT_IDS = [
+  'DATASET_BUILDER','DATA_INTELLIGENCE','KNOWLEDGE_GRAPH','RESEARCH_MATH','CONCEPT_EXPLAINER',
+  'COMPETITIVE_INTEL','ARCHITECT','CODE','PRODUCT_BUILDER','AUTOMATION','MODEL_EVALUATOR',
+  'LEGAL_COMPLIANCE','GROWTH_INTEL','FINANCIAL','PERSONAL_OS'
+];
+
+var BASE_RESPONSE_FORMAT = [
+  'Do not use research-paper style prose.',
+  'Use markdown headings with short bullets only.',
+  'Always structure output exactly as:',
+  '## Executive Summary',
+  '## Findings',
+  '## Action Plan (prioritized)',
+  '## Risks & Mitigations',
+  '## Next 7-Days'
+].join('\n');
+
+var PROMPT_LIBRARY = {
+  DATASET_BUILDER: {
+    label: 'Dataset Builder Agent',
+    keywords: ['dataset','etl','csv','jsonl','labeling','data payload','schema mapping'],
+    systemInstruction: 'You are the Dataset Builder Agent. Produce data collection plans, schema definitions, and payload quality checks.'
+  },
+  DATA_INTELLIGENCE: {
+    label: 'Data Intelligence Agent',
+    keywords: ['anomaly','cohort','forecast','timeseries','diagnostic','metric drift'],
+    systemInstruction: 'You are the Data Intelligence Agent. Analyze anomalies, cohort behavior, forecasting risk, and instrumentation gaps.'
+  },
+  KNOWLEDGE_GRAPH: {
+    label: 'Knowledge Graph Agent',
+    keywords: ['knowledge graph','ontology','entity','node','edge','relationship'],
+    systemInstruction: 'You are the Knowledge Graph Agent. Design entity-relationship maps, traversal paths, and graph gap analysis.'
+  },
+  RESEARCH_MATH: {
+    label: 'Research & Math Agent',
+    keywords: ['research','paper','citation','equation','calculus','statistics','probability','proof'],
+    systemInstruction: 'You are the Research & Math Agent. Synthesize evidence and solve quantitative problems with explicit assumptions.'
+  },
+  CONCEPT_EXPLAINER: {
+    label: 'Concept Explainer Agent',
+    keywords: ['explain','eli5','break down','what is','how does'],
+    systemInstruction: 'You are the Concept Explainer Agent. Teach complex concepts with simple language, examples, and practical intuition.'
+  },
+  COMPETITIVE_INTEL: {
+    label: 'Competitive Intel Agent',
+    keywords: ['competitor','positioning','market landscape','swot','threat','opportunity'],
+    systemInstruction: 'You are the Competitive Intel Agent. Evaluate market dynamics, competitor strategy, and risk/opportunity signals.'
+  },
+  ARCHITECT: {
+    label: 'Architect Agent',
+    keywords: ['architecture','system design','microservice','scalability','tech stack'],
+    systemInstruction: 'You are the Architect Agent. Design robust architecture with tradeoff analysis and phased implementation plans.'
+  },
+  CODE: {
+    label: 'Code Agent',
+    keywords: ['code','bug','debug','refactor','function','api endpoint','security flaw'],
+    systemInstruction: 'You are the Code Agent. Provide production-minded implementations, debugging steps, and security checks.'
+  },
+  PRODUCT_BUILDER: {
+    label: 'Product Builder Agent',
+    keywords: ['prd','product requirement','feature spec','user story','acceptance criteria','roadmap'],
+    systemInstruction: 'You are the Product Builder Agent. Create PRDs, feature specs, user stories, and milestone plans.'
+  },
+  AUTOMATION: {
+    label: 'Automation Builder Agent',
+    keywords: ['automation','workflow','n8n','zapier','pipeline','agent chain','orchestration'],
+    systemInstruction: 'You are the Automation Builder Agent. Design resilient automations, triggers, flows, and observability controls.'
+  },
+  MODEL_EVALUATOR: {
+    label: 'AI Model Evaluator Agent',
+    keywords: ['benchmark','hallucination','model eval','precision','recall','latency test','evaluation'],
+    systemInstruction: 'You are the AI Model Evaluator Agent. Define eval suites, quality metrics, failure modes, and remediation loops.'
+  },
+  LEGAL_COMPLIANCE: {
+    label: 'Startup Legal & Compliance Agent',
+    keywords: ['legal','compliance','terms','privacy policy','gdpr','hipaa','contract','liability'],
+    systemInstruction: 'You are the Startup Legal & Compliance Agent. Identify legal/compliance risk and recommend governance controls.'
+  },
+  GROWTH_INTEL: {
+    label: 'Growth Intelligence Agent',
+    keywords: ['growth','gtm','go-to-market','acquisition','retention','funnel','ads','virality'],
+    systemInstruction: 'You are the Growth Intelligence Agent. Build GTM strategy, channel experiments, and measurable funnel optimization.'
+  },
+  FINANCIAL: {
+    label: 'Financial Agent',
+    keywords: ['finance','financial','budget','cash flow','burn rate','runway','unit economics','roi'],
+    systemInstruction: 'You are the Financial Agent. Build financial scenarios, budget models, and ROI-sensitive recommendations.'
+  },
+  PERSONAL_OS: {
+    label: 'Personal OS Agent',
+    keywords: ['personal os','habit','goal','journal','reflection','weekly plan','decision log'],
+    systemInstruction: 'You are the Personal OS Agent. Organize goals, routines, decisions, and personal execution systems.'
+  }
+};
+
+function scoreAgents(message) {
+  var text = (message || '').toLowerCase();
+  var scored = ROUTER_AGENT_IDS.map(function(id){
+    var kws = PROMPT_LIBRARY[id].keywords;
+    var score = 0;
+    for (var i = 0; i < kws.length; i++) if (text.indexOf(kws[i]) !== -1) score++;
+    return { id: id, score: score };
+  });
+  scored.sort(function(a,b){ return b.score - a.score; });
+  return scored;
+}
+
+function parseRouterOutput(raw) {
+  var t = String(raw || '').toUpperCase().trim().replace(/[^A-Z_]/g, '');
+  return ROUTER_AGENT_IDS.indexOf(t) !== -1 ? t : '';
+}
+
+async function getRoutingDecision(message) {
+  var scored = scoreAgents(message);
+  var primaryLocal = scored[0] && scored[0].score > 0 ? scored[0].id : 'CONCEPT_EXPLAINER';
+  var collaboratorsLocal = scored.filter(function(x){ return x.id !== primaryLocal && x.score > 0; }).slice(0,2).map(function(x){ return x.id; });
+
+  var routePrompt = [
+    'You are the Master Router for Stremini AI.',
+    'Analyze the user input and route to exactly ONE specialist ID.',
+    'Allowed IDs: ' + ROUTER_AGENT_IDS.join(', '),
+    'Return ONLY the exact ID, nothing else.',
+    'User input: ' + message
+  ].join('\n');
+
+  try {
+    var ctrl = new AbortController();
+    var timer = setTimeout(function(){ ctrl.abort(); }, 2500);
+    var res = await fetch(API + '/chat/message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: routePrompt, history: [] }),
+      signal: ctrl.signal
+    });
+    clearTimeout(timer);
+    if (res.ok) {
+      var d = await res.json();
+      var routed = parseRouterOutput(d && d.response);
+      if (routed) return { primary: routed, collaborators: collaboratorsLocal, source: 'router_model' };
+    }
+  } catch (e) {}
+
+  return { primary: primaryLocal, collaborators: collaboratorsLocal, source: 'local_fallback' };
+}
+
+function buildUnifiedSystemPrompt(primaryId, collaborators) {
+  var p = PROMPT_LIBRARY[primaryId] || PROMPT_LIBRARY.CONCEPT_EXPLAINER;
+  var collab = (collaborators || []).filter(function(id){ return PROMPT_LIBRARY[id]; });
+  var collabText = collab.length
+    ? 'Secondary collaboration lenses: ' + collab.map(function(id){ return PROMPT_LIBRARY[id].label; }).join(', ') + '. Use them only when relevant.'
+    : 'No secondary collaborator is required for this user request.';
+
+  return [
+    'You are StreminiAI operating as the ' + p.label + '.',
+    p.systemInstruction,
+    collabText,
+    BASE_RESPONSE_FORMAT,
+    'Use compact code blocks, math, tables, mermaid, or step cards only when they materially improve the answer.',
+    'When uncertainty is high, state assumptions explicitly before recommendations.'
+  ].join('\n');
+}
 
 window.addEventListener('DOMContentLoaded', function () {
   if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc =
@@ -636,9 +807,16 @@ function inlineRender(s){
 function renderMd(raw){
   if(!raw)return '';
   var blocks=[];
-  var t=raw.replace(/```([\w]*)\n?([\s\S]*?)```/g,function(_,lang,code){
+  var t=raw.replace(/\$\$([\s\S]+?)\$\$/g,function(_,expr){
     var i=blocks.length;
-    blocks.push('<pre><code'+(lang?' class="lang-'+escHtml(lang)+'"':'')+'>'+escHtml(code.trim())+'</code></pre>');
+    blocks.push('<div class="math-block">'+escHtml(expr.trim())+'</div>');
+    return '\x02B'+i+'\x03';
+  });
+  t=t.replace(/```([\w-]*)\n?([\s\S]*?)```/g,function(_,lang,code){
+    var i=blocks.length;
+    var l=(lang||'').toLowerCase();
+    if(l==='mermaid') blocks.push('<pre class="mermaid">'+escHtml(code.trim())+'</pre>');
+    else blocks.push('<pre><code'+(lang?' class="lang-'+escHtml(lang)+'"':'')+'>'+escHtml(code.trim())+'</code></pre>');
     return '\x02B'+i+'\x03';
   });
   var lines=t.split('\n'),out=[],i=0;
@@ -649,7 +827,20 @@ function renderMd(raw){
     if(/^---+$/.test(l.trim())){out.push('<hr>');i++;continue;}
     if(/^> /.test(l)){var bq=[];while(i<lines.length&&/^> ?/.test(lines[i])){bq.push(lines[i].replace(/^> ?/,''));i++;}out.push('<blockquote>'+inlineRender(escHtml(bq.join(' ')))+'</blockquote>');continue;}
     if(/^\d+\.\s/.test(l)){var ol=[];while(i<lines.length&&/^\d+\.\s/.test(lines[i])){ol.push('<li>'+inlineRender(escHtml(lines[i].replace(/^\d+\.\s+/,'')))+'</li>');i++;}out.push('<ol>'+ol.join('')+'</ol>');continue;}
-    if(/^[-*]\s/.test(l)){var ul=[];while(i<lines.length&&/^[-*]\s/.test(lines[i])){ul.push('<li>'+inlineRender(escHtml(lines[i].replace(/^[-*]\s+/,'')))+'</li>');i++;}out.push('<ul>'+ul.join('')+'</ul>');continue;}
+    if(/^[-*]\s/.test(l)){
+      var kv=[], ul=[];
+      while(i<lines.length&&/^[-*]\s/.test(lines[i])){
+        var item=lines[i].replace(/^[-*]\s+/, '');
+        var kvm=item.match(/^([^:]{1,60}):\s+(.+)$/);
+        if(kvm) kv.push('<div class="kv-item"><strong>'+inlineRender(escHtml(kvm[1]))+'</strong><span>'+inlineRender(escHtml(kvm[2]))+'</span></div>');
+        else ul.push('<li>'+inlineRender(escHtml(item))+'</li>');
+        i++;
+      }
+      if(kv.length) out.push('<div class="rs-kv-grid">'+kv.join('')+'</div>');
+      if(ul.length) out.push('<ul>'+ul.join('')+'</ul>');
+      continue;
+    }
+    var sm=l.match(/^Step\s*(\d+)\s*[—-]\s*(.+)$/i); if(sm){out.push('<div class="step-item"><strong>Step '+escHtml(sm[1])+'</strong><span>'+inlineRender(escHtml(sm[2]))+'</span></div>');i++;continue;}
     if(!l.trim()){i++;continue;}
     var pl=[];
     while(i<lines.length){var ll=lines[i];if(!ll.trim()||/^(#{1,3}\s|> |[-*]\s|\d+\.\s|---+$|\x02B)/.test(ll))break;pl.push(inlineRender(escHtml(ll)));i++;}
@@ -671,8 +862,12 @@ async function sendMsg() {
 
   inp.value=''; resize(inp);
 
+  var route = await getRoutingDecision(text);
+  var systemPrompt = buildUnifiedSystemPrompt(route.primary, route.collaborators);
+
   // Snapshot history BEFORE saving current message
   var hist=messages.slice(-MAX_H).map(function(m){return{role:m.role,content:m.content};});
+  hist.unshift({role:'system',content:systemPrompt});
   if(userContext) hist.unshift({role:'system',content:'User context: '+userContext});
 
   await saveMessage(activeId,'user',text);
@@ -682,10 +877,15 @@ async function sendMsg() {
 
   addMsgRow('user',text); setBusy(true); addStreamRow();
 
-  var msgToSend = userContext ? '[User context: '+userContext+']\n\n'+text : text;
+  var msgToSend = text;
   var answer='';
   try {
-    answer = docFile ? await callDoc(msgToSend,docFile.text) : await callStream(msgToSend,hist);
+    if (docFile) {
+      var docQuestion = systemPrompt + '\n\nUser question:\n' + msgToSend;
+      answer = await callDoc(docQuestion,docFile.text);
+    } else {
+      answer = await callStream(msgToSend,hist);
+    }
     if(!answer||!answer.trim()) answer='No response from model. Please try again.';
     finalizeStream(answer);
     await saveMessage(activeId,'assistant',answer);
