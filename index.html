@@ -418,8 +418,12 @@ var sbOpen        = true;
 //  BOOT
 // ═══════════════════════════════════════════════════════
 window.addEventListener('DOMContentLoaded', async function() {
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  } else {
+    console.warn('PDF library is unavailable. PDF attachments will be disabled.');
+  }
 
   if (!sb) {
     showAuthScreen('Could not load authentication service. Please refresh and try again.');
@@ -952,8 +956,11 @@ async function onFile(e) {
 }
 
 async function extractPDF(file) {
+  if (!window.pdfjsLib || !window.pdfjsLib.getDocument) {
+    throw new Error('PDF support is currently unavailable. Please refresh and try again.');
+  }
   var buf = await file.arrayBuffer();
-  var pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  var pdf = await window.pdfjsLib.getDocument({data:buf}).promise;
   var text='';
   for(var p=1;p<=pdf.numPages;p++){var pg=await pdf.getPage(p);var ct=await pg.getTextContent();text+=ct.items.map(function(x){return x.str;}).join(' ')+'\n\n';}
   return text.trim();
