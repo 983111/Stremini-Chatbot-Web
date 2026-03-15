@@ -927,7 +927,7 @@ async function sendMsg() {
     } else {
       answer = await callStreamRoute(msgToSend, hist);
     }
-    if (!answer || !answer.trim()) answer = 'No response received. Please try again.';
+    if (!answer || !answer.trim()) answer = '26a0Fe0f API returned empty. Check your Cloudflare Worker `/chat/stream` route is deployed and active.';
     finalizeStream(answer);
     await saveMessage(activeId, 'assistant', answer);
   } catch(err) {
@@ -942,58 +942,92 @@ async function sendMsg() {
 // ═══════════════════════════════════════════════════════
 //  API ROUTES
 // ═══════════════════════════════════════════════════════
+
+// Build OpenAI-style messages array from history + current message
+function buildMessages(message, history) {
+  // history is already [{role, content}] pairs, filter out system entries
+  var msgs = history.filter(function(m) { return m.role === 'user' || m.role === 'assistant'; });
+  msgs.push({ role: 'user', content: message });
+  return msgs;
+}
+
 async function callStreamRoute(message, history) {
+  var msgs = buildMessages(message, history);
+  var body = JSON.stringify({
+    message:  message,
+    messages: msgs,
+    history:  history
+  });
+
   var res;
   try {
     res = await fetch(API + '/chat/stream', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message, history: history })
+      body:    body
     });
   } catch(e) {
-    throw new Error('Network error: ' + e.message);
+    throw new Error('Network error — cannot reach API: ' + e.message);
   }
 
   if (!res.ok) {
     var errText = '';
     try { errText = await res.text(); } catch(e) {}
-    // If stream endpoint fails, fall back to message endpoint
-    console.warn('Stream endpoint failed (' + res.status + '), falling back to /chat/message');
+    console.warn('Stream endpoint returned ' + res.status + ': ' + errText + ' — falling back to /chat/message');
+    return await callMessageRoute(message, history);
+  }
+
+  if (!res.body) {
+    // No streaming support, fall back
     return await callMessageRoute(message, history);
   }
 
   var reader = res.body.getReader();
-  streamRdr = reader;
-  var dec  = new TextDecoder();
-  var full = '';
+  streamRdr  = reader;
+  var dec    = new TextDecoder();
+  var full   = '';
+  var buf    = '';
+
   try {
     while (true) {
       if (stopFlag) { reader.cancel(); throw new Error('stopped'); }
       var r = await reader.read();
       if (r.done) break;
-      var chunk = dec.decode(r.value, { stream: true });
-      var lines = chunk.split('\n');
+      buf += dec.decode(r.value, { stream: true });
+      var lines = buf.split('\n');
+      buf = lines.pop(); // keep incomplete line in buffer
       for (var j = 0; j < lines.length; j++) {
-        var line = lines[j];
-        if (!line.startsWith('data: ')) continue;
-        var data = line.slice(6).trim();
-        if (data === '[DONE]') { return full; }
+        var line = lines[j].trim();
+        if (!line || !line.startsWith('data:')) continue;
+        var data = line.slice(5).trim();
+        if (data === '[DONE]') return full;
         try {
           var p = JSON.parse(data);
-          if (p.token) { full += p.token; updateStream(full); }
-          else if (p.response) { full = p.response; updateStream(full); }
-          else if (p.error) { throw new Error(p.error); }
+          // Handle various token field names workers use
+          var token = p.token || p.text || p.delta || p.content || '';
+          if (token) { full += token; updateStream(full); }
+          if (p.response) { full = p.response; updateStream(full); return full; }
+          if (p.error)    { throw new Error(p.error); }
         } catch(parseErr) {
-          // Non-JSON line, skip
+          // Non-JSON SSE line — could be plain text token
+          if (data && data !== '[DONE]') { full += data; updateStream(full); }
         }
+      }
+    }
+    // Flush remaining buffer
+    if (buf.trim().startsWith('data:')) {
+      var data = buf.trim().slice(5).trim();
+      if (data && data !== '[DONE]') {
+        try { var p = JSON.parse(data); if (p.token) full += p.token; } catch(e) {}
       }
     }
   } finally {
     streamRdr = null;
   }
 
-  // If stream returned empty, try message route
+  // If stream produced nothing, try the message endpoint
   if (!full.trim()) {
+    console.warn('Stream returned empty — falling back to /chat/message');
     return await callMessageRoute(message, history);
   }
   return full;
@@ -1001,24 +1035,33 @@ async function callStreamRoute(message, history) {
 
 async function callMessageRoute(message, history) {
   updateStream('Thinking…');
+  var msgs = buildMessages(message, history);
   var res;
   try {
     res = await fetch(API + '/chat/message', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: message, history: history })
+      body:    JSON.stringify({
+        message:  message,
+        messages: msgs,
+        history:  history
+      })
     });
   } catch(e) {
-    throw new Error('Network error: ' + e.message);
+    throw new Error('Network error — cannot reach API: ' + e.message);
   }
   if (!res.ok) {
     var t = '';
     try { t = await res.text(); } catch(e) {}
-    throw new Error(t || 'Message request failed (' + res.status + ')');
+    throw new Error('API error ' + res.status + (t ? ': ' + t : ''));
   }
-  var data = await res.json();
+  var data;
+  try { data = await res.json(); } catch(e) {
+    throw new Error('Invalid JSON from API');
+  }
   if (data.error) throw new Error(data.error);
-  return data.response || '';
+  // Handle various response field names
+  return data.response || data.text || data.content || data.message || '';
 }
 
 async function callDocRoute(question, documentText) {
@@ -1026,21 +1069,24 @@ async function callDocRoute(question, documentText) {
   var res;
   try {
     res = await fetch(API + '/chat/document', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ question: question, documentText: documentText })
+      body:    JSON.stringify({ question: question, documentText: documentText })
     });
   } catch(e) {
-    throw new Error('Network error: ' + e.message);
+    throw new Error('Network error — cannot reach API: ' + e.message);
   }
   if (!res.ok) {
     var t = '';
     try { t = await res.text(); } catch(e) {}
-    throw new Error(t || 'Document request failed (' + res.status + ')');
+    throw new Error('API error ' + res.status + (t ? ': ' + t : ''));
   }
-  var data = await res.json();
+  var data;
+  try { data = await res.json(); } catch(e) {
+    throw new Error('Invalid JSON from API');
+  }
   if (data.error) throw new Error(data.error);
-  return data.response || 'No response.';
+  return data.response || data.text || data.content || 'No response.';
 }
 
 // ═══════════════════════════════════════════════════════
