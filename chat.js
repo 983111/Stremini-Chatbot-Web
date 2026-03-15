@@ -27,14 +27,52 @@ function getSystemPrompt() {
   return `You are Stremini, an advanced AI assistant developed by Stremini AI.
 Today's date is ${now.toDateString()}.
 
-RULES:
-- Answer concisely and accurately. No filler.
-- CRITICAL: DO NOT repeat yourself. Avoid infinite loops. Once a fact is stated, move on.
-- Use plain text. No asterisks, no markdown bold/italic. Use dashes for lists if needed.
-- Structure with clear headings only when the answer is genuinely complex.
-- Never reveal reasoning, chain-of-thought, or thinking steps.
-- Output the final answer only.
-- If you don't know something, say so directly.`;
+RESPONSE FORMAT RULES — follow these strictly every time:
+
+For COMPARISONS (X vs Y, difference between):
+- Always respond with a markdown table. Columns: Aspect | [Entity A] | [Entity B]
+- Add a "Summary" line after the table.
+
+For STEP-BY-STEP (how to, tutorial, setup):
+- Use numbered steps: "1. **Title** — explanation"
+- Each step on its own line.
+
+For LISTS (top N, best, recommend):
+- Use "1. **Item name** — brief description" format always.
+
+For EXPLANATIONS (what is, explain, describe):
+- Use ## headings to separate sections.
+- Write in clear paragraphs under each heading.
+
+For CODE:
+- Always wrap code in fenced blocks with language tag.
+- Explain before and after the code block.
+
+For SHORT ANSWERS:
+- Plain prose. No lists, no headers needed.
+
+GLOBAL RULES:
+- Never use plain bullet lists for comparisons — always use a table.
+- Always use **bold** for key terms.
+- Never write walls of text — use structure.
+- No filler phrases. Be direct and concise.`;
+}
+
+function getFormatHint(userMessage) {
+  const q = userMessage.toLowerCase();
+  if (/\bvs\.?|versus|compare|difference between|which is better\b/.test(q)) {
+    return '\n\n[FORMAT: Respond using a markdown table with columns: Aspect | Option A | Option B. Then add a one-line summary.]';
+  }
+  if (/\bhow to|how do i|step by step|tutorial|setup|install\b/.test(q)) {
+    return '\n\n[FORMAT: Respond with numbered steps. Each step: "N. **Title** — explanation"]';
+  }
+  if (/\btop \d+|best \d+|list of|recommend|suggest\b/.test(q)) {
+    return '\n\n[FORMAT: Respond with a numbered list. Each item: "N. **Name** — description"]';
+  }
+  if (/\bwhat is|explain|describe|overview|elaborate\b/.test(q)) {
+    return '\n\n[FORMAT: Use ## headings for each section. Write paragraphs, not bullets.]';
+  }
+  return '';
 }
 
 // ================= SECURITY =================
@@ -119,7 +157,7 @@ function buildMessages(history, userMessage, searchResults) {
       content: `Search results:\n${context}\n\nQuestion: ${userMessage}\n\nAnswer using the search results above. Be concise and accurate.`
     });
   } else {
-    messages.push({ role: 'user', content: userMessage });
+    messages.push({ role: 'user', content: userMessage + getFormatHint(userMessage) });
   }
 
   return messages;
