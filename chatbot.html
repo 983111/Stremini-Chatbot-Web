@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StreminiAI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#ffffff; --bg-sub:#f9f8f6; --bg-side:#faf9f7;
+  --bg-hov:#f2f0ed; --bg-act:#ede9e3;
+  --bdr:#e8e4de; --bdr-soft:#f0ece7;
+  --tx:#1a1814; --tx2:#6b6560; --tx3:#a09890;
+  --acc:#c96a2b; --acc-bg:#f5ede4; --acc-bdr:#e8d2be;
+  --code-bg:#f7f5f2;
+  --sh-sm:0 1px 3px rgba(0,0,0,.06);
+  --sh:0 4px 16px rgba(0,0,0,.08);
+  --font:'DM Sans',ui-sans-serif,sans-serif;
+  --serif:'Instrument Serif',Georgia,serif;
+  --mono:'DM Mono',ui-monospace,monospace;
+  --sw:264px; --ease:.15s ease;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--tx);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:4px;}
+
+/* ── AUTH SCREEN ── */
+#auth-screen {
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  z-index:100;
+}
+.auth-card {
+  width:100%;max-width:400px;padding:40px 36px;
+  border:1px solid var(--bdr);border-radius:20px;
+  box-shadow:var(--sh);background:var(--bg);
+}
+.auth-logo {
+  display:flex;align-items:center;gap:10px;margin-bottom:28px;
+}
+.auth-logo .bmark {
+  width:36px;height:36px;background:var(--tx);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:18px;color:#fff;
+}
+.auth-logo span{font-size:18px;font-weight:600;letter-spacing:-.01em;}
+.auth-tabs {
+  display:flex;gap:0;border:1px solid var(--bdr);border-radius:10px;
+  padding:3px;margin-bottom:24px;background:var(--bg-sub);
+}
+.auth-tab {
+  flex:1;padding:7px 0;border:none;background:none;cursor:pointer;
+  font-family:var(--font);font-size:13.5px;font-weight:500;color:var(--tx2);
+  border-radius:8px;transition:background var(--ease),color var(--ease);
+}
+.auth-tab.active{background:var(--bg);color:var(--tx);box-shadow:var(--sh-sm);}
+.auth-field{margin-bottom:14px;}
+.auth-field label{display:block;font-size:12.5px;font-weight:600;color:var(--tx2);margin-bottom:5px;letter-spacing:.01em;}
+.auth-field input {
+  width:100%;padding:10px 13px;border:1.5px solid var(--bdr);border-radius:10px;
+  font-family:var(--font);font-size:14.5px;color:var(--tx);background:var(--bg);
+  outline:none;transition:border-color var(--ease),box-shadow var(--ease);
+}
+.auth-field input:focus{border-color:#c5bdb4;box-shadow:0 0 0 3px rgba(201,106,43,.08);}
+.auth-submit {
+  width:100%;padding:11px;border:none;border-radius:10px;
+  background:var(--tx);color:#fff;font-family:var(--font);font-size:14.5px;font-weight:600;
+  cursor:pointer;margin-top:6px;
+  transition:background var(--ease),transform var(--ease);
+  box-shadow:0 2px 6px rgba(26,24,20,.18);
+}
+.auth-submit:hover{background:#3a3630;}
+.auth-submit:active{transform:scale(.98);}
+.auth-submit:disabled{background:var(--bg-hov);color:var(--tx3);cursor:not-allowed;box-shadow:none;}
+.auth-err{font-size:13px;color:#dc2626;margin-top:10px;text-align:center;min-height:18px;}
+.auth-divider{text-align:center;font-size:12px;color:var(--tx3);margin:18px 0 14px;position:relative;}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--bdr);}
+.auth-divider::before{left:0;}.auth-divider::after{right:0;}
+.auth-google {
+  width:100%;padding:10px;border:1.5px solid var(--bdr);border-radius:10px;
+  background:var(--bg);font-family:var(--font);font-size:14px;font-weight:500;color:var(--tx);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;
+  transition:background var(--ease),border-color var(--ease);
+}
+.auth-google:hover{background:var(--bg-hov);border-color:#d5cfc7;}
+
+/* ── APP ── */
+#app{display:flex;height:100vh;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+#sb{width:var(--sw);background:var(--bg-side);border-right:1px solid var(--bdr);display:flex;flex-direction:column;flex-shrink:0;transition:transform var(--ease);z-index:20;}
+#sb.collapsed{transform:translateX(calc(-1 * var(--sw)));position:absolute;height:100%;}
+.sb-top{display:flex;align-items:center;padding:14px 12px 12px;gap:4px;border-bottom:1px solid var(--bdr-soft);}
+.brand{display:flex;align-items:center;gap:9px;flex:1;}
+.bmark{width:28px;height:28px;background:var(--tx);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:15px;color:#fff;flex-shrink:0;}
+.bname{font-size:14px;font-weight:600;letter-spacing:-.01em;}
+.ib{background:none;border:none;cursor:pointer;color:var(--tx3);padding:7px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background var(--ease),color var(--ease);}
+.ib:hover{background:var(--bg-hov);color:var(--tx);}
+.clist{flex:1;overflow-y:auto;padding:8px;}
+.clabel{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);padding:10px 8px 5px;}
+.ci{display:flex;align-items:center;padding:7px 9px;border-radius:9px;cursor:pointer;transition:background var(--ease);font-size:13.5px;color:var(--tx2);margin-bottom:1px;}
+.ci:hover{background:var(--bg-hov);color:var(--tx);}
+.ci.active{background:var(--bg-act);color:var(--tx);}
+.ci-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ci-del{opacity:0;background:none;border:none;cursor:pointer;color:var(--tx3);padding:2px 5px;border-radius:5px;font-size:12px;transition:opacity var(--ease),color var(--ease),background var(--ease);}
+.ci:hover .ci-del{opacity:1;}
+.ci-del:hover{color:#dc2626;background:#fee2e2;}
+.sb-foot{padding:8px 10px 14px;border-top:1px solid var(--bdr-soft);}
+.urow{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:default;transition:background var(--ease);}
+.urow:hover{background:var(--bg-hov);}
+.uav{width:30px;height:30px;border-radius:50%;background:var(--tx);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.uinfo{flex:1;min-width:0;}
+.ulabel{font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.uemail{font-size:11px;color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.signout-btn{background:none;border:none;cursor:pointer;color:var(--tx3);padding:6px;border-radius:6px;display:flex;align-items:center;transition:color var(--ease),background var(--ease);}
+.signout-btn:hover{color:#dc2626;background:#fee2e2;}
+
+/* ── CONTEXT PANEL ── */
+.ctx-btn{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:9px;border:none;background:none;cursor:pointer;font-family:var(--font);font-size:13px;color:var(--tx2);transition:background var(--ease);margin-bottom:4px;}
+.ctx-btn:hover{background:var(--bg-hov);color:var(--tx);}
+#ctx-panel{display:none;padding:10px;border-top:1px solid var(--bdr-soft);}
+#ctx-panel.open{display:block;}
+#ctx-panel textarea{width:100%;border:1.5px solid var(--bdr);border-radius:9px;padding:9px 11px;font-family:var(--font);font-size:13px;color:var(--tx);resize:none;outline:none;line-height:1.5;height:90px;background:var(--bg);transition:border-color var(--ease);}
+#ctx-panel textarea:focus{border-color:#c5bdb4;}
+.ctx-save{margin-top:6px;width:100%;padding:7px;border:none;border-radius:8px;background:var(--tx);color:#fff;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:background var(--ease);}
+.ctx-save:hover{background:#3a3630;}
+
+/* ── MAIN ── */
+#main{flex:1;display:flex;flex-direction:column;min-width:0;}
+#topbar{display:flex;align-items:center;padding:0 16px;height:52px;border-bottom:1px solid var(--bdr);background:var(--bg);flex-shrink:0;gap:8px;}
+.mpill{display:flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:20px;border:1px solid var(--bdr);background:none;cursor:pointer;font-family:var(--font);font-size:13.5px;font-weight:500;color:var(--tx);transition:background var(--ease),border-color var(--ease);letter-spacing:-.01em;}
+.mpill:hover{background:var(--bg-hov);border-color:#d5cfc7;}
+.mdot{width:7px;height:7px;border-radius:50%;background:var(--acc);flex-shrink:0;}
+
+/* ── CHAT AREA ── */
+#chat-area{flex:1;overflow-y:auto;display:flex;flex-direction:column;scroll-behavior:smooth;}
+#welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px 20px;gap:24px;animation:fu .4s ease both;}
+@keyframes fu{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.wicon{width:52px;height:52px;background:var(--tx);border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:26px;color:#fff;box-shadow:0 6px 24px rgba(26,24,20,.14);}
+.wtitle{font-family:var(--serif);font-size:32px;font-weight:400;letter-spacing:-.02em;text-align:center;line-height:1.25;}
+.wsub{font-size:13.5px;color:var(--tx3);text-align:center;margin-top:-14px;}
+.sugs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:660px;width:100%;}
+.sc{background:var(--bg);border:1px solid var(--bdr);border-radius:12px;padding:14px 16px;cursor:pointer;text-align:left;font-family:var(--font);transition:background var(--ease),border-color var(--ease),box-shadow var(--ease);}
+.sc:hover{background:var(--bg-sub);border-color:#d5cfc7;box-shadow:var(--sh-sm);}
+.sc strong{display:block;font-size:13.5px;font-weight:600;color:var(--tx);margin-bottom:3px;letter-spacing:-.01em;}
+.sc span{font-size:12.5px;color:var(--tx3);line-height:1.4;}
+
+/* ── MESSAGES ── */
+#msgs-wrap{max-width:720px;width:100%;margin:0 auto;padding:20px 28px 0;display:flex;flex-direction:column;}
+.mr{padding:20px 0;display:flex;gap:14px;border-bottom:1px solid var(--bdr-soft);animation:mi .22s ease both;}
+.mr:last-child{border-bottom:none;}
+@keyframes mi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.mav{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.mav.ai{background:var(--tx);color:#fff;font-family:var(--serif);font-size:14px;}
+.mav.usr{background:var(--bg-act);color:var(--tx);border:1px solid var(--bdr);}
+.mbody{flex:1;min-width:0;}
+.mname{font-size:11.5px;font-weight:600;color:var(--tx3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em;}
+.mc{color:var(--tx);font-size:15px;line-height:1.75;}
+.mc>*+*{margin-top:10px;}
+.mc p{margin:0;}.mc p+p{margin-top:10px;}
+.mc ul{padding-left:22px;list-style:disc;}.mc ol{padding-left:22px;list-style:decimal;}
+.mc li{margin-bottom:5px;line-height:1.65;}.mc li:last-child{margin-bottom:0;}
+.mc h1{font-family:var(--serif);font-size:21px;font-weight:400;margin:20px 0 6px;letter-spacing:-.02em;line-height:1.3;}
+.mc h2{font-size:16px;font-weight:600;margin:18px 0 5px;letter-spacing:-.01em;border-bottom:1px solid var(--bdr-soft);padding-bottom:6px;}
+.mc h3{font-size:14.5px;font-weight:600;margin:14px 0 4px;color:var(--tx2);}
+.mc h1:first-child,.mc h2:first-child,.mc h3:first-child{margin-top:0;}
+.mc strong{font-weight:600;}.mc em{font-style:italic;}
+.mc a{color:var(--acc);text-decoration:underline;text-underline-offset:2px;}
+.mc code{font-family:var(--mono);background:var(--code-bg);border:1px solid var(--bdr);border-radius:4px;padding:2px 6px;font-size:13px;color:#b5490d;letter-spacing:0;}
+.mc pre{background:var(--code-bg);border:1px solid var(--bdr);border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13px;line-height:1.65;}
+.mc pre code{background:none;border:none;padding:0;color:var(--tx);font-size:13px;}
+.mc blockquote{border-left:3px solid var(--acc);padding:8px 0 8px 16px;color:var(--tx2);font-style:italic;background:var(--acc-bg);border-radius:0 6px 6px 0;}
+.mc hr{border:none;border-top:1px solid var(--bdr);}
+.mc table{width:100%;border-collapse:collapse;font-size:14px;}
+.mc th{background:var(--bg-sub);font-weight:600;text-align:left;padding:8px 12px;border:1px solid var(--bdr);font-size:13px;}
+.mc td{padding:7px 12px;border:1px solid var(--bdr);vertical-align:top;}
+.mc tr:nth-child(even) td{background:var(--bg-sub);}
+.macts{display:flex;gap:2px;margin-top:10px;opacity:0;transition:opacity var(--ease);}
+.mr:hover .macts{opacity:1;}
+.abt{background:none;border:1px solid transparent;cursor:pointer;color:var(--tx3);padding:4px 8px;border-radius:6px;font-size:12px;font-family:var(--font);display:flex;align-items:center;gap:4px;transition:background var(--ease),border-color var(--ease),color var(--ease);}
+.abt:hover{background:var(--bg-hov);border-color:var(--bdr);color:var(--tx);}
+.typing{display:flex;gap:4px;align-items:center;padding:4px 0;}
+.td{width:6px;height:6px;background:var(--tx3);border-radius:50%;animation:tb 1.2s infinite;}
+.td:nth-child(2){animation-delay:.15s;}.td:nth-child(3){animation-delay:.3s;}
+@keyframes tb{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+.pad{height:28px;flex-shrink:0;}
+
+/* ── BOTTOM ── */
+#bottom{flex-shrink:0;padding:6px 28px 18px;}
+#inner{max-width:720px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:6px;}
+#docbar{display:none;background:var(--acc-bg);border:1px solid var(--acc-bdr);border-radius:9px;padding:8px 12px;font-size:13px;color:var(--tx2);align-items:center;gap:8px;}
+#docbar.on{display:flex;}
+.dic{color:var(--acc);flex-shrink:0;}
+.dnm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;color:var(--tx);}
+.drm{background:none;border:none;cursor:pointer;color:var(--tx3);padding:2px 6px;border-radius:4px;font-size:12px;transition:color var(--ease);}
+.drm:hover{color:#dc2626;}
+.shell{background:#fff;border:1.5px solid var(--bdr);border-radius:16px;box-shadow:var(--sh-sm);overflow:hidden;transition:border-color var(--ease),box-shadow var(--ease);}
+.shell:focus-within{border-color:#c5bdb4;box-shadow:0 0 0 3px rgba(201,106,43,.08),var(--sh-sm);}
+#inp{display:block;width:100%;background:none;border:none;outline:none;resize:none;font-family:var(--font);font-size:15px;color:var(--tx);line-height:1.6;padding:14px 16px 6px;max-height:200px;overflow-y:auto;min-height:54px;}
+#inp::placeholder{color:var(--tx3);}
+.ibar{display:flex;align-items:center;padding:7px 10px 10px;gap:4px;}
+.bb{background:none;border:none;cursor:pointer;color:var(--tx3);padding:6px 9px;border-radius:8px;font-size:13px;font-family:var(--font);display:flex;align-items:center;gap:5px;transition:background var(--ease),color var(--ease);}
+.bb:hover{background:var(--bg-hov);color:var(--tx);}
+#sendbtn{margin-left:auto;width:32px;height:32px;border-radius:9px;background:var(--tx);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:background var(--ease),transform var(--ease),box-shadow var(--ease);flex-shrink:0;box-shadow:0 2px 6px rgba(26,24,20,.18);}
+#sendbtn:hover{background:#3a3630;box-shadow:0 3px 10px rgba(26,24,20,.22);}
+#sendbtn:active{transform:scale(.94);}
+#sendbtn:disabled{background:var(--bg-hov);color:var(--tx3);cursor:not-allowed;box-shadow:none;}
+#stopbtn{margin-left:auto;background:none;border:1.5px solid var(--bdr);border-radius:8px;color:var(--tx);font-family:var(--font);font-size:13px;cursor:pointer;padding:5px 12px;display:none;align-items:center;gap:5px;transition:background var(--ease);}
+#stopbtn.on{display:flex;}
+#stopbtn:hover{background:var(--bg-hov);}
+.disc{text-align:center;font-size:11.5px;color:var(--tx3);padding-top:7px;letter-spacing:.01em;}
+#finput{display:none;}
+
+/* ── LOADING OVERLAY ── */
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:200;flex-direction:column;gap:14px;}
+.load-logo{width:44px;height:44px;background:var(--tx);border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;color:#fff;animation:pulse 1.5s ease infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.load-txt{font-size:13.5px;color:var(--tx3);}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--tx);color:#fff;border-radius:8px;padding:8px 16px;font-size:13px;opacity:0;pointer-events:none;z-index:999;transition:opacity .2s,transform .2s;white-space:nowrap;box-shadow:var(--sh);}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:720px){
+  #sb{position:absolute;height:100%;transform:translateX(calc(-1 * var(--sw)));}
+  #sb.open{transform:translateX(0);box-shadow:0 12px 40px rgba(0,0,0,.12);}
+  .sugs{grid-template-columns:1fr;}
+  #bottom{padding:4px 14px 16px;}
+  #msgs-wrap{padding:16px 16px 0;}
+  .wtitle{font-size:26px;}
+  .auth-card{border:none;box-shadow:none;padding:32px 20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="load-logo">S</div>
+  <span class="load-txt">Loading StreminiAI…</span>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="bmark">S</div>
+      <span>StreminiAI</span>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('signin')">Sign in</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Create account</button>
+    </div>
+    <div id="auth-form">
+      <div class="auth-field">
+        <label>Email</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="auth-field">
+        <label>Password</label>
+        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAuth()"/>
+      </div>
+      <div id="auth-name-field" class="auth-field" style="display:none;">
+        <label>Display name</label>
+        <input type="text" id="auth-name" placeholder="Your name"/>
+      </div>
+      <button class="auth-submit" id="auth-btn" onclick="doAuth()">Sign in</button>
+      <p class="auth-err" id="auth-err"></p>
+    </div>
+    <div class="auth-divider">or</div>
+    <button class="auth-google" onclick="doGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.6 20-21 0-1.4-.1-2.7-.5-4z"/><path fill="#34A853" d="M6.3 14.7l7 5.1C15.1 16.1 19.2 13 24 13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3c-7.8 0-14.5 4.4-17.7 11.7z"/><path fill="#FBBC05" d="M24 45c5.9 0 10.9-2 14.5-5.4l-6.7-5.5C29.8 35.9 27 37 24 37c-6 0-10.7-3.8-11.7-9.1l-7 5.4C8.1 40.6 15.5 45 24 45z"/><path fill="#EA4335" d="M44.5 20H24v8.5h11.8c-.8 2.9-2.8 5.3-5.4 6.9l6.7 5.5C40.8 37.4 44.5 31.3 44.5 24c0-1.4-.1-2.7-.5-4z"/></svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app" style="display:none;">
+  <nav id="sb">
+    <div class="sb-top">
+      <div class="brand">
+        <div class="bmark">S</div>
+        <span class="bname">StreminiAI</span>
+      </div>
+      <button class="ib" onclick="newChat()" title="New chat">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="ib" onclick="toggleSb()" title="Close">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="clist" id="clist"></div>
+    <div class="sb-foot">
+      <button class="ctx-btn" onclick="toggleCtx()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
+        My context
+      </button>
+      <div id="ctx-panel">
+        <textarea id="ctx-text" placeholder="Tell StreminiAI about yourself — your role, preferences, topics you work on…"></textarea>
+        <button class="ctx-save" onclick="saveContext()">Save context</button>
+      </div>
+      <div class="urow">
+        <div class="uav" id="user-av">S</div>
+        <div class="uinfo">
+          <div class="ulabel" id="user-name">User</div>
+          <div class="uemail" id="user-email"></div>
+        </div>
+        <button class="signout-btn" onclick="signOut()" title="Sign out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <div id="topbar">
+      <button class="ib" onclick="toggleSb()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <button class="mpill">
+        <span class="mdot"></span>StreminiAI
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+    </div>
+
+    <div id="chat-area">
+      <div id="welcome">
+        <div class="wicon">S</div>
+        <div>
+          <h1 class="wtitle">What can I help with?</h1>
+          <p class="wsub">Powered by StreminiAI — think smarter, build faster.</p>
+        </div>
+        <div class="sugs">
+          <button class="sc" onclick="useSug('Explain transformer attention mechanism with a clear example')">
+            <strong>Explain transformers</strong><span>Attention mechanism, clearly explained</span>
+          </button>
+          <button class="sc" onclick="useSug('Write a Python script to scrape a webpage with BeautifulSoup')">
+            <strong>Write Python code</strong><span>Scrape and parse a webpage</span>
+          </button>
+          <button class="sc" onclick="useSug('What are the latest AI safety research directions?')">
+            <strong>AI safety research</strong><span>Latest directions and open problems</span>
+          </button>
+          <button class="sc" onclick="useSug('Review my code and suggest improvements for performance and readability')">
+            <strong>Code review</strong><span>Performance and readability suggestions</span>
+          </button>
+        </div>
+      </div>
+      <div id="msgs-wrap" style="display:none;"></div>
+      <div class="pad"></div>
+    </div>
+
+    <div id="bottom">
+      <div id="inner">
+        <div id="docbar">
+          <svg class="dic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="dnm" id="docnm"></span>
+          <button class="drm" onclick="removeDoc()">✕ Remove</button>
+        </div>
+        <div class="shell">
+          <textarea id="inp" rows="1" placeholder="Message StreminiAI…" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
+          <div class="ibar">
+            <button class="bb" onclick="document.getElementById('finput').click()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              Attach
+            </button>
+            <input type="file" id="finput" accept=".pdf,.doc,.docx" onchange="onFile(event)">
+            <button id="stopbtn" onclick="doStop()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+              Stop
+            </button>
+            <button id="sendbtn" onclick="sendMsg()">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+            </button>
+          </div>
+        </div>
+        <p class="disc">StreminiAI can make mistakes. Verify important information.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ═══════════════════════════════════════════════════════
+const SB_URL  = 'https://svhgvvwbhmheqylmjzub.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aGd2dndiaG1oZXF5bG1qenViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNDU2NTgsImV4cCI6MjA4ODgyMTY1OH0.9RrwV0kje63N6KBBfO2iAdgvvHX8gooh-G6kTwvIr78';
+const sb      = supabase.createClient(SB_URL, SB_ANON);
+
+const API    = 'https://ai-keyboard-backend.vishwajeetadkine705.workers.dev';
+const MAX_H  = 20;
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+var currentUser   = null;
+var chats         = {};      // { id: { id, title, ts } }
+var activeId      = null;
+var messages      = [];      // loaded messages for active chat
+var busy          = false;
+var stopFlag      = false;
+var docFile       = null;
+var streamRdr     = null;
+var userContext   = '';
+var authTab       = 'signin';
+var sbOpen        = true;
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', async function() {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // Listen for auth state
+  sb.auth.onAuthStateChange(async function(event, session) {
+    if (session && session.user) {
+      currentUser = session.user;
+      await onSignedIn();
+    } else {
+      currentUser = null;
+      showAuthScreen();
+    }
+  });
+
+  // Check initial session
+  var sessionRes = await sb.auth.getSession();
+  if (!sessionRes.data.session) {
+    hideLoading();
+    showAuthScreen();
+  }
+});
+
+function hideLoading() { document.getElementById('loading').style.display = 'none'; }
+function showAuthScreen() {
+  hideLoading();
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+async function onSignedIn() {
+  hideLoading();
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  updateUserUI();
+  await Promise.all([loadUserContext(), loadChats()]);
+  resize(document.getElementById('inp'));
+}
+
+// ═══════════════════════════════════════════════════════
+//  AUTH UI
+// ═══════════════════════════════════════════════════════
+function switchTab(tab) {
+  authTab = tab;
+  document.querySelectorAll('.auth-tab').forEach(function(t,i) {
+    t.classList.toggle('active', (i===0&&tab==='signin')||(i===1&&tab==='signup'));
+  });
+  document.getElementById('auth-btn').textContent = tab === 'signin' ? 'Sign in' : 'Create account';
+  document.getElementById('auth-name-field').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('auth-err').textContent = '';
+}
+
+async function doAuth() {
+  var email = document.getElementById('auth-email').value.trim();
+  var pass  = document.getElementById('auth-password').value;
+  var btn   = document.getElementById('auth-btn');
+  var errEl = document.getElementById('auth-err');
+  if (!email || !pass) { errEl.textContent = 'Email and password required.'; return; }
+  btn.disabled = true;
+  errEl.textContent = '';
+  var res;
+  if (authTab === 'signin') {
+    res = await sb.auth.signInWithPassword({ email: email, password: pass });
+  } else {
+    var name = document.getElementById('auth-name').value.trim() || email.split('@')[0];
+    res = await sb.auth.signUp({ email: email, password: pass, options: { data: { display_name: name } } });
+    if (!res.error && res.data.user && !res.data.session) {
+      errEl.style.color = '#16a34a';
+      errEl.textContent = 'Check your email to confirm your account.';
+      btn.disabled = false; return;
+    }
+  }
+  btn.disabled = false;
+  if (res.error) { errEl.style.color = '#dc2626'; errEl.textContent = res.error.message; }
+}
+
+async function doGoogle() {
+  await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  chats = {}; activeId = null; messages = []; userContext = '';
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  var meta  = currentUser.user_metadata || {};
+  var name  = meta.display_name || meta.full_name || meta.name || currentUser.email.split('@')[0];
+  var email = currentUser.email || '';
+  document.getElementById('user-name').textContent  = name;
+  document.getElementById('user-email').textContent = email;
+  document.getElementById('user-av').textContent    = name[0].toUpperCase();
+}
+
+// ═══════════════════════════════════════════════════════
+//  USER CONTEXT
+// ═══════════════════════════════════════════════════════
+async function loadUserContext() {
+  var res = await sb.from('stremini_user_context').select('context').eq('user_id', currentUser.id).single();
+  if (res.data) {
+    userContext = res.data.context || '';
+    document.getElementById('ctx-text').value = userContext;
+  }
+}
+
+async function saveContext() {
+  userContext = document.getElementById('ctx-text').value.trim();
+  await sb.from('stremini_user_context').upsert({
+    user_id:    currentUser.id,
+    context:    userContext,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id' });
+  toast('Context saved');
+  toggleCtx();
+}
+
+function toggleCtx() {
+  document.getElementById('ctx-panel').classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHATS — SUPABASE
+// ═══════════════════════════════════════════════════════
+async function loadChats() {
+  var res = await sb.from('stremini_chats')
+    .select('id,title,created_at,updated_at')
+    .eq('user_id', currentUser.id)
+    .order('updated_at', { ascending: false });
+  if (res.data) {
+    chats = {};
+    res.data.forEach(function(c) {
+      chats[c.id] = { id: c.id, title: c.title, ts: new Date(c.updated_at).getTime() };
+    });
+  }
+  renderSidebar();
+}
+
+async function createChat(title) {
+  var res = await sb.from('stremini_chats').insert({
+    user_id: currentUser.id,
+    title:   title || 'New Chat'
+  }).select().single();
+  if (res.error) throw new Error(res.error.message);
+  var c = res.data;
+  chats[c.id] = { id: c.id, title: c.title, ts: new Date(c.updated_at).getTime() };
+  renderSidebar();
+  return c.id;
+}
+
+async function updateChatTitle(chatId, title) {
+  chats[chatId].title = title;
+  chats[chatId].ts    = Date.now();
+  renderSidebar();
+  await sb.from('stremini_chats').update({ title: title }).eq('id', chatId);
+}
+
+async function deleteChatById(chatId) {
+  delete chats[chatId];
+  if (activeId === chatId) { activeId = null; messages = []; showWelcome(); }
+  renderSidebar();
+  await sb.from('stremini_chats').delete().eq('id', chatId);
+}
+
+async function loadMessages(chatId) {
+  var res = await sb.from('stremini_messages')
+    .select('id,role,content,created_at')
+    .eq('chat_id', chatId)
+    .order('created_at', { ascending: true });
+  messages = res.data || [];
+  return messages;
+}
+
+async function saveMessage(chatId, role, content) {
+  var res = await sb.from('stremini_messages').insert({
+    chat_id: chatId,
+    user_id: currentUser.id,
+    role:    role,
+    content: content
+  }).select().single();
+  if (res.data) messages.push(res.data);
+  // bump chat updated_at
+  await sb.from('stremini_chats').update({ updated_at: new Date().toISOString() }).eq('id', chatId);
+  chats[chatId].ts = Date.now();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════════════
+function toggleSb() {
+  var s = document.getElementById('sb');
+  if (window.innerWidth <= 720) s.classList.toggle('open');
+  else { sbOpen = !sbOpen; sbOpen ? s.classList.remove('collapsed') : s.classList.add('collapsed'); }
+}
+
+function renderSidebar() {
+  var el   = document.getElementById('clist');
+  var list = Object.values(chats).sort(function(a,b){ return b.ts - a.ts; });
+  if (!list.length) { el.innerHTML = '<div style="padding:10px 8px;font-size:13px;color:var(--tx3)">No chats yet</div>'; return; }
+  var now = Date.now(), day = 86400000;
+  var g = { Today:[], Yesterday:[], Older:[] };
+  list.forEach(function(c) {
+    var age = now - c.ts;
+    if (age < day) g.Today.push(c); else if (age < 2*day) g.Yesterday.push(c); else g.Older.push(c);
+  });
+  var html = '';
+  ['Today','Yesterday','Older'].forEach(function(lbl) {
+    if (!g[lbl].length) return;
+    html += '<div class="clabel">' + lbl + '</div>';
+    g[lbl].forEach(function(c) {
+      var act = c.id === activeId ? ' active' : '';
+      html += '<div class="ci' + act + '" onclick="loadChatUI(\'' + c.id + '\')">'
+            + '<span class="ci-title">' + escHtml(c.title) + '</span>'
+            + '<button class="ci-del" onclick="event.stopPropagation();deleteChatById(\'' + c.id + '\')">✕</button>'
+            + '</div>';
+    });
+  });
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+function newChat() {
+  activeId = null; messages = []; docFile = null;
+  updateDocBar(); showWelcome(); renderSidebar();
+  document.getElementById('inp').focus();
+}
+
+async function loadChatUI(id) {
+  activeId = id; docFile = null; updateDocBar();
+  document.getElementById('welcome').style.display = 'none';
+  var mw = document.getElementById('msgs-wrap');
+  mw.style.display = 'flex'; mw.innerHTML = '';
+  renderSidebar();
+  var msgs = await loadMessages(id);
+  msgs.forEach(function(m) { addMsgRow(m.role, m.content, false); });
+  scrollBottom();
+}
+
+function showWelcome() {
+  document.getElementById('welcome').style.display = 'flex';
+  var mw = document.getElementById('msgs-wrap');
+  mw.style.display = 'none'; mw.innerHTML = '';
+}
+
+// ═══════════════════════════════════════════════════════
+//  MESSAGE ROWS
+// ═══════════════════════════════════════════════════════
+function addMsgRow(role, content, animate) {
+  if (animate === undefined) animate = true;
+  var wrap = document.getElementById('msgs-wrap');
+  wrap.style.display = 'flex';
+  document.getElementById('welcome').style.display = 'none';
+  var isAI = role === 'assistant';
+  var row  = document.createElement('div');
+  row.className = 'mr';
+  if (!animate) row.style.animation = 'none';
+  row.innerHTML =
+    '<div class="mav ' + (isAI?'ai':'usr') + '">' + (isAI?'S':'U') + '</div>'
+    + '<div class="mbody">'
+    + '<div class="mname">' + (isAI?'StreminiAI':'You') + '</div>'
+    + '<div class="mc">' + renderMd(content) + '</div>'
+    + (isAI ? '<div class="macts"><button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div>' : '')
+    + '</div>';
+  wrap.appendChild(row);
+  return row;
+}
+
+function addStreamingRow() {
+  var wrap = document.getElementById('msgs-wrap');
+  wrap.style.display = 'flex';
+  document.getElementById('welcome').style.display = 'none';
+  var row = document.createElement('div');
+  row.className = 'mr'; row.id = 'srow';
+  row.innerHTML = '<div class="mav ai">S</div><div class="mbody"><div class="mname">StreminiAI</div>'
+    + '<div class="mc" id="sc"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div></div>';
+  wrap.appendChild(row);
+  scrollBottom();
+}
+
+function updateStream(text) {
+  var el = document.getElementById('sc');
+  if (el) { el.innerHTML = renderMd(text); scrollBottom(); }
+}
+
+function finalizeStream(text) {
+  var row = document.getElementById('srow');
+  if (!row) return;
+  row.id = '';
+  var c = row.querySelector('.mc');
+  if (c) c.innerHTML = renderMd(text);
+  var body = row.querySelector('.mbody');
+  if (body && !body.querySelector('.macts')) {
+    var a = document.createElement('div'); a.className = 'macts';
+    a.innerHTML = '<button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>';
+    body.appendChild(a);
+  }
+}
+
+function scrollBottom() { var a = document.getElementById('chat-area'); a.scrollTop = a.scrollHeight; }
+
+// ═══════════════════════════════════════════════════════
+//  MARKDOWN
+// ═══════════════════════════════════════════════════════
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function inlineRender(s) {
+  if (!s) return '';
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,!?]|$)/g, '$1<em>$2</em>');
+  s = s.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return s;
+}
+
+function renderMd(raw) {
+  if (!raw) return '';
+  var codeBlocks = [];
+  var t = raw.replace(/```([\w]*)\n?([\s\S]*?)```/g, function(_, lang, code) {
+    var idx = codeBlocks.length;
+    codeBlocks.push('<pre><code' + (lang?' class="lang-'+escHtml(lang)+'"':'') + '>' + escHtml(code.trim()) + '</code></pre>');
+    return '\x02BLOCK' + idx + '\x03';
+  });
+  var lines = t.split('\n'), output = [], i = 0;
+  while (i < lines.length) {
+    var line = lines[i];
+    var bm = line.trim().match(/^\x02BLOCK(\d+)\x03$/);
+    if (bm) { output.push(codeBlocks[parseInt(bm[1],10)]); i++; continue; }
+    var hm = line.match(/^(#{1,3})\s+(.+)$/);
+    if (hm) { var lvl=hm[1].length; output.push('<h'+lvl+'>'+inlineRender(escHtml(hm[2]))+'</h'+lvl+'>'); i++; continue; }
+    if (/^---+$/.test(line.trim())) { output.push('<hr>'); i++; continue; }
+    if (/^> /.test(line)) {
+      var bq=[];
+      while (i<lines.length&&/^> ?/.test(lines[i])){bq.push(lines[i].replace(/^> ?/,''));i++;}
+      output.push('<blockquote>'+inlineRender(escHtml(bq.join(' ')))+'</blockquote>'); continue;
+    }
+    if (/^\d+\.\s/.test(line)) {
+      var ol=[];
+      while(i<lines.length&&/^\d+\.\s/.test(lines[i])){ol.push('<li>'+inlineRender(escHtml(lines[i].replace(/^\d+\.\s+/,'')))+'</li>');i++;}
+      output.push('<ol>'+ol.join('')+'</ol>'); continue;
+    }
+    if (/^[-*]\s/.test(line)) {
+      var ul=[];
+      while(i<lines.length&&/^[-*]\s/.test(lines[i])){ul.push('<li>'+inlineRender(escHtml(lines[i].replace(/^[-*]\s+/,'')))+'</li>');i++;}
+      output.push('<ul>'+ul.join('')+'</ul>'); continue;
+    }
+    if (!line.trim()) { i++; continue; }
+    var pLines=[];
+    while(i<lines.length){
+      var l=lines[i];
+      if(!l.trim()||/^(#{1,3}\s|> |[-*]\s|\d+\.\s|---+$|\x02BLOCK)/.test(l))break;
+      pLines.push(inlineRender(escHtml(l)));i++;
+    }
+    if(pLines.length)output.push('<p>'+pLines.join('<br>')+'</p>');
+  }
+  return output.join('\n');
+}
+
+// ═══════════════════════════════════════════════════════
+//  SEND
+// ═══════════════════════════════════════════════════════
+async function sendMsg() {
+  if (busy || !currentUser) return;
+  var inp  = document.getElementById('inp');
+  var text = inp.value.trim();
+  if (!text) return;
+
+  // Create chat if needed
+  if (!activeId) {
+    try { activeId = await createChat(text.slice(0,52)+(text.length>52?'…':'')); }
+    catch(e) { toast('Error creating chat: '+e.message); return; }
+  }
+
+  inp.value = ''; resize(inp);
+
+  // Save user message to DB
+  await saveMessage(activeId, 'user', text);
+  // Update title on first message
+  if (messages.filter(function(m){return m.role==='user';}).length === 1) {
+    await updateChatTitle(activeId, text.slice(0,52)+(text.length>52?'…':''));
+  }
+
+  addMsgRow('user', text);
+  setBusy(true);
+  addStreamingRow();
+
+  // Build history for API (last MAX_H messages, excluding just-saved one)
+  var hist = messages.slice(-MAX_H-1, -1).map(function(m){ return {role:m.role, content:m.content}; });
+
+  // Prepend user context if set
+  var msgToSend = text;
+  if (userContext) {
+    msgToSend = '[User context: ' + userContext + ']\n\n' + text;
+  }
+
+  var answer = '';
+  try {
+    if (docFile) {
+      answer = await callDocRoute(msgToSend, docFile.text);
+    } else {
+      answer = await callStreamRoute(msgToSend, hist);
+      if (!answer || !answer.trim()) {
+        updateStream('Thinking…');
+        answer = await callMessageRoute(msgToSend, hist);
+      }
+    }
+    if (!answer || !answer.trim()) answer = 'No response received. Please try again.';
+    finalizeStream(answer);
+    await saveMessage(activeId, 'assistant', answer);
+  } catch(err) {
+    var em = err.message === 'stopped' ? '*(Generation stopped)*' : 'Error: ' + escHtml(err.message);
+    finalizeStream(em);
+    if (err.message !== 'stopped') await saveMessage(activeId, 'assistant', em);
+  } finally {
+    setBusy(false);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  API ROUTES
+// ═══════════════════════════════════════════════════════
+async function callStreamRoute(message, history) {
+  var res = await fetch(API+'/chat/stream', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ message:message, history:history })
+  });
+  if (!res.ok) { throw new Error(await res.text() || 'Stream failed'); }
+  var reader = res.body.getReader(); streamRdr = reader;
+  var dec = new TextDecoder(), full = '';
+  try {
+    while (true) {
+      if (stopFlag) { reader.cancel(); throw new Error('stopped'); }
+      var r = await reader.read(); if (r.done) break;
+      var lines = dec.decode(r.value, {stream:true}).split('\n');
+      for (var j=0; j<lines.length; j++) {
+        var line=lines[j];
+        if (!line.startsWith('data: ')) continue;
+        var data=line.slice(6).trim();
+        if (data==='[DONE]') return full;
+        try { var p=JSON.parse(data); if(p.token){full+=p.token;updateStream(full);} } catch(e){}
+      }
+    }
+  } finally { streamRdr=null; }
+  return full;
+}
+
+async function callMessageRoute(message, history) {
+  var res = await fetch(API+'/chat/message', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ message:message, history:history })
+  });
+  if (!res.ok) { throw new Error(await res.text() || 'Message failed'); }
+  var data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.response || '';
+}
+
+async function callDocRoute(question, documentText) {
+  updateStream('Analyzing document…');
+  var res = await fetch(API+'/chat/document', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ question:question, documentText:documentText })
+  });
+  if (!res.ok) { throw new Error(await res.text() || 'Doc failed'); }
+  var data = await res.json();
+  if (data.error) throw new Error(data.error);
+  return data.response || 'No response.';
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILE
+// ═══════════════════════════════════════════════════════
+async function onFile(e) {
+  var file = e.target.files[0]; if (!file) return; e.target.value='';
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (ext==='pdf') {
+    toast('Extracting PDF…');
+    try { var t=await extractPDF(file); docFile={name:file.name,text:t}; updateDocBar(); toast('PDF ready — '+Math.round(t.length/1000)+'k chars'); }
+    catch(err){toast('PDF error: '+err.message);}
+  } else if (ext==='docx'||ext==='doc') {
+    toast('Extracting DOCX…');
+    try { var t=await extractDOCX(file); docFile={name:file.name,text:t}; updateDocBar(); toast('DOCX ready — '+Math.round(t.length/1000)+'k chars'); }
+    catch(err){toast('DOCX error: '+err.message);}
+  } else { toast('Use PDF or DOCX only'); }
+}
+
+async function extractPDF(file) {
+  var buf = await file.arrayBuffer();
+  var pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  var text='';
+  for(var p=1;p<=pdf.numPages;p++){var pg=await pdf.getPage(p);var ct=await pg.getTextContent();text+=ct.items.map(function(x){return x.str;}).join(' ')+'\n\n';}
+  return text.trim();
+}
+
+async function extractDOCX(file) {
+  var u8=new Uint8Array(await file.arrayBuffer()),pos=0;
+  while(pos<u8.length-4){
+    if(u8[pos]===0x50&&u8[pos+1]===0x4B&&u8[pos+2]===0x03&&u8[pos+3]===0x04){
+      var comp=u8[pos+8]|(u8[pos+9]<<8),csz=u8[pos+18]|(u8[pos+19]<<8)|(u8[pos+20]<<16)|(u8[pos+21]<<24);
+      var fnl=u8[pos+26]|(u8[pos+27]<<8),exl=u8[pos+28]|(u8[pos+29]<<8);
+      var fn=new TextDecoder().decode(u8.slice(pos+30,pos+30+fnl)),ds=pos+30+fnl+exl;
+      if(fn==='word/document.xml'){
+        var xml;
+        if(comp===0){xml=u8.slice(ds,ds+csz);}
+        else if(comp===8){
+          var c=u8.slice(ds,ds+csz),ds2=new DecompressionStream('deflate-raw');
+          var w=ds2.writable.getWriter(),r2=ds2.readable.getReader();
+          w.write(c);w.close();
+          var chunks=[],rd;
+          while(true){rd=await r2.read();if(rd.done)break;chunks.push(rd.value);}
+          var tot=chunks.reduce(function(s,c){return s+c.length;},0);
+          xml=new Uint8Array(tot);var off=0;
+          chunks.forEach(function(ch){xml.set(ch,off);off+=ch.length;});
+        }
+        if(xml)return new TextDecoder().decode(xml)
+          .replace(/<w:br[^>]*\/>/g,'\n').replace(/<w:p[ >][^>]*>/g,'\n')
+          .replace(/<[^>]+>/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"')
+          .replace(/ {2,}/g,' ').trim();
+      }
+      pos=ds+csz;
+    }else pos++;
+  }
+  throw new Error('Could not find content in DOCX');
+}
+
+function updateDocBar(){var b=document.getElementById('docbar'),n=document.getElementById('docnm');if(docFile){b.classList.add('on');n.textContent=docFile.name;}else{b.classList.remove('on');n.textContent='';}}
+function removeDoc(){docFile=null;updateDocBar();toast('Document removed');}
+function setBusy(v){busy=v;stopFlag=false;document.getElementById('sendbtn').disabled=v;var s=document.getElementById('stopbtn');v?s.classList.add('on'):s.classList.remove('on');}
+function doStop(){stopFlag=true;if(streamRdr){try{streamRdr.cancel();}catch(e){}}}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMsg();}}
+function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,200)+'px';}
+function useSug(text){var inp=document.getElementById('inp');inp.value=text;resize(inp);inp.focus();}
+function copyMsg(btn){var row=btn.closest('.mr');navigator.clipboard.writeText(row.querySelector('.mc').innerText).then(function(){toast('Copied');}).catch(function(){toast('Failed');});}
+
+var toastTimer;
+function toast(msg){var e=document.getElementById('toast');e.textContent=msg;e.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(function(){e.classList.remove('on');},2400);}
+</script>
+</body>
+</html>
