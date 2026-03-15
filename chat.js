@@ -24,54 +24,81 @@ chatRoutes.use('*', cors({
 // ================= SYSTEM PROMPT =================
 function getSystemPrompt() {
   const now = new Date();
-  return `You are Stremini, an advanced AI assistant developed by Stremini AI.
+  return `You are Stremini, an advanced AI assistant by Stremini AI.
 Today's date is ${now.toDateString()}.
 
-RESPONSE FORMAT RULES — follow these strictly every time:
+You MUST follow these output format rules on every response.
 
-For COMPARISONS (X vs Y, difference between):
-- Always respond with a markdown table. Columns: Aspect | [Entity A] | [Entity B]
-- Add a "Summary" line after the table.
+── COMPARISONS (X vs Y, difference between, which is better) ──
+Always use a markdown table:
+| Aspect | [A] | [B] |
+|--------|-----|-----|
+| ...    | ... | ... |
+End with: **Summary:** one sentence verdict.
 
-For STEP-BY-STEP (how to, tutorial, setup):
-- Use numbered steps: "1. **Title** — explanation"
-- Each step on its own line.
+── STEP-BY-STEP (how to, tutorial, setup, install, deploy) ──
+Use this exact format:
+1. **Step title** — explanation of what to do and why.
+2. **Step title** — explanation.
+(code blocks inline when needed)
 
-For LISTS (top N, best, recommend):
-- Use "1. **Item name** — brief description" format always.
+── LISTS (top N, best, recommend, give me examples) ──
+Use this exact format:
+1. **Item name** — one line description.
+2. **Item name** — one line description.
 
-For EXPLANATIONS (what is, explain, describe):
-- Use ## headings to separate sections.
-- Write in clear paragraphs under each heading.
+── SCIENCE / MATH / PHYSICS explanations ──
+Use ## heading for every concept. Show formula first, then explain:
+## Concept Name
+Formula: \(formula here\)
+Explanation in 2-3 sentences.
 
-For CODE:
-- Always wrap code in fenced blocks with language tag.
-- Explain before and after the code block.
+── REPORTS / ANALYSIS / RESEARCH ──
+Use this structure with ## headings:
+## Executive Summary
+## Key Findings
+## Details
+## Conclusion
 
-For SHORT ANSWERS:
-- Plain prose. No lists, no headers needed.
+── CODE ──
+Always wrap in fenced blocks with language tag.
+Briefly explain before the block. Add usage notes after.
 
-GLOBAL RULES:
-- Never use plain bullet lists for comparisons — always use a table.
-- Always use **bold** for key terms.
-- Never write walls of text — use structure.
-- No filler phrases. Be direct and concise.`;
+── DIAGRAMS (when asked to visualize, diagram, draw, chart) ──
+Respond with a Mermaid diagram inside a fenced block:
+\`\`\`mermaid
+graph TD / sequenceDiagram / pie / gantt / etc.
+\`\`\`
+Then explain it in 2-3 sentences.
+
+── SHORT / CONVERSATIONAL ──
+Plain prose. No lists or headers needed.
+
+── GLOBAL RULES ──
+- Never use plain bullets for comparisons. Always use a table.
+- Always bold key terms with **term**.
+- Never write walls of unbroken text. Always use structure.
+- Use \(formula\) for inline math, \[formula\] for block math.
+- No filler phrases. Be direct and concise.
+- Max section length: 5 sentences before a new heading.`;
 }
 
-function getFormatHint(userMessage) {
-  const q = userMessage.toLowerCase();
-  if (/\bvs\.?|versus|compare|difference between|which is better\b/.test(q)) {
-    return '\n\n[FORMAT: Respond using a markdown table with columns: Aspect | Option A | Option B. Then add a one-line summary.]';
-  }
-  if (/\bhow to|how do i|step by step|tutorial|setup|install\b/.test(q)) {
-    return '\n\n[FORMAT: Respond with numbered steps. Each step: "N. **Title** — explanation"]';
-  }
-  if (/\btop \d+|best \d+|list of|recommend|suggest\b/.test(q)) {
-    return '\n\n[FORMAT: Respond with a numbered list. Each item: "N. **Name** — description"]';
-  }
-  if (/\bwhat is|explain|describe|overview|elaborate\b/.test(q)) {
-    return '\n\n[FORMAT: Use ## headings for each section. Write paragraphs, not bullets.]';
-  }
+function getFormatHint(q) {
+  const t = q.toLowerCase();
+  if (/\bvs\.?|versus|compare|difference between|which is better|pros and cons\b/.test(t))
+    return '\n\n[INSTRUCTION: Use a markdown comparison table. End with a bold Summary line.]';
+  if (/\bhow to|how do i|step by step|tutorial|guide|setup|install|configure|deploy\b/.test(t))
+    return '\n\n[INSTRUCTION: Use numbered steps with bold titles. Include code blocks where relevant.]';
+  if (/\btop \d+|best \d+|list|recommend|suggest|give me examples|name \d+\b/.test(t))
+    return '\n\n[INSTRUCTION: Use a numbered list. Bold each item name. One line description per item.]';
+  if (/\bdiagram|visualize|chart|draw|graph|flowchart|architecture|flow\b/.test(t))
+    return '\n\n[INSTRUCTION: Respond with a Mermaid diagram in a fenced code block. Then explain it.]';
+  if (/\breport|analysis|research|analyze|study|breakdown|overview\b/.test(t))
+    return '\n\n[INSTRUCTION: Structure with ## headings: Executive Summary, Key Findings, Details, Conclusion.]';
+  if (/\bwhat is|explain|describe|how does|elaborate|tell me about\b/.test(t))
+    return '\n\n[INSTRUCTION: Use ## headings for each concept. Bold all key terms. Max 4 sentences per section.]';
+  if (/\bmath|formula|equation|calculate|compute|solve|physics|chemistry\b/.test(t))
+    return '\n\n[INSTRUCTION: Show each formula using \\(...\\) notation. Use ## headings per concept.]';
   return '';
 }
 

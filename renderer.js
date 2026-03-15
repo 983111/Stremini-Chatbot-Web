@@ -28,8 +28,10 @@ function detectOutputType(userQuery, responseText) {
   if (/\b(what is|explain|describe|tell me about|overview of|history of|research|analyze|elaborate|break down)\b/.test(q)&&r.length>600) return OUTPUT_TYPES.RESEARCH;
   if ((r.match(/^#{2,3}\s/gm)||[]).length>=2) return OUTPUT_TYPES.RESEARCH;
   if (/\b(write a|compose|draft|story|poem|essay|blog post|email|letter|creative|caption)\b/.test(q)) return OUTPUT_TYPES.CREATIVE;
-  if (r.length<500) return OUTPUT_TYPES.CHAT;
-  return OUTPUT_TYPES.EXPLANATION;
+  if (r.length<300) return OUTPUT_TYPES.CHAT;
+  if (r.length>800&&(r.match(/^#{2}/m)||r.match(/\bformula\b/i))) return OUTPUT_TYPES.RESEARCH;
+  if (r.length>500) return OUTPUT_TYPES.RESEARCH;
+  return OUTPUT_TYPES.CHAT;
 }
 
 /* ─────────────────────────────────────────
@@ -38,6 +40,8 @@ function detectOutputType(userQuery, responseText) {
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function inlineMd(s){
   s=esc(s);
+  s=s.replace(/\\\((.+?)\\\)/g,'<span class="si-math-inline">$1</span>');
+  s=s.replace(/\\\[([\s\S]+?)\\\]/g,'<div class="si-math-block">$1</div>');
   s=s.replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>');
   s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
   s=s.replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
@@ -157,6 +161,10 @@ function injectRendererStyles(){
 .si-math-wrap{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:12px;padding:14px 18px;margin:8px 0;}
 .si-math-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0284c7;margin-bottom:6px;}
 .si-math-formula{font-family:var(--mono);font-size:15px;color:#0369a1;font-weight:500;}
+.si-math-inline{font-family:var(--mono);font-size:13px;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 5px;}
+.si-math-block{font-family:var(--mono);font-size:14px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:10px;padding:12px 16px;color:#0369a1;margin:10px 0;text-align:center;}
+.si-mermaid-wrap{background:var(--bg-sub);border:1px solid var(--bdr);border-radius:12px;padding:20px;margin:10px 0;text-align:center;overflow-x:auto;}
+.si-mermaid-wrap svg{max-width:100%;height:auto;}
 
 /* CREATIVE */
 .si-creative{border-left:3px solid var(--acc);padding:2px 0 2px 20px;margin:6px 0;}
@@ -227,7 +235,14 @@ function parseBulletComparison(text){
 function parseResearchSections(text){
   const sections=[];const re=/^(#{2,3})\s+(.+)$/gm;const headings=[];let m;
   while((m=re.exec(text))!==null)headings.push({index:m.index,end:re.lastIndex,title:m[2].trim()});
-  if(!headings.length){sections.push({title:null,body:text.trim()});return sections;}
+  if(!headings.length){
+    text.split(/\n{2,}/).filter(p=>p.trim()).forEach(p=>{
+      const dot=p.indexOf('.');
+      const title=dot>0&&dot<55?p.slice(0,dot).trim():null;
+      sections.push({title,body:p.trim()});
+    });
+    return sections;
+  }
   if(headings[0].index>0){const pre=text.slice(0,headings[0].index).trim();if(pre)sections.push({title:null,body:pre});}
   headings.forEach((h,i)=>{
     const bodyEnd=i+1<headings.length?headings[i+1].index:text.length;
@@ -270,6 +285,16 @@ function parseMarkdownTable(text){
    5. BLOCK BUILDERS
 ───────────────────────────────────────── */
 function buildCodeBlock(lang,code){
+  if(lang==='mermaid'){
+    const wrap=document.createElement('div');
+    wrap.className='si-mermaid-wrap';
+    const id='mermaid-'+Date.now();
+    wrap.innerHTML=`<div class="mermaid" id="${id}">${esc(code)}</div>`;
+    requestAnimationFrame(()=>{
+      try{if(window.mermaid)mermaid.run({nodes:[wrap.querySelector('.mermaid')]});}catch(e){}
+    });
+    return wrap;
+  }
   const wrap=document.createElement('div');wrap.className='si-code-wrap';
   const bar=document.createElement('div');bar.className='si-code-bar';
   const langEl=document.createElement('span');langEl.className='si-code-lang';langEl.textContent=lang||'code';
