@@ -6,6 +6,8 @@
 <title>StreminiAI</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -179,6 +181,72 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .kv-item span{font-size:13px;color:var(--tx);}
 .math-block{font-family:var(--mono);background:var(--code-bg);border:1px solid var(--bdr);border-radius:10px;padding:10px 12px;overflow:auto;}
 pre.mermaid{background:var(--code-bg);border:1px dashed var(--acc-bdr);border-radius:10px;padding:10px 12px;}
+
+/* ── Code Agent renderer styles ── */
+.ca-prose{font-family:var(--font);font-size:14px;line-height:1.75;color:var(--tx);}
+.ca-prose p{margin:0 0 .7em}.ca-prose p:last-child{margin-bottom:0}
+.ca-prose h2,.ca-prose h3{font-size:15px;font-weight:600;margin:.9em 0 .3em;letter-spacing:-.01em;}
+.ca-prose h4{font-size:13.5px;font-weight:600;margin:.8em 0 .25em;color:var(--tx2);}
+.ca-prose hr{border:none;border-top:1px solid var(--bdr);margin:.9em 0}
+.ca-prose ul,.ca-prose ol{padding-left:1.4em;margin:.3em 0 .7em}
+.ca-prose li{margin:.2em 0;line-height:1.65}
+.ca-prose code{font-family:var(--mono);font-size:12.5px;background:var(--code-bg);border:1px solid var(--bdr);padding:1px 5px;border-radius:3px;color:#b5490d;}
+.ca-prose blockquote{border-left:3px solid var(--bdr);margin:.5em 0;padding:.3em .8em;color:var(--tx2);font-style:italic;}
+.ca-prose strong{font-weight:600}.ca-prose em{font-style:italic}
+.ca-prose .sh{font-size:10.5px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.6px;margin:1.3em 0 .4em;display:block}
+.ca-prose .sh:first-child{margin-top:0}
+.ca-prose .arrow-item{display:flex;gap:7px;margin:.25em 0;align-items:flex-start}
+.ca-prose .arrow-icon{color:var(--acc);font-size:11px;flex-shrink:0;margin-top:.25em;font-weight:700}
+.ca-prose .arrow-body{flex:1}
+.ca-prose .step-wrap{margin:.4em 0;padding:9px 12px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg-sub);}
+.ca-prose .step-lbl{font-size:10px;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+
+.ca-code-block{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;overflow:hidden;margin:.6em 0;box-shadow:var(--sh-sm);}
+.ca-code-block-hd{display:flex;align-items:center;justify-content:space-between;padding:7px 13px;background:var(--bg-sub);border-bottom:1px solid var(--bdr);}
+.ca-code-lang{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--tx3);text-transform:lowercase;}
+.ca-copy-btn{display:inline-flex;align-items:center;gap:4px;background:none;border:1px solid var(--bdr);cursor:pointer;font-size:11px;color:var(--tx3);font-family:var(--font);padding:3px 8px;border-radius:3px;transition:all .15s;}
+.ca-copy-btn:hover{background:var(--bg-hov);color:var(--tx)}
+.ca-copy-btn.copied{background:#ecfdf5;color:#059669;border-color:#6ee7b7}
+.ca-code-block pre{margin:0;border-radius:0;border:none;background:#fafaf9}
+.ca-code-block pre code.hljs{font-family:var(--mono);font-size:12.5px;line-height:1.65;padding:14px 16px;background:#fafaf9;display:block;border-radius:0;}
+
+.ca-files-bar{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;font-size:12.5px;color:#0c4a6e;margin-bottom:7px;}
+.ca-files-bar-count{font-weight:600}
+.ca-files-actions{display:flex;gap:5px;margin-left:auto}
+.ca-files-btn{background:none;border:1px solid #bae6fd;cursor:pointer;font-size:11px;color:#0369a1;font-family:var(--font);padding:2px 8px;border-radius:3px;transition:all .15s;}
+.ca-files-btn:hover{background:#e0f2fe}
+.ca-file-widgets{display:flex;flex-direction:column;gap:5px;margin-bottom:6px}
+.ca-fw{background:var(--bg);border:1px solid var(--bdr);border-radius:9px;overflow:hidden;box-shadow:var(--sh-sm);transition:border-color .15s;}
+.ca-fw:hover{border-color:#c5c0b8}
+.ca-fw-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-sub);cursor:pointer;user-select:none;border-bottom:1px solid transparent;transition:border-color .15s;}
+.ca-fw.open .ca-fw-hd{border-bottom-color:var(--bdr)}
+.ca-fw-hd:hover{background:var(--bg-hov)}
+.ca-fw-left{display:flex;align-items:center;gap:8px}
+.ca-fw-icon{width:24px;height:24px;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:8px;font-weight:700;letter-spacing:-.2px;}
+.fi-js{background:#fef3c7;color:#b45309}.fi-ts{background:#dbeafe;color:#1d4ed8}.fi-py{background:#ede9fe;color:#7c3aed}
+.fi-go{background:#d1fae5;color:#059669}.fi-rs{background:#fef3c7;color:#d97706}.fi-cpp{background:#dbeafe;color:#2563eb}
+.fi-html{background:#fee2e2;color:#dc2626}.fi-css{background:#dbeafe;color:#1d4ed8}.fi-json{background:#dcfce7;color:#15803d}
+.fi-sh{background:#f0fdf4;color:#166534}.fi-default{background:var(--bg-sub);color:var(--tx2)}
+.ca-fw-name{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--tx)}
+.ca-fw-path{font-size:10px;color:var(--tx3)}
+.ca-fw-right{display:flex;align-items:center;gap:6px}
+.ca-fw-lines{font-size:10.5px;color:var(--tx3);font-family:var(--mono)}
+.ca-fw-lang{padding:2px 6px;background:var(--bg);border:1px solid var(--bdr);border-radius:10px;font-size:9.5px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.3px;}
+.ca-fw-copy{background:none;border:1px solid var(--bdr);cursor:pointer;font-size:11px;color:var(--tx3);font-family:var(--font);display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:3px;transition:all .15s;}
+.ca-fw-copy:hover{background:var(--bg-hov);color:var(--tx)}
+.ca-fw-copy.copied{background:#ecfdf5;color:#059669;border-color:#6ee7b7}
+.ca-fw-chevron{transition:transform .18s;color:var(--tx3);flex-shrink:0}
+.ca-fw.open .ca-fw-chevron{transform:rotate(180deg)}
+.ca-fw-body{display:none}
+.ca-fw.open .ca-fw-body{display:block}
+.ca-fw-body pre{margin:0;border-radius:0;border:none;background:#fafaf9}
+.ca-fw-body pre code.hljs{font-family:var(--mono);font-size:12px;line-height:1.6;padding:13px 15px;background:#fafaf9;display:block;border-radius:0;}
+.ca-dl-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.ca-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border:none;border-radius:7px;font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.ca-dl-dark{background:var(--tx);color:#fff}.ca-dl-dark:hover{background:#2d2a26;transform:translateY(-1px)}
+.ca-dl-blue{background:#0369a1;color:#fff}.ca-dl-blue:hover{background:#075985;transform:translateY(-1px)}
+.ca-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:500;margin-bottom:9px;background:#f0f9ff;color:#0c4a6e;border:1px solid #bae6fd;}
+
 @media(max-width:720px){
   #sb{position:absolute;height:100%;transform:translateX(calc(-1 * var(--sw)));}
   #sb.open{transform:translateX(0);box-shadow:0 12px 40px rgba(0,0,0,.12);}
@@ -328,6 +396,7 @@ pre.mermaid{background:var(--code-bg);border:1px dashed var(--acc-bdr);border-ra
 var SB_URL  = 'https://svhgvvwbhmheqylmjzub.supabase.co';
 var SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2aGd2dndiaG1oZXF5bG1qenViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNDU2NTgsImV4cCI6MjA4ODgyMTY1OH0.9RrwV0kje63N6KBBfO2iAdgvvHX8gooh-G6kTwvIr78';
 var API     = 'https://ai-keyboard-backend.vishwajeetadkine705.workers.dev';
+var CODE_API = 'https://k2-code-agent.vishwajeetadkine705.workers.dev';
 var MAX_H   = 20;
 
 var sb = null, currentUser = null, chats = {}, activeId = null;
@@ -353,82 +422,521 @@ var BASE_RESPONSE_FORMAT = [
 ].join('\n');
 
 var PROMPT_LIBRARY = {
-  DATASET_BUILDER: {
-    label: 'Dataset Builder Agent',
-    keywords: ['dataset','etl','csv','jsonl','labeling','data payload','schema mapping'],
-    systemInstruction: 'You are the Dataset Builder Agent. Produce data collection plans, schema definitions, and payload quality checks.'
-  },
-  DATA_INTELLIGENCE: {
-    label: 'Data Intelligence Agent',
-    keywords: ['anomaly','cohort','forecast','timeseries','diagnostic','metric drift'],
-    systemInstruction: 'You are the Data Intelligence Agent. Analyze anomalies, cohort behavior, forecasting risk, and instrumentation gaps.'
-  },
-  KNOWLEDGE_GRAPH: {
-    label: 'Knowledge Graph Agent',
-    keywords: ['knowledge graph','ontology','entity','node','edge','relationship'],
-    systemInstruction: 'You are the Knowledge Graph Agent. Design entity-relationship maps, traversal paths, and graph gap analysis.'
-  },
-  RESEARCH_MATH: {
-    label: 'Research & Math Agent',
-    keywords: ['research','paper','citation','equation','calculus','statistics','probability','proof'],
-    systemInstruction: 'You are the Research & Math Agent. Synthesize evidence and solve quantitative problems with explicit assumptions.'
-  },
-  CONCEPT_EXPLAINER: {
-    label: 'Concept Explainer Agent',
-    keywords: ['explain','eli5','break down','what is','how does'],
-    systemInstruction: 'You are the Concept Explainer Agent. Teach complex concepts with simple language, examples, and practical intuition.'
-  },
-  COMPETITIVE_INTEL: {
-    label: 'Competitive Intel Agent',
-    keywords: ['competitor','positioning','market landscape','swot','threat','opportunity'],
-    systemInstruction: 'You are the Competitive Intel Agent. Evaluate market dynamics, competitor strategy, and risk/opportunity signals.'
-  },
-  ARCHITECT: {
-    label: 'Architect Agent',
-    keywords: ['architecture','system design','microservice','scalability','tech stack'],
-    systemInstruction: 'You are the Architect Agent. Design robust architecture with tradeoff analysis and phased implementation plans.'
-  },
-  CODE: {
-    label: 'Code Agent',
-    keywords: ['code','bug','debug','refactor','function','api endpoint','security flaw'],
-    systemInstruction: 'You are the Code Agent. Provide production-minded implementations, debugging steps, and security checks.'
-  },
-  PRODUCT_BUILDER: {
-    label: 'Product Builder Agent',
-    keywords: ['prd','product requirement','feature spec','user story','acceptance criteria','roadmap'],
-    systemInstruction: 'You are the Product Builder Agent. Create PRDs, feature specs, user stories, and milestone plans.'
-  },
-  AUTOMATION: {
-    label: 'Automation Builder Agent',
-    keywords: ['automation','workflow','n8n','zapier','pipeline','agent chain','orchestration'],
-    systemInstruction: 'You are the Automation Builder Agent. Design resilient automations, triggers, flows, and observability controls.'
-  },
-  MODEL_EVALUATOR: {
-    label: 'AI Model Evaluator Agent',
-    keywords: ['benchmark','hallucination','model eval','precision','recall','latency test','evaluation'],
-    systemInstruction: 'You are the AI Model Evaluator Agent. Define eval suites, quality metrics, failure modes, and remediation loops.'
-  },
-  LEGAL_COMPLIANCE: {
-    label: 'Startup Legal & Compliance Agent',
-    keywords: ['legal','compliance','terms','privacy policy','gdpr','hipaa','contract','liability'],
-    systemInstruction: 'You are the Startup Legal & Compliance Agent. Identify legal/compliance risk and recommend governance controls.'
-  },
-  GROWTH_INTEL: {
-    label: 'Growth Intelligence Agent',
-    keywords: ['growth','gtm','go-to-market','acquisition','retention','funnel','ads','virality'],
-    systemInstruction: 'You are the Growth Intelligence Agent. Build GTM strategy, channel experiments, and measurable funnel optimization.'
-  },
-  FINANCIAL: {
-    label: 'Financial Agent',
-    keywords: ['finance','financial','budget','cash flow','burn rate','runway','unit economics','roi'],
-    systemInstruction: 'You are the Financial Agent. Build financial scenarios, budget models, and ROI-sensitive recommendations.'
-  },
-  PERSONAL_OS: {
-    label: 'Personal OS Agent',
-    keywords: ['personal os','habit','goal','journal','reflection','weekly plan','decision log'],
-    systemInstruction: 'You are the Personal OS Agent. Organize goals, routines, decisions, and personal execution systems.'
-  }
+  DATASET_BUILDER:{label:'Dataset Builder Agent',keywords:['dataset','etl','csv','jsonl','labeling','data payload','schema mapping'],systemInstruction:'You are the Dataset Builder Agent. Produce data collection plans, schema definitions, and payload quality checks.'},
+  DATA_INTELLIGENCE:{label:'Data Intelligence Agent',keywords:['anomaly','cohort','forecast','timeseries','diagnostic','metric drift'],systemInstruction:'You are the Data Intelligence Agent. Analyze anomalies, cohort behavior, forecasting risk, and instrumentation gaps.'},
+  KNOWLEDGE_GRAPH:{label:'Knowledge Graph Agent',keywords:['knowledge graph','ontology','entity','node','edge','relationship'],systemInstruction:'You are the Knowledge Graph Agent. Design entity-relationship maps, traversal paths, and graph gap analysis.'},
+  RESEARCH_MATH:{label:'Research & Math Agent',keywords:['research','paper','citation','equation','calculus','statistics','probability','proof'],systemInstruction:'You are the Research & Math Agent. Synthesize evidence and solve quantitative problems with explicit assumptions.'},
+  CONCEPT_EXPLAINER:{label:'Concept Explainer Agent',keywords:['explain','eli5','break down','what is','how does'],systemInstruction:'You are the Concept Explainer Agent. Teach complex concepts with simple language, examples, and practical intuition.'},
+  COMPETITIVE_INTEL:{label:'Competitive Intel Agent',keywords:['competitor','positioning','market landscape','swot','threat','opportunity'],systemInstruction:'You are the Competitive Intel Agent. Evaluate market dynamics, competitor strategy, and risk/opportunity signals.'},
+  ARCHITECT:{label:'Architect Agent',keywords:['architecture','system design','microservice','scalability','tech stack'],systemInstruction:'You are the Architect Agent. Design robust architecture with tradeoff analysis and phased implementation plans.'},
+  CODE:{label:'Code Agent',keywords:['code','bug','debug','refactor','function','api endpoint','security flaw'],systemInstruction:'You are the Code Agent. Provide production-minded implementations, debugging steps, and security checks.'},
+  PRODUCT_BUILDER:{label:'Product Builder Agent',keywords:['prd','product requirement','feature spec','user story','acceptance criteria','roadmap'],systemInstruction:'You are the Product Builder Agent. Create PRDs, feature specs, user stories, and milestone plans.'},
+  AUTOMATION:{label:'Automation Builder Agent',keywords:['automation','workflow','n8n','zapier','pipeline','agent chain','orchestration'],systemInstruction:'You are the Automation Builder Agent. Design resilient automations, triggers, flows, and observability controls.'},
+  MODEL_EVALUATOR:{label:'AI Model Evaluator Agent',keywords:['benchmark','hallucination','model eval','precision','recall','latency test','evaluation'],systemInstruction:'You are the AI Model Evaluator Agent. Define eval suites, quality metrics, failure modes, and remediation loops.'},
+  LEGAL_COMPLIANCE:{label:'Startup Legal & Compliance Agent',keywords:['legal','compliance','terms','privacy policy','gdpr','hipaa','contract','liability'],systemInstruction:'You are the Startup Legal & Compliance Agent. Identify legal/compliance risk and recommend governance controls.'},
+  GROWTH_INTEL:{label:'Growth Intelligence Agent',keywords:['growth','gtm','go-to-market','acquisition','retention','funnel','ads','virality'],systemInstruction:'You are the Growth Intelligence Agent. Build GTM strategy, channel experiments, and measurable funnel optimization.'},
+  FINANCIAL:{label:'Financial Agent',keywords:['finance','financial','budget','cash flow','burn rate','runway','unit economics','roi'],systemInstruction:'You are the Financial Agent. Build financial scenarios, budget models, and ROI-sensitive recommendations.'},
+  PERSONAL_OS:{label:'Personal OS Agent',keywords:['personal os','habit','goal','journal','reflection','weekly plan','decision log'],systemInstruction:'You are the Personal OS Agent. Organize goals, routines, decisions, and personal execution systems.'}
 };
+
+/* ── CODE QUERY DETECTION ── */
+var CODE_KEYWORDS = [
+  'write','build','implement','create a function','create a script','make a','code',
+  'debug','fix this','bug','error','exception','traceback','not working','broken',
+  'review this','review my','check my code','refactor','optimize','improve this',
+  'explain this code','how does this work','what does this do',
+  'python','javascript','typescript','react','node','rust','go','golang',
+  'java','kotlin','swift','c++','cpp','html','css','sql','bash','shell',
+  'api','endpoint','function','class','method','algorithm','data structure',
+  'array','loop','async','promise','callback','hook','component','module',
+  'dockerfile','kubernetes','terraform','cloudflare worker','supabase'
+];
+
+function isCodeQuery(text) {
+  var lower = text.toLowerCase();
+  // If it contains a code fence, always treat as code
+  if (/```/.test(text)) return true;
+  // Check keywords
+  for (var i = 0; i < CODE_KEYWORDS.length; i++) {
+    if (lower.indexOf(CODE_KEYWORDS[i]) !== -1) return true;
+  }
+  return false;
+}
+
+function detectCodeMode(text) {
+  var lower = text.toLowerCase();
+  if (/\b(debug|fix|error|bug|exception|traceback|not working|broken|issue)\b/.test(lower)) return 'debug';
+  if (/\b(review|check|audit|inspect|security|flaw|vulnerability)\b/.test(lower)) return 'review';
+  if (/\b(explain|what does|how does|what is|understand|walk me through)\b/.test(lower)) return 'explain';
+  return 'implement';
+}
+
+/* ═══════════════════════════════════
+   CODE AGENT RENDERER
+═══════════════════════════════════ */
+function caEsc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function caInlineMd(text) {
+  var s = caEsc(text);
+  s = s.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  s = s.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g,'<em>$1</em>');
+  s = s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  return s;
+}
+
+function caIsAISectionHead(line) {
+  var t = line.trim();
+  if (t.length < 3 || t.length > 70) return false;
+  if (!/^[A-Z][A-Z0-9\s&\/\-\.,:']+$/.test(t)) return false;
+  if (!t.includes(' ') && t.length < 6) return false;
+  return true;
+}
+
+function caSplitByFences(text) {
+  var segments = [], lastIndex = 0;
+  var re = /```([a-zA-Z0-9]*)\n?([\s\S]*?)```/g, m;
+  while ((m = re.exec(text)) !== null) {
+    if (m.index > lastIndex) segments.push({ type:'text', content: text.slice(lastIndex, m.index) });
+    segments.push({ type:'code', lang: m[1] || '', content: m[2] });
+    lastIndex = re.lastIndex;
+  }
+  if (lastIndex < text.length) segments.push({ type:'text', content: text.slice(lastIndex) });
+  return segments;
+}
+
+function caBuildCodeBlock(lang, code) {
+  var wrap = document.createElement('div');
+  wrap.className = 'ca-code-block';
+
+  var hd = document.createElement('div');
+  hd.className = 'ca-code-block-hd';
+
+  var langEl = document.createElement('span');
+  langEl.className = 'ca-code-lang';
+  langEl.textContent = lang || 'code';
+
+  var copyIcon = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+  var copyBtn = document.createElement('button');
+  copyBtn.className = 'ca-copy-btn';
+  copyBtn.innerHTML = copyIcon;
+  copyBtn.addEventListener('click', function() { caCopyText(code, copyBtn, copyIcon); });
+
+  hd.appendChild(langEl);
+  hd.appendChild(copyBtn);
+  wrap.appendChild(hd);
+
+  var pre = document.createElement('pre');
+  var codeEl = document.createElement('code');
+  if (lang) codeEl.className = 'language-' + lang;
+  codeEl.textContent = code;
+  pre.appendChild(codeEl);
+  try { hljs.highlightElement(codeEl); } catch(e) {}
+  wrap.appendChild(pre);
+  return wrap;
+}
+
+function caBuildProseBlock(text) {
+  var container = document.createElement('div');
+  container.className = 'ca-prose';
+  var lines = text.split('\n');
+  var i = 0, currentUL = null, currentOL = null;
+
+  function flushLists() { currentUL = null; currentOL = null; }
+  function append(el) { flushLists(); container.appendChild(el); }
+
+  while (i < lines.length) {
+    var raw = lines[i], t = raw.trim();
+    i++;
+    if (!t) { flushLists(); continue; }
+
+    // Divider
+    if (/^[━─=\-─]{4,}$/.test(t)) { var hr = document.createElement('hr'); append(hr); continue; }
+
+    // AI section head (ALL CAPS)
+    if (caIsAISectionHead(t)) {
+      var sh = document.createElement('span');
+      sh.className = 'sh';
+      sh.textContent = t;
+      append(sh);
+      continue;
+    }
+
+    // Markdown headings
+    if (/^#{1,4}\s+\S/.test(t)) {
+      var level = (t.match(/^(#{1,4})\s/) || ['','#'])[1].length;
+      var htxt = t.replace(/^#{1,4}\s+/, '');
+      var tag = level <= 2 ? 'h2' : level === 3 ? 'h3' : 'h4';
+      var hel = document.createElement(tag);
+      hel.innerHTML = caInlineMd(htxt);
+      append(hel);
+      continue;
+    }
+
+    // Step item
+    if (/^Step\s+\d+\s*[—–-]/.test(t)) {
+      var sw = document.createElement('div');
+      sw.className = 'step-wrap';
+      var sm2 = t.match(/^(Step\s+\d+)\s*[—–-]\s*(.*)$/i);
+      if (sm2) {
+        var lbl = document.createElement('div');
+        lbl.className = 'step-lbl';
+        lbl.textContent = sm2[1].toUpperCase();
+        var sbody = document.createElement('p');
+        sbody.innerHTML = caInlineMd(sm2[2]);
+        sw.appendChild(lbl);
+        sw.appendChild(sbody);
+      } else {
+        var sbody2 = document.createElement('p');
+        sbody2.innerHTML = caInlineMd(t);
+        sw.appendChild(sbody2);
+      }
+      append(sw);
+      continue;
+    }
+
+    // Arrow items (► ▶ •)
+    if (/^[►▶•]\s+/.test(t)) {
+      var body = t.replace(/^[►▶•]\s+/, '');
+      var ai = document.createElement('div');
+      ai.className = 'arrow-item';
+      ai.innerHTML = '<span class="arrow-icon">►</span><span class="arrow-body">' + caInlineMd(body) + '</span>';
+      flushLists();
+      container.appendChild(ai);
+      continue;
+    }
+
+    // Unordered list
+    if (/^[-*]\s+/.test(t)) {
+      if (!currentUL) { currentUL = document.createElement('ul'); currentOL = null; container.appendChild(currentUL); }
+      var li = document.createElement('li');
+      li.innerHTML = caInlineMd(t.replace(/^[-*]\s+/, ''));
+      currentUL.appendChild(li);
+      continue;
+    }
+
+    // Ordered list
+    if (/^\d+[.)]\s+/.test(t)) {
+      if (!currentOL) { currentOL = document.createElement('ol'); currentUL = null; container.appendChild(currentOL); }
+      var oli = document.createElement('li');
+      oli.innerHTML = caInlineMd(t.replace(/^\d+[.)]\s+/, ''));
+      currentOL.appendChild(oli);
+      continue;
+    }
+
+    // Blockquote
+    if (t.startsWith('> ')) {
+      var bq = document.createElement('blockquote');
+      bq.innerHTML = caInlineMd(t.slice(2));
+      append(bq);
+      continue;
+    }
+
+    // Paragraph — collect consecutive non-special lines
+    flushLists();
+    var paraLines = [t];
+    while (i < lines.length) {
+      var nt = lines[i].trim();
+      if (!nt || /^[━─=\-─]{4,}$/.test(nt) || caIsAISectionHead(nt) ||
+          /^#{1,4}\s+\S/.test(nt) || /^Step\s+\d+\s*[—–-]/.test(nt) ||
+          /^[►▶•]\s+/.test(nt) || /^[-*]\s+/.test(nt) || /^\d+[.)]\s+/.test(nt) ||
+          nt.startsWith('> ')) break;
+      paraLines.push(nt);
+      i++;
+    }
+    var p = document.createElement('p');
+    p.innerHTML = caInlineMd(paraLines.join(' '));
+    container.appendChild(p);
+  }
+  return container;
+}
+
+function caRenderContent(rawText) {
+  var root = document.createDocumentFragment();
+  var segments = caSplitByFences(rawText);
+  segments.forEach(function(seg) {
+    if (seg.type === 'code') {
+      root.appendChild(caBuildCodeBlock(seg.lang, seg.content));
+    } else {
+      var prose = caBuildProseBlock(seg.content);
+      if (prose.children.length > 0 || prose.textContent.trim()) root.appendChild(prose);
+    }
+  });
+  return root;
+}
+
+/* ── File widget helpers ── */
+function caLangFromExt(name) {
+  var ext = (name.split('.').pop() || '').toLowerCase();
+  var m = {dart:'dart',yaml:'yaml',yml:'yaml',json:'json',js:'javascript',jsx:'javascript',ts:'typescript',tsx:'typescript',py:'python',go:'go',rb:'ruby',kt:'kotlin',swift:'swift',rs:'rust',cpp:'cpp',cc:'cpp',c:'c',cs:'csharp',java:'java',html:'html',css:'css',scss:'css',md:'markdown',sh:'bash',bash:'bash',sql:'sql'};
+  return m[ext] || ext || 'plaintext';
+}
+function caIconClass(name) {
+  var ext = (name.split('.').pop() || '').toLowerCase();
+  var m = {js:'fi-js',jsx:'fi-js',ts:'fi-ts',tsx:'fi-ts',py:'fi-py',go:'fi-go',rs:'fi-rs',cpp:'fi-cpp',cc:'fi-cpp',html:'fi-html',css:'fi-css',scss:'fi-css',json:'fi-json',sh:'fi-sh',bash:'fi-sh'};
+  return m[ext] || 'fi-default';
+}
+function caIconLabel(name) {
+  var ext = (name.split('.').pop() || '').toLowerCase();
+  var m = {js:'JS',jsx:'JSX',ts:'TS',tsx:'TSX',py:'PY',go:'GO',rs:'RS',cpp:'C++',c:'C',cs:'C#',java:'JV',html:'HTM',css:'CSS',json:'JSON',sh:'SH',yaml:'YML',yml:'YML',md:'MD'};
+  return m[ext] || (ext.slice(0,3).toUpperCase() || '?');
+}
+
+function caParseFileBlocks(text) {
+  var lines = text.split('\n'), starts = [];
+  lines.forEach(function(l, i) {
+    var m = l.match(/^[ \t]*FILE:\s*(.+?)\s*$/);
+    if (m) starts.push({ lineIndex: i, filepath: m[1].trim() });
+  });
+  if (starts.length < 2) return null;
+  var preamble = lines.slice(0, starts[0].lineIndex).join('\n').trim();
+  var files = starts.map(function(s, idx) {
+    var endLine = idx + 1 < starts.length ? starts[idx+1].lineIndex : lines.length;
+    var bodyText = lines.slice(s.lineIndex + 1, endLine).join('\n').trim();
+    var fm = bodyText.match(/^```([a-zA-Z0-9]*)\n?([\s\S]*?)```/);
+    var lang = fm ? (fm[1] || caLangFromExt(s.filepath)) : caLangFromExt(s.filepath);
+    var code = (fm ? fm[2] : bodyText).trim();
+    return { filepath: s.filepath, filename: s.filepath.split('/').pop(), lang: lang, code: code };
+  });
+  return { preamble: preamble, files: files };
+}
+
+function caBuildFileWidget(file, index) {
+  var widget = document.createElement('div');
+  widget.className = 'ca-fw' + (index < 3 ? ' open' : '');
+
+  var hd = document.createElement('div');
+  hd.className = 'ca-fw-hd';
+
+  var left = document.createElement('div');
+  left.className = 'ca-fw-left';
+
+  var icon = document.createElement('div');
+  icon.className = 'ca-fw-icon ' + caIconClass(file.filename);
+  icon.textContent = caIconLabel(file.filename);
+
+  var nameBlock = document.createElement('div');
+  var nameEl = document.createElement('div');
+  nameEl.className = 'ca-fw-name';
+  nameEl.textContent = file.filename;
+  nameBlock.appendChild(nameEl);
+  var dirPart = file.filepath.includes('/') ? file.filepath.split('/').slice(0,-1).join('/') + '/' : '';
+  if (dirPart) {
+    var pathEl = document.createElement('div');
+    pathEl.className = 'ca-fw-path';
+    pathEl.textContent = dirPart;
+    nameBlock.appendChild(pathEl);
+  }
+  left.appendChild(icon);
+  left.appendChild(nameBlock);
+
+  var right = document.createElement('div');
+  right.className = 'ca-fw-right';
+
+  var linesBadge = document.createElement('span');
+  linesBadge.className = 'ca-fw-lines';
+  linesBadge.textContent = file.code.split('\n').length + ' lines';
+
+  var langBadge = document.createElement('span');
+  langBadge.className = 'ca-fw-lang';
+  langBadge.textContent = file.lang;
+
+  var copyIcon2 = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+  var copyBtn2 = document.createElement('button');
+  copyBtn2.className = 'ca-fw-copy';
+  copyBtn2.innerHTML = copyIcon2;
+  copyBtn2.addEventListener('click', function(e) { e.stopPropagation(); caCopyText(file.code, copyBtn2, copyIcon2); });
+
+  var chevron = document.createElement('span');
+  chevron.className = 'ca-fw-chevron';
+  chevron.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>';
+
+  right.appendChild(linesBadge);
+  right.appendChild(langBadge);
+  right.appendChild(copyBtn2);
+  right.appendChild(chevron);
+  hd.appendChild(left);
+  hd.appendChild(right);
+
+  var body = document.createElement('div');
+  body.className = 'ca-fw-body';
+  var pre = document.createElement('pre');
+  var codeEl = document.createElement('code');
+  if (file.lang) codeEl.className = 'language-' + file.lang;
+  codeEl.textContent = file.code;
+  pre.appendChild(codeEl);
+  try { hljs.highlightElement(codeEl); } catch(e) {}
+  body.appendChild(pre);
+
+  widget.appendChild(hd);
+  widget.appendChild(body);
+  hd.addEventListener('click', function() { widget.classList.toggle('open'); });
+  return widget;
+}
+
+function caCopyText(text, btn, originalHTML) {
+  var ok = function() {
+    btn.classList.add('copied');
+    btn.textContent = '✓ Copied';
+    setTimeout(function() { btn.classList.remove('copied'); btn.innerHTML = originalHTML; }, 2000);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(ok).catch(function() { caFallbackCopy(text); ok(); });
+  } else { caFallbackCopy(text); ok(); }
+}
+function caFallbackCopy(text) {
+  var el = document.createElement('textarea');
+  el.value = text; el.style.cssText = 'position:fixed;top:-9999px';
+  document.body.appendChild(el); el.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(el);
+}
+
+function caBuildOutputDOM(rawContent) {
+  var wrap = document.createElement('div');
+  var uid = 'ca_' + Date.now();
+
+  // Try multi-file
+  var parsed = caParseFileBlocks(rawContent);
+  if (parsed && parsed.files.length >= 2) {
+    if (parsed.preamble) {
+      var pr = caRenderContent(parsed.preamble);
+      wrap.appendChild(pr);
+    }
+    var bar = document.createElement('div');
+    bar.className = 'ca-files-bar';
+    bar.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>'
+      + '<span><span class="ca-files-bar-count">' + parsed.files.length + ' files</span> generated</span>'
+      + '<div class="ca-files-actions"><button class="ca-files-btn" id="caexp_' + uid + '">Expand all</button><button class="ca-files-btn" id="cacol_' + uid + '">Collapse all</button></div>';
+    wrap.appendChild(bar);
+
+    var widgetsEl = document.createElement('div');
+    widgetsEl.className = 'ca-file-widgets';
+    widgetsEl.id = 'caw_' + uid;
+    parsed.files.forEach(function(f, idx) { widgetsEl.appendChild(caBuildFileWidget(f, idx)); });
+    wrap.appendChild(widgetsEl);
+
+    requestAnimationFrame(function() {
+      var expBtn = document.getElementById('caexp_' + uid);
+      var colBtn = document.getElementById('cacol_' + uid);
+      var cont = document.getElementById('caw_' + uid);
+      if (expBtn && cont) expBtn.addEventListener('click', function() { cont.querySelectorAll('.ca-fw').forEach(function(w) { w.classList.add('open'); }); });
+      if (colBtn && cont) colBtn.addEventListener('click', function() { cont.querySelectorAll('.ca-fw').forEach(function(w) { w.classList.remove('open'); }); });
+    });
+
+    var dlRow = document.createElement('div');
+    dlRow.className = 'ca-dl-row';
+    var dlBtn = document.createElement('button');
+    dlBtn.className = 'ca-dl-btn ca-dl-dark';
+    dlBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download all (.txt)';
+    (function(rc) { dlBtn.addEventListener('click', function() { caDownload(rc, 'stremini-code-' + Date.now() + '.txt', 'text/plain'); }); })(rawContent);
+    dlRow.appendChild(dlBtn);
+    wrap.appendChild(dlRow);
+    return wrap;
+  }
+
+  // Standard render
+  wrap.appendChild(caRenderContent(rawContent));
+
+  var dlRow2 = document.createElement('div');
+  dlRow2.className = 'ca-dl-row';
+  var dlTxt = document.createElement('button');
+  dlTxt.className = 'ca-dl-btn ca-dl-dark';
+  dlTxt.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .txt';
+  var dlMd = document.createElement('button');
+  dlMd.className = 'ca-dl-btn ca-dl-blue';
+  dlMd.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Download .md';
+  (function(rc) {
+    dlTxt.addEventListener('click', function() { caDownload(rc, 'stremini-code-' + Date.now() + '.txt', 'text/plain'); });
+    dlMd.addEventListener('click', function() { caDownload('# Code Response\n\n' + rc, 'stremini-code-' + Date.now() + '.md', 'text/markdown'); });
+  })(rawContent);
+  dlRow2.appendChild(dlTxt);
+  dlRow2.appendChild(dlMd);
+  wrap.appendChild(dlRow2);
+  return wrap;
+}
+
+function caDownload(content, filename, type) {
+  var url = URL.createObjectURL(new Blob([content], { type: type }));
+  var a = document.createElement('a');
+  a.href = url; a.download = filename; a.style.display = 'none';
+  document.body.appendChild(a); a.click();
+  setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 1000);
+}
+
+/* ── Call code worker ── */
+async function callCodeAPI(query, mode, history) {
+  var res;
+  try {
+    res = await fetch(CODE_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: query, mode: mode, history: history.slice(-10), iteration: 0 })
+    });
+  } catch(e) { throw new Error('Network error: ' + e.message); }
+  if (!res.ok) { var t = await res.text().catch(function(){return '';}); throw new Error('Code API ' + res.status + (t?': '+t:'')); }
+  var d = await res.json();
+  if (d.error) throw new Error(d.error);
+  // Worker returns { status: 'CODE'|'REVIEW'|'DEBUG'|'EXPLANATION'|'COMPLETED', content/solution }
+  return d.content || d.solution || d.response || '';
+}
+
+/* ── addCodeMsgRow: renders code agent output into the existing message row structure ── */
+function addCodeMsgRow(rawContent, mode) {
+  var wrap = document.getElementById('msgs-wrap');
+  wrap.style.display = 'flex';
+  document.getElementById('welcome').style.display = 'none';
+
+  var row = document.createElement('div');
+  row.className = 'mr';
+
+  var av = document.createElement('div');
+  av.className = 'mav ai';
+  av.textContent = 'S';
+
+  var body = document.createElement('div');
+  body.className = 'mbody';
+
+  var mname = document.createElement('div');
+  mname.className = 'mname';
+  mname.textContent = 'StreminiAI';
+
+  var mc = document.createElement('div');
+  mc.className = 'mc';
+
+  // Chip
+  var modeLabels = { implement: 'Implementation', review: 'Code Review', debug: 'Debug Analysis', explain: 'Explanation' };
+  var chip = document.createElement('div');
+  chip.className = 'ca-chip';
+  chip.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> '
+    + (modeLabels[mode] || 'Code Response');
+  mc.appendChild(chip);
+
+  // Rendered output
+  mc.appendChild(caBuildOutputDOM(rawContent));
+
+  // Copy action
+  var macts = document.createElement('div');
+  macts.className = 'macts';
+  var copyBtn = document.createElement('button');
+  copyBtn.className = 'abt';
+  copyBtn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy';
+  copyBtn.onclick = function() { copyMsg(copyBtn); };
+  macts.appendChild(copyBtn);
+
+  body.appendChild(mname);
+  body.appendChild(mc);
+  body.appendChild(macts);
+  row.appendChild(av);
+  row.appendChild(body);
+  wrap.appendChild(row);
+  return row;
+}
+
+/* ═══════════════════════════════════
+   ORIGINAL APP CODE (unchanged)
+═══════════════════════════════════ */
 
 function scoreAgents(message) {
   var text = (message || '').toLowerCase();
@@ -451,24 +959,11 @@ async function getRoutingDecision(message) {
   var scored = scoreAgents(message);
   var primaryLocal = scored[0] && scored[0].score > 0 ? scored[0].id : 'CONCEPT_EXPLAINER';
   var collaboratorsLocal = scored.filter(function(x){ return x.id !== primaryLocal && x.score > 0; }).slice(0,2).map(function(x){ return x.id; });
-
-  var routePrompt = [
-    'You are the Master Router for Stremini AI.',
-    'Analyze the user input and route to exactly ONE specialist ID.',
-    'Allowed IDs: ' + ROUTER_AGENT_IDS.join(', '),
-    'Return ONLY the exact ID, nothing else.',
-    'User input: ' + message
-  ].join('\n');
-
+  var routePrompt = ['You are the Master Router for Stremini AI.','Analyze the user input and route to exactly ONE specialist ID.','Allowed IDs: ' + ROUTER_AGENT_IDS.join(', '),'Return ONLY the exact ID, nothing else.','User input: ' + message].join('\n');
   try {
     var ctrl = new AbortController();
     var timer = setTimeout(function(){ ctrl.abort(); }, 2500);
-    var res = await fetch(API + '/chat/message', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: routePrompt, history: [] }),
-      signal: ctrl.signal
-    });
+    var res = await fetch(API + '/chat/message', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: routePrompt, history: [] }), signal: ctrl.signal });
     clearTimeout(timer);
     if (res.ok) {
       var d = await res.json();
@@ -476,54 +971,28 @@ async function getRoutingDecision(message) {
       if (routed) return { primary: routed, collaborators: collaboratorsLocal, source: 'router_model' };
     }
   } catch (e) {}
-
   return { primary: primaryLocal, collaborators: collaboratorsLocal, source: 'local_fallback' };
 }
 
 function buildUnifiedSystemPrompt(primaryId, collaborators) {
   var p = PROMPT_LIBRARY[primaryId] || PROMPT_LIBRARY.CONCEPT_EXPLAINER;
   var collab = (collaborators || []).filter(function(id){ return PROMPT_LIBRARY[id]; });
-  var collabText = collab.length
-    ? 'Secondary collaboration lenses: ' + collab.map(function(id){ return PROMPT_LIBRARY[id].label; }).join(', ') + '. Use them only when relevant.'
-    : 'No secondary collaborator is required for this user request.';
-
-  return [
-    'You are StreminiAI operating as the ' + p.label + '.',
-    p.systemInstruction,
-    collabText,
-    BASE_RESPONSE_FORMAT,
-    'Use compact code blocks, math, tables, mermaid, or step cards only when they materially improve the answer.',
-    'When uncertainty is high, state assumptions explicitly before recommendations.'
-  ].join('\n');
+  var collabText = collab.length ? 'Secondary collaboration lenses: ' + collab.map(function(id){ return PROMPT_LIBRARY[id].label; }).join(', ') + '. Use them only when relevant.' : 'No secondary collaborator is required for this user request.';
+  return ['You are StreminiAI operating as the ' + p.label + '.', p.systemInstruction, collabText, BASE_RESPONSE_FORMAT, 'Use compact code blocks, math, tables, mermaid, or step cards only when they materially improve the answer.', 'When uncertainty is high, state assumptions explicitly before recommendations.'].join('\n');
 }
 
 window.addEventListener('DOMContentLoaded', function () {
-  if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
+  if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   try {
-    sb = window.supabase.createClient(SB_URL, SB_ANON, {
-      auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true }
-    });
+    sb = window.supabase.createClient(SB_URL, SB_ANON, { auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true } });
   } catch (e) { hideLoading(); showAuth('Could not init auth. Please refresh.'); return; }
-
   sb.auth.onAuthStateChange(function (event, session) {
-    if (session && session.user) {
-      currentUser = session.user;
-      if (!booted) { booted = true; startApp(); }
-    } else if (event === 'SIGNED_OUT') {
-      currentUser = null; booted = false;
-      chats = {}; activeId = null; messages = []; userContext = '';
-      document.getElementById('app').style.display = 'none';
-      showAuth();
-    }
+    if (session && session.user) { currentUser = session.user; if (!booted) { booted = true; startApp(); } }
+    else if (event === 'SIGNED_OUT') { currentUser = null; booted = false; chats = {}; activeId = null; messages = []; userContext = ''; document.getElementById('app').style.display = 'none'; showAuth(); }
   });
-
   sb.auth.getSession().then(function (res) {
-    if (res.data && res.data.session) {
-      currentUser = res.data.session.user;
-      if (!booted) { booted = true; startApp(); }
-    } else { hideLoading(); showAuth(); }
+    if (res.data && res.data.session) { currentUser = res.data.session.user; if (!booted) { booted = true; startApp(); } }
+    else { hideLoading(); showAuth(); }
   }).catch(function () { hideLoading(); showAuth('Connection error. Please refresh.'); });
 });
 
@@ -532,24 +1001,16 @@ function startApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
   updateUserUI();
-  upsertUser().then(function () {
-    return Promise.all([loadContext(), loadChats()]);
-  }).catch(console.error);
+  upsertUser().then(function () { return Promise.all([loadContext(), loadChats()]); }).catch(console.error);
   resize(document.getElementById('inp'));
 }
 
 function hideLoading() { document.getElementById('loading').style.display = 'none'; }
-function showAuth(msg) {
-  document.getElementById('auth-screen').style.display = 'flex';
-  setMsg(msg || '', false);
-}
+function showAuth(msg) { document.getElementById('auth-screen').style.display = 'flex'; setMsg(msg || '', false); }
 
-// ── AUTH ──
 function switchTab(btn) {
   _activeTab = btn.dataset.tab;
-  document.querySelectorAll('.auth-tab').forEach(function (t) {
-    t.classList.toggle('active', t.dataset.tab === _activeTab);
-  });
+  document.querySelectorAll('.auth-tab').forEach(function (t) { t.classList.toggle('active', t.dataset.tab === _activeTab); });
   document.getElementById('auth-btn').textContent = _activeTab === 'signin' ? 'Sign in' : 'Create account';
   document.getElementById('auth-name-field').style.display = _activeTab === 'signup' ? 'block' : 'none';
   setMsg('', false);
@@ -581,38 +1042,23 @@ async function doAuth() {
       if (res.error) throw res.error;
       if (res.data.user && !res.data.session) {
         setMsg('Check your email to confirm, then sign in.', true);
-        // switch to signin tab visually
         document.querySelectorAll('.auth-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab==='signin');});
-        _activeTab='signin';
-        document.getElementById('auth-btn').textContent='Sign in';
-        document.getElementById('auth-name-field').style.display='none';
+        _activeTab='signin'; document.getElementById('auth-btn').textContent='Sign in'; document.getElementById('auth-name-field').style.display='none';
         return;
       }
     }
   } catch (e) { setMsg(e.message || 'Authentication failed.', false); }
-  finally {
-    btn.disabled = false;
-    btn.textContent = _activeTab === 'signin' ? 'Sign in' : 'Create account';
-  }
+  finally { btn.disabled = false; btn.textContent = _activeTab === 'signin' ? 'Sign in' : 'Create account'; }
 }
 
 async function doGoogle() {
   var btn = document.getElementById('google-btn');
   btn.disabled = true; setMsg('', false);
   try {
-    // CRITICAL: origin+pathname only — no query params, no hash fragments
-    // Must exactly match the URL listed in Supabase Auth → URL Configuration → Redirect URLs
     var redirectTo = window.location.origin + window.location.pathname;
-    var res = await sb.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: redirectTo, queryParams: { access_type: 'offline', prompt: 'consent' } }
-    });
+    var res = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectTo, queryParams: { access_type: 'offline', prompt: 'consent' } } });
     if (res.error) throw res.error;
-    // Page redirects to Google — nothing runs after this line
-  } catch (e) {
-    setMsg(e.message || 'Google sign-in failed.', false);
-    btn.disabled = false;
-  }
+  } catch (e) { setMsg(e.message || 'Google sign-in failed.', false); btn.disabled = false; }
 }
 
 async function signOut() { await sb.auth.signOut(); }
@@ -627,14 +1073,12 @@ function updateUserUI() {
   document.getElementById('user-av').textContent    = (name[0] || 'U').toUpperCase();
 }
 
-// ── USER ROW ──
 async function upsertUser() {
   var m = currentUser.user_metadata || {};
   var name = m.display_name || m.full_name || m.name || currentUser.email.split('@')[0];
   await sb.from('users').upsert({ id: currentUser.id, display_name: name, email: currentUser.email, updated_at: new Date().toISOString() }, { onConflict: 'id' });
 }
 
-// ── CONTEXT ──
 function ctxKey() { return 'sai_ctx_' + currentUser.id; }
 
 async function loadContext() {
@@ -657,7 +1101,6 @@ async function saveContext() {
 
 function toggleCtx() { document.getElementById('ctx-panel').classList.toggle('open'); }
 
-// ── CHATS ──
 async function loadChats() {
   var res = await sb.from('chats').select('id,title,updated_at').eq('user_id', currentUser.id).order('updated_at', { ascending: false });
   if (res.error) { console.error(res.error.message); return; }
@@ -703,7 +1146,6 @@ async function saveMessage(chatId, role, content) {
   if (chats[chatId]) chats[chatId].ts = Date.now();
 }
 
-// ── SIDEBAR ──
 function toggleSb() {
   var s = document.getElementById('sb');
   if (window.innerWidth <= 720) s.classList.toggle('open');
@@ -732,7 +1174,6 @@ function renderSidebar() {
   el.innerHTML = html;
 }
 
-// ── NAVIGATION ──
 function newChat() {
   activeId=null; messages=[]; docFile=null;
   updateDocBar(); showWelcome(); renderSidebar();
@@ -754,7 +1195,6 @@ function showWelcome() {
   var mw=document.getElementById('msgs-wrap'); mw.style.display='none'; mw.innerHTML='';
 }
 
-// ── MESSAGE ROWS ──
 function addMsgRow(role, content, animate) {
   if(animate===undefined)animate=true;
   var wrap=document.getElementById('msgs-wrap');
@@ -794,7 +1234,6 @@ function finalizeStream(text) {
 
 function scrollBottom(){ var a=document.getElementById('chat-area'); a.scrollTop=a.scrollHeight; }
 
-// ── MARKDOWN ──
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function inlineRender(s){
   if(!s)return '';
@@ -807,18 +1246,8 @@ function inlineRender(s){
 function renderMd(raw){
   if(!raw)return '';
   var blocks=[];
-  var t=raw.replace(/\$\$([\s\S]+?)\$\$/g,function(_,expr){
-    var i=blocks.length;
-    blocks.push('<div class="math-block">'+escHtml(expr.trim())+'</div>');
-    return '\x02B'+i+'\x03';
-  });
-  t=t.replace(/```([\w-]*)\n?([\s\S]*?)```/g,function(_,lang,code){
-    var i=blocks.length;
-    var l=(lang||'').toLowerCase();
-    if(l==='mermaid') blocks.push('<pre class="mermaid">'+escHtml(code.trim())+'</pre>');
-    else blocks.push('<pre><code'+(lang?' class="lang-'+escHtml(lang)+'"':'')+'>'+escHtml(code.trim())+'</code></pre>');
-    return '\x02B'+i+'\x03';
-  });
+  var t=raw.replace(/\$\$([\s\S]+?)\$\$/g,function(_,expr){var i=blocks.length;blocks.push('<div class="math-block">'+escHtml(expr.trim())+'</div>');return '\x02B'+i+'\x03';});
+  t=t.replace(/```([\w-]*)\n?([\s\S]*?)```/g,function(_,lang,code){var i=blocks.length;var l=(lang||'').toLowerCase();if(l==='mermaid')blocks.push('<pre class="mermaid">'+escHtml(code.trim())+'</pre>');else blocks.push('<pre><code'+(lang?' class="lang-'+escHtml(lang)+'"':'')+'>'+escHtml(code.trim())+'</code></pre>');return '\x02B'+i+'\x03';});
   var lines=t.split('\n'),out=[],i=0;
   while(i<lines.length){
     var l=lines[i];
@@ -827,19 +1256,7 @@ function renderMd(raw){
     if(/^---+$/.test(l.trim())){out.push('<hr>');i++;continue;}
     if(/^> /.test(l)){var bq=[];while(i<lines.length&&/^> ?/.test(lines[i])){bq.push(lines[i].replace(/^> ?/,''));i++;}out.push('<blockquote>'+inlineRender(escHtml(bq.join(' ')))+'</blockquote>');continue;}
     if(/^\d+\.\s/.test(l)){var ol=[];while(i<lines.length&&/^\d+\.\s/.test(lines[i])){ol.push('<li>'+inlineRender(escHtml(lines[i].replace(/^\d+\.\s+/,'')))+'</li>');i++;}out.push('<ol>'+ol.join('')+'</ol>');continue;}
-    if(/^[-*]\s/.test(l)){
-      var kv=[], ul=[];
-      while(i<lines.length&&/^[-*]\s/.test(lines[i])){
-        var item=lines[i].replace(/^[-*]\s+/, '');
-        var kvm=item.match(/^([^:]{1,60}):\s+(.+)$/);
-        if(kvm) kv.push('<div class="kv-item"><strong>'+inlineRender(escHtml(kvm[1]))+'</strong><span>'+inlineRender(escHtml(kvm[2]))+'</span></div>');
-        else ul.push('<li>'+inlineRender(escHtml(item))+'</li>');
-        i++;
-      }
-      if(kv.length) out.push('<div class="rs-kv-grid">'+kv.join('')+'</div>');
-      if(ul.length) out.push('<ul>'+ul.join('')+'</ul>');
-      continue;
-    }
+    if(/^[-*]\s/.test(l)){var kv=[],ul=[];while(i<lines.length&&/^[-*]\s/.test(lines[i])){var item=lines[i].replace(/^[-*]\s+/,'');var kvm=item.match(/^([^:]{1,60}):\s+(.+)$/);if(kvm)kv.push('<div class="kv-item"><strong>'+inlineRender(escHtml(kvm[1]))+'</strong><span>'+inlineRender(escHtml(kvm[2]))+'</span></div>');else ul.push('<li>'+inlineRender(escHtml(item))+'</li>');i++;}if(kv.length)out.push('<div class="rs-kv-grid">'+kv.join('')+'</div>');if(ul.length)out.push('<ul>'+ul.join('')+'</ul>');continue;}
     var sm=l.match(/^Step\s*(\d+)\s*[—-]\s*(.+)$/i); if(sm){out.push('<div class="step-item"><strong>Step '+escHtml(sm[1])+'</strong><span>'+inlineRender(escHtml(sm[2]))+'</span></div>');i++;continue;}
     if(!l.trim()){i++;continue;}
     var pl=[];
@@ -849,7 +1266,7 @@ function renderMd(raw){
   return out.join('\n');
 }
 
-// ── SEND ──
+/* ── SEND ── */
 async function sendMsg() {
   if(busy||!currentUser)return;
   var inp=document.getElementById('inp'), text=inp.value.trim();
@@ -862,41 +1279,67 @@ async function sendMsg() {
 
   inp.value=''; resize(inp);
 
-  var route = await getRoutingDecision(text);
-  var systemPrompt = buildUnifiedSystemPrompt(route.primary, route.collaborators);
-
-  // Snapshot history BEFORE saving current message
-  var hist=messages.slice(-MAX_H).map(function(m){return{role:m.role,content:m.content};});
-  hist.unshift({role:'system',content:systemPrompt});
-  if(userContext) hist.unshift({role:'system',content:'User context: '+userContext});
-
+  // Save user message and show it
+  var hist = messages.slice(-MAX_H).map(function(m){return{role:m.role,content:m.content};});
   await saveMessage(activeId,'user',text);
   if(messages.filter(function(m){return m.role==='user';}).length===1){
     updateChatTitle(activeId, text.slice(0,52)+(text.length>52?'…':''));
   }
+  addMsgRow('user', text);
+  setBusy(true);
 
-  addMsgRow('user',text); setBusy(true); addStreamRow();
+  var answer = '';
 
-  var msgToSend = text;
-  var answer='';
+  // ── Branch: code query → code worker, else → normal flow ──
+  if (isCodeQuery(text)) {
+    var codeMode = detectCodeMode(text);
+    addStreamRow();
+    updateStream('Analyzing code query…');
+    try {
+      answer = await callCodeAPI(text, codeMode, hist);
+      if (!answer || !answer.trim()) answer = 'No response from code agent.';
+      // Remove stream row, then insert code-rendered row
+      var srow = document.getElementById('srow');
+      if (srow) srow.remove();
+      addCodeMsgRow(answer, codeMode);
+      scrollBottom();
+      await saveMessage(activeId, 'assistant', answer);
+    } catch(err) {
+      var srow2 = document.getElementById('srow');
+      if (srow2) srow2.remove();
+      var errMsg = 'Error: ' + escHtml(err.message);
+      addMsgRow('assistant', errMsg);
+      await saveMessage(activeId, 'assistant', errMsg);
+    }
+    setBusy(false);
+    return;
+  }
+
+  // ── Normal (non-code) flow ──
+  var route = await getRoutingDecision(text);
+  var systemPrompt = buildUnifiedSystemPrompt(route.primary, route.collaborators);
+  hist.unshift({role:'system',content:systemPrompt});
+  if(userContext) hist.unshift({role:'system',content:'User context: '+userContext});
+
+  addStreamRow();
+
   try {
     if (docFile) {
-      var docQuestion = systemPrompt + '\n\nUser question:\n' + msgToSend;
-      answer = await callDoc(docQuestion,docFile.text);
+      var docQuestion = systemPrompt + '\n\nUser question:\n' + text;
+      answer = await callDoc(docQuestion, docFile.text);
     } else {
-      answer = await callStream(msgToSend,hist);
+      answer = await callStream(text, hist);
     }
     if(!answer||!answer.trim()) answer='No response from model. Please try again.';
     finalizeStream(answer);
     await saveMessage(activeId,'assistant',answer);
   } catch(err){
-    var em=err.message==='stopped'?'*(Generation stopped)*':'Error: '+escHtml(err.message);
+    var em = err.message==='stopped' ? '*(Generation stopped)*' : 'Error: '+escHtml(err.message);
     finalizeStream(em);
     if(err.message!=='stopped') await saveMessage(activeId,'assistant',em);
   } finally{ setBusy(false); }
 }
 
-// ── API ──
 async function callStream(message,history){
   var res;
   try{ res=await fetch(API+'/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:message,history:history})}); }
@@ -916,7 +1359,7 @@ async function callStream(message,history){
         var data=line.slice(5).trim();
         if(data==='[DONE]')return full;
         try{ var p=JSON.parse(data); if(p.token){full+=p.token;updateStream(full);} if(p.error)throw new Error(p.error); }
-        catch(pe){ if(pe.message!=='stopped'){}  }
+        catch(pe){ if(pe.message!=='stopped'){} }
       }
     }
   } finally{ streamRdr=null; }
@@ -944,7 +1387,6 @@ async function callDoc(question,documentText){
   return d.response||'No response.';
 }
 
-// ── FILE ──
 async function onFile(e){
   var file=e.target.files[0]; if(!file)return; e.target.value='';
   var ext=file.name.split('.').pop().toLowerCase();
@@ -986,7 +1428,6 @@ async function extractDOCX(file){
   throw new Error('Could not find content in DOCX');
 }
 
-// ── HELPERS ──
 function updateDocBar(){ var b=document.getElementById('docbar'),n=document.getElementById('docnm'); docFile?(b.classList.add('on'),n.textContent=docFile.name):(b.classList.remove('on'),n.textContent=''); }
 function removeDoc(){ docFile=null; updateDocBar(); toast('Document removed'); }
 function setBusy(v){ busy=v; stopFlag=false; document.getElementById('sendbtn').disabled=v; var s=document.getElementById('stopbtn'); v?s.classList.add('on'):s.classList.remove('on'); }
