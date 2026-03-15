@@ -326,6 +326,61 @@ var messages = [], busy = false, stopFlag = false;
 var docFile = null, streamRdr = null, userContext = '', sbOpen = true, booted = false;
 var _activeTab = 'signin';
 
+var AGENT_PROFILES = {
+  DATASET: { label: 'Dataset Builder Agent', goal: 'Structure and build reliable data payloads and collection specs.' },
+  DATA_INTEL: { label: 'Data Intelligence Agent', goal: 'Analyze anomalies, cohorts, trend shifts, and forecasting signals.' },
+  KNOWLEDGE: { label: 'Knowledge Graph Agent', goal: 'Map entities, relationships, and graph gaps to improve discoverability.' },
+  RESEARCH: { label: 'Research & Math Agent', goal: 'Synthesize research evidence and solve quantitative/math tasks.' },
+  CONCEPT: { label: 'Concept Explainer Agent', goal: 'Explain complex ideas simply with practical examples and breakdowns.' },
+  COMPETITIVE: { label: 'Competitive Intel Agent', goal: 'Assess competitors, market positioning, risks, and opportunities.' },
+  ARCHITECT: { label: 'Architect Agent', goal: 'Design scalable architecture, tradeoffs, and implementation plans.' },
+  CODE: { label: 'Code Agent', goal: 'Implement code, debug issues, and review for quality/security.' },
+  PRODUCT: { label: 'Product Builder Agent', goal: 'Create PRDs, feature specs, schemas, and delivery milestones.' },
+  AUTOMATION: { label: 'Automation Builder Agent', goal: 'Design workflow automations, orchestration, and agent chains.' },
+  EVALUATOR: { label: 'AI Model Evaluator Agent', goal: 'Evaluate model quality, hallucination risk, and benchmark strategy.' },
+  LEGAL: { label: 'Startup Legal & Compliance Agent', goal: 'Review legal/compliance risks, policies, and governance controls.' },
+  GROWTH: { label: 'Growth Intelligence Agent', goal: 'Optimize GTM, funnels, channels, and experimentation loops.' },
+  FINANCE: { label: 'Financial Agent', goal: 'Build financial models, scenarios, and budget/ROI views.' },
+  PERSONAL_OS: { label: 'Personal OS Agent', goal: 'Organize goals, decisions, habits, reflection, and execution plans.' }
+};
+
+function classifyIntent(message) {
+  var m = (message || '').toLowerCase();
+  if (/(dataset|etl|csv|schema mapping|data payload)/.test(m)) return 'DATASET';
+  if (/(anomaly|cohort|forecast|timeseries|dashboard metric|diagnostic)/.test(m)) return 'DATA_INTEL';
+  if (/(knowledge graph|ontology|entity relation|node|edge)/.test(m)) return 'KNOWLEDGE';
+  if (/(research|citation|paper|equation|calculus|statistics|probability|prove)/.test(m)) return 'RESEARCH';
+  if (/(explain|break down|eli5|what is|how does)/.test(m)) return 'CONCEPT';
+  if (/(competitor|market landscape|positioning|swot|threat|opportunit)/.test(m)) return 'COMPETITIVE';
+  if (/(architecture|tech stack|microservice|system design|scalability)/.test(m)) return 'ARCHITECT';
+  if (/(code|bug|debug|refactor|function|class|api endpoint|security flaw|pull request)/.test(m)) return 'CODE';
+  if (/(prd|product requirements|feature spec|user story|acceptance criteria|roadmap)/.test(m)) return 'PRODUCT';
+  if (/(automation|workflow|zap|n8n|orchestrat|pipeline|agent chain)/.test(m)) return 'AUTOMATION';
+  if (/(evaluate model|benchmark|hallucination|eval|precision|recall|latency test)/.test(m)) return 'EVALUATOR';
+  if (/(legal|compliance|terms|privacy policy|gdpr|hipaa|contract|liability)/.test(m)) return 'LEGAL';
+  if (/(growth|gtm|go-to-market|acquisition|retention|funnel|virality|ads)/.test(m)) return 'GROWTH';
+  if (/(finance|financial|budget|cash flow|burn rate|runway|unit economics|roi)/.test(m)) return 'FINANCE';
+  if (/(personal os|habit|goal|journal|reflection|weekly plan|decision log)/.test(m)) return 'PERSONAL_OS';
+  return 'CONCEPT';
+}
+
+function buildStructuredPrompt(intent) {
+  var profile = AGENT_PROFILES[intent] || AGENT_PROFILES.CONCEPT;
+  return [
+    'You are StreminiAI operating as the ' + profile.label + '.',
+    'Primary objective: ' + profile.goal,
+    'Do not use research-paper style prose.',
+    'Use markdown headings with short bullets only.',
+    'Always structure output exactly as:',
+    '## Executive Summary',
+    '## Findings',
+    '## Action Plan (prioritized)',
+    '## Risks & Mitigations',
+    '## Next 7-Days',
+    'Include compact code blocks, math, tables, or mermaid only when they materially improve the answer.'
+  ].join('\n');
+}
+
 window.addEventListener('DOMContentLoaded', function () {
   if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc =
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -671,8 +726,12 @@ async function sendMsg() {
 
   inp.value=''; resize(inp);
 
+  var intent = classifyIntent(text);
+  var systemPrompt = buildStructuredPrompt(intent);
+
   // Snapshot history BEFORE saving current message
   var hist=messages.slice(-MAX_H).map(function(m){return{role:m.role,content:m.content};});
+  hist.unshift({role:'system',content:systemPrompt});
   if(userContext) hist.unshift({role:'system',content:'User context: '+userContext});
 
   await saveMessage(activeId,'user',text);
@@ -682,10 +741,15 @@ async function sendMsg() {
 
   addMsgRow('user',text); setBusy(true); addStreamRow();
 
-  var msgToSend = userContext ? '[User context: '+userContext+']\n\n'+text : text;
+  var msgToSend = text;
   var answer='';
   try {
-    answer = docFile ? await callDoc(msgToSend,docFile.text) : await callStream(msgToSend,hist);
+    if (docFile) {
+      var docQuestion = systemPrompt + '\n\nUser question:\n' + msgToSend;
+      answer = await callDoc(docQuestion,docFile.text);
+    } else {
+      answer = await callStream(msgToSend,hist);
+    }
     if(!answer||!answer.trim()) answer='No response from model. Please try again.';
     finalizeStream(answer);
     await saveMessage(activeId,'assistant',answer);
