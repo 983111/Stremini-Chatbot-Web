@@ -66,9 +66,9 @@ Briefly explain before the block. Add usage notes after.
 
 ── DIAGRAMS (when asked to visualize, diagram, draw, chart) ──
 Respond with a Mermaid diagram inside a fenced block:
-```mermaid
+\`\`\`mermaid
 graph TD / sequenceDiagram / pie / gantt / etc.
-```
+\`\`\`
 Then explain it in 2-3 sentences.
 
 ── SHORT / CONVERSATIONAL ──
