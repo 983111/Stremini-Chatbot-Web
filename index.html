@@ -11,9 +11,11 @@
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({ startOnLoad: false, theme: 'neutral' });</script>
 <script src="renderer.js"></script>
+<script src="research-renderer.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:#ffffff;--bg-sub:#f9f8f6;--bg-side:#faf9f7;
@@ -1368,6 +1370,54 @@ async function sendMsg() {
   setBusy(true);
 
   var answer = '';
+
+  // ── Branch: research/math query → research agent ──
+  if (window.StreminiResearch) {
+    window.StreminiResearch.injectStyles();
+    var rmType = window.StreminiResearch.detect(text);
+    if (rmType) {
+      addStreamRow();
+      updateStream(rmType === 'math' ? 'Solving…' : 'Researching…');
+      try {
+        var rmData = await window.StreminiResearch.call(text, rmType, hist);
+        var srowRm = document.getElementById('srow');
+        if (srowRm) srowRm.remove();
+
+        // Insert a message row with the rendered research/math output
+        var mwRm = document.getElementById('msgs-wrap');
+        mwRm.style.display = 'flex';
+        document.getElementById('welcome').style.display = 'none';
+        var rowRm = document.createElement('div');
+        rowRm.className = 'mr';
+        rowRm.innerHTML =
+          '<div class="mav ai">S</div>' +
+          '<div class="mbody">' +
+            '<div class="mname">StreminiAI</div>' +
+            '<div class="mc" id="rm-slot-' + activeId + '"></div>' +
+            '<div class="macts"><button class="abt" onclick="copyMsg(this)">' +
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy' +
+            '</button></div>' +
+          '</div>';
+        mwRm.appendChild(rowRm);
+        scrollBottom();
+
+        var rmSlot = document.getElementById('rm-slot-' + activeId);
+        await window.StreminiResearch.renderResult(rmData, rmSlot, rmType);
+        scrollBottom();
+
+        var rmContent = rmData.content || rmData.solution || '';
+        await saveMessage(activeId, 'assistant', rmContent);
+      } catch(rmErr) {
+        var srowRm2 = document.getElementById('srow');
+        if (srowRm2) srowRm2.remove();
+        var errMsgRm = 'Error: ' + escHtml(rmErr.message);
+        addMsgRow('assistant', errMsgRm);
+        await saveMessage(activeId, 'assistant', errMsgRm);
+      }
+      setBusy(false);
+      return;
+    }
+  }
 
   // ── Branch: code query → code worker, else → normal flow ──
   if (isCodeQuery(text)) {
