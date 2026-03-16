@@ -8,10 +8,11 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="renderer.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({ startOnLoad: false, theme: 'neutral' });</script>
-<script src="renderer.js"></script>
 <script src="research-renderer.js"></script>
+<script src="agent-router.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1371,51 +1372,68 @@ async function sendMsg() {
 
   var answer = '';
 
-  // ── Branch: research/math query → research agent ──
-  if (window.StreminiResearch) {
-    window.StreminiResearch.injectStyles();
-    var rmType = window.StreminiResearch.detect(text);
-    if (rmType) {
+  // ── Branch: specialist agent router (math/research/growth/strategy/legal/competitive) ──
+  if (window.StreminiAgentRouter) {
+    var agentType = window.StreminiAgentRouter.detect(text);
+    if (agentType) {
       addStreamRow();
-      updateStream(rmType === 'math' ? 'Solving…' : 'Researching…');
-      try {
-        var rmData = await window.StreminiResearch.call(text, rmType, hist);
-        var srowRm = document.getElementById('srow');
-        if (srowRm) srowRm.remove();
+      var agentLabels = {
+        math:        'Solving…',
+        research:    'Researching…',
+        growth:      'Building growth strategy…',
+        strategy:    'Building strategy report…',
+        legal:       'Analysing legal query…',
+        competitive: 'Running competitive intelligence…'
+      };
+      updateStream(agentLabels[agentType] || 'Processing…');
 
-        // Insert a message row with the rendered research/math output
-        var mwRm = document.getElementById('msgs-wrap');
-        mwRm.style.display = 'flex';
+      try {
+        // Build a slot row for the result
+        var srowAgent = document.getElementById('srow');
+        if (srowAgent) srowAgent.remove();
+
+        var mwAgent = document.getElementById('msgs-wrap');
+        mwAgent.style.display = 'flex';
         document.getElementById('welcome').style.display = 'none';
-        var rowRm = document.createElement('div');
-        rowRm.className = 'mr';
-        rowRm.innerHTML =
+
+        var rowAgent = document.createElement('div');
+        rowAgent.className = 'mr';
+        var agentSlotId = 'agent-slot-' + Date.now();
+        rowAgent.innerHTML =
           '<div class="mav ai">S</div>' +
           '<div class="mbody">' +
             '<div class="mname">StreminiAI</div>' +
-            '<div class="mc" id="rm-slot-' + activeId + '"></div>' +
+            '<div class="mc" id="' + agentSlotId + '">' +
+              '<div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>' +
+            '</div>' +
             '<div class="macts"><button class="abt" onclick="copyMsg(this)">' +
               '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy' +
             '</button></div>' +
           '</div>';
-        mwRm.appendChild(rowRm);
+        mwAgent.appendChild(rowAgent);
         scrollBottom();
 
-        var rmSlot = document.getElementById('rm-slot-' + activeId);
-        await window.StreminiResearch.renderResult(rmData, rmSlot, rmType);
-        scrollBottom();
+        var agentSlot = document.getElementById(agentSlotId);
+        var handled = await window.StreminiAgentRouter.handle(text, hist, agentSlot);
 
-        var rmContent = rmData.content || rmData.solution || '';
-        await saveMessage(activeId, 'assistant', rmContent);
-      } catch(rmErr) {
-        var srowRm2 = document.getElementById('srow');
-        if (srowRm2) srowRm2.remove();
-        var errMsgRm = 'Error: ' + escHtml(rmErr.message);
-        addMsgRow('assistant', errMsgRm);
-        await saveMessage(activeId, 'assistant', errMsgRm);
+        if (handled) {
+          scrollBottom();
+          var agentContent = agentSlot ? agentSlot.innerText : text;
+          await saveMessage(activeId, 'assistant', agentContent.slice(0, 4000));
+          setBusy(false);
+          return;
+        }
+        // If not handled (shouldn't happen), fall through
+        rowAgent.remove();
+      } catch(agentErr) {
+        var srowClean = document.getElementById('srow');
+        if (srowClean) srowClean.remove();
+        var errMsgAgent = 'Error: ' + escHtml(agentErr.message);
+        addMsgRow('assistant', errMsgAgent);
+        await saveMessage(activeId, 'assistant', errMsgAgent);
+        setBusy(false);
+        return;
       }
-      setBusy(false);
-      return;
     }
   }
 
