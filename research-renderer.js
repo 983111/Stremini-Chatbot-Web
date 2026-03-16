@@ -1,12 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   STREMINI — RESEARCH & MATH RENDERER BRIDGE
-   Detects research/math queries and routes them to the agentic
-   research backend, then renders structured paper/math output.
+   STREMINI — RESEARCH & MATH RENDERER BRIDGE v2.0
+   Clean, beautiful math and research output rendering.
 ═══════════════════════════════════════════════════════════════ */
 
 var RESEARCH_API = 'https://agentic-research.vishwajeetadkine705.workers.dev';
 
-/* ─── Detection ─── */
 var RESEARCH_KEYWORDS = [
   'research paper','write a paper','write paper','academic paper','literature review',
   'study on','comprehensive study','overview of','history of','impact of',
@@ -47,565 +45,582 @@ window.StreminiResearch = {
     return data;
   },
 
-  /* ── Shared utils ── */
+  /* ── Utilities ── */
   esc: function(s) {
     return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   },
 
-  formatInlineMath: function(text) {
-    var frag = document.createDocumentFragment();
-    var re = /(\$[^$]+\$|`[^`]+`)/g;
-    var last = 0, m;
-    while ((m = re.exec(text)) !== null) {
-      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
-      var span = document.createElement('span');
-      span.className = 'rm-math-inline';
-      span.textContent = m[0].replace(/^[$`]|[$`]$/g, '');
-      frag.appendChild(span);
-      last = re.lastIndex;
-    }
-    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-    return frag;
+  inlineMath: function(text) {
+    // Replace $...$ and `...` with styled math spans
+    var s = window.StreminiResearch.esc(text);
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+    s = s.replace(/`([^`]+)`/g, '<span class="rm2-math-inline">$1</span>');
+    s = s.replace(/\$([^$\n]+)\$/g, '<span class="rm2-math-inline">$1</span>');
+    return s;
   },
 
-  /* ── Diagram parser ── */
-  parseContent: function(content) {
-    var parts = [];
-    var re = /<diagram\s+type=["']?(\w+)["']?\s+title=["']?([^"'>]*)["']?\s*>([\s\S]*?)<\/diagram>/gi;
-    var last = 0, m;
-    while ((m = re.exec(content)) !== null) {
-      if (m.index > last) parts.push({ kind: 'text', txt: content.slice(last, m.index) });
-      parts.push({ kind: 'diagram', dtype: m[1], title: m[2], code: m[3].trim() });
-      last = m.index + m[0].length;
-    }
-    if (last < content.length) parts.push({ kind: 'text', txt: content.slice(last) });
-    return parts;
+  copyToClipboard: function(text, btn) {
+    var orig = btn.innerHTML;
+    var ok = function() {
+      btn.classList.add('rm2-copied');
+      btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Copied';
+      setTimeout(function() { btn.classList.remove('rm2-copied'); btn.innerHTML = orig; }, 2000);
+    };
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(ok).catch(function() { ok(); });
+    else ok();
   },
 
-  renderDiagram: async function(part) {
-    var dw = document.createElement('div');
-    dw.className = 'rm-diagram-wrap';
-    dw.innerHTML = '<div class="rm-diagram-bar">' +
-      '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg> ' +
-      window.StreminiResearch.esc(part.title || part.dtype) +
-      '</div>';
-    var dr = document.createElement('div');
-    dr.className = 'rm-diagram-render';
-    try {
-      if (window.mermaid) {
-        var uid = 'rm_d_' + Date.now() + Math.random().toString(36).slice(2);
-        var result = await window.mermaid.render(uid, part.code);
-        dr.innerHTML = result.svg || result;
-      } else {
-        dr.textContent = part.code;
-      }
-    } catch(e) {
-      dr.className = 'rm-diagram-err';
-      dr.textContent = 'Diagram error: ' + e.message;
-    }
-    dw.appendChild(dr);
-    return dw;
+  /* ── CSS Injection ── */
+  injectStyles: function() {
+    if (document.getElementById('rm2-styles')) return;
+    var s = document.createElement('style');
+    s.id = 'rm2-styles';
+    s.textContent = `
+/* ── WRAPPER ── */
+.rm2-wrap { font-family: var(--font); }
+.rm2-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; margin-bottom: 12px;
+}
+.rm2-chip-math     { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+.rm2-chip-research { background: #fffbf5; color: #b45309; border: 1px solid #fde68a; }
+
+/* ── CARD ── */
+.rm2-card {
+  background: var(--bg); border: 1px solid var(--bdr);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06); margin: 2px 0 6px;
+}
+.rm2-card-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 15px; border-bottom: 1px solid var(--bdr); background: var(--bg-sub);
+}
+.rm2-card-title { font-size: 12.5px; font-weight: 600; color: var(--tx2); }
+.rm2-copy-btn {
+  background: none; border: 1px solid var(--bdr); cursor: pointer;
+  font-size: 11px; color: var(--tx3); font-family: var(--font);
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 5px; transition: all .15s;
+}
+.rm2-copy-btn:hover { background: var(--bg-hov); color: var(--tx); }
+.rm2-copied { background: #ecfdf5 !important; color: #059669 !important; border-color: #6ee7b7 !important; }
+
+/* ── MATH BODY ── */
+.rm2-math-body {
+  padding: 20px 22px; max-height: 600px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* ── MATH SECTION ── */
+.rm2-section {
+  border: 1px solid var(--bdr); border-radius: 10px; overflow: hidden;
+}
+.rm2-section-hd {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px; background: var(--bg-sub);
+  border-bottom: 1px solid var(--bdr); font-size: 11px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--tx2);
+}
+.rm2-section-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--acc); flex-shrink: 0;
+}
+.rm2-section-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+
+/* ── FORMULA BOX ── */
+.rm2-formula {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border: 1px solid #bae6fd; border-radius: 9px; padding: 13px 16px;
+  font-family: var(--mono); font-size: 15px; color: #0369a1;
+  font-weight: 500; overflow-x: auto; line-height: 1.6;
+}
+.rm2-formula-lbl {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: #0284c7; margin-bottom: 5px;
+  font-family: var(--font);
+}
+
+/* ── STEP ROW ── */
+.rm2-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px;
+  padding: 10px 12px;
+}
+.rm2-step-no {
+  width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+  background: #7c3aed; color: #fff; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.rm2-step-content { flex: 1; color: #312e81; font-size: 13.5px; line-height: 1.7; }
+
+/* ── FINAL ANSWER ── */
+.rm2-answer {
+  background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 10px;
+  padding: 13px 15px;
+}
+.rm2-answer-lbl {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: #059669; margin-bottom: 5px;
+  font-family: var(--font);
+}
+.rm2-answer-val {
+  font-family: var(--mono); font-size: 15px; font-weight: 600;
+  color: #065f46; line-height: 1.6;
+}
+.rm2-answer-note { font-size: 13px; color: #047857; margin-top: 6px; line-height: 1.6; }
+
+/* ── INLINE MATH ── */
+.rm2-math-inline {
+  font-family: var(--mono); font-size: 0.92em;
+  background: #eef2ff; border: 1px solid #c7d2fe;
+  border-radius: 4px; padding: 1px 5px; color: #4338ca;
+}
+
+/* ── PROSE ── */
+.rm2-para { font-size: 13.5px; color: var(--tx); line-height: 1.78; }
+.rm2-list { margin: 0 0 0 18px; display: flex; flex-direction: column; gap: 5px; }
+.rm2-list li { font-size: 13px; color: var(--tx2); line-height: 1.65; }
+
+/* ── NOTE / TIP ── */
+.rm2-note {
+  background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+  padding: 10px 13px; font-size: 13px; color: #1e3a8a; line-height: 1.65;
+}
+
+/* ── RESEARCH PAPER ── */
+.rm2-paper-body { padding: 22px 24px; max-height: 580px; overflow-y: auto; }
+.rm2-paper-title {
+  font-family: 'Lora', Georgia, serif; font-size: 18px; font-weight: 700;
+  line-height: 1.35; color: var(--tx); margin-bottom: 6px; letter-spacing: -.3px;
+}
+.rm2-paper-meta {
+  font-size: 12px; color: var(--tx3); margin-bottom: 16px;
+  display: flex; gap: 12px; flex-wrap: wrap; padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--bdr);
+}
+.rm2-paper-section { margin-bottom: 18px; }
+.rm2-paper-sec-hd {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .5px; color: #b45309; margin-bottom: 9px;
+  padding-bottom: 5px; border-bottom: 1px solid var(--bdr-soft);
+}
+.rm2-paper-para {
+  font-family: 'Lora', Georgia, serif; font-size: 14.5px;
+  line-height: 1.85; color: var(--tx); margin-bottom: 10px;
+  text-align: justify; hyphens: auto;
+}
+.rm2-paper-para:last-child { margin-bottom: 0; }
+.rm2-keywords {
+  background: var(--bg-sub); border: 1px solid var(--bdr-soft);
+  border-radius: 7px; padding: 8px 12px;
+  font-size: 12.5px; color: var(--tx2); margin-top: 8px;
+}
+.rm2-ref-item {
+  font-size: 12.5px; line-height: 1.65; margin-bottom: 7px;
+  padding-left: 20px; text-indent: -20px; color: var(--tx2);
+}
+
+/* ── DL ROW ── */
+.rm2-dl-row {
+  display: flex; gap: 6px; padding: 10px 16px;
+  border-top: 1px solid var(--bdr-soft); background: var(--bg-sub);
+}
+.rm2-dl-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border: none; border-radius: 7px;
+  font-family: var(--font); font-size: 11.5px; font-weight: 500;
+  cursor: pointer; background: var(--tx); color: #fff; transition: all .15s;
+}
+.rm2-dl-btn:hover { background: #2d2a26; transform: translateY(-1px); }
+`;
+    document.head.appendChild(s);
   },
 
-  /* ── Math DOM builder ── */
-  normalizeMathSection: function(raw) {
-    var key = raw.toLowerCase().replace(/[^a-z\s]/g,'').trim();
-    if (!key) return 'Explanation';
-    if (/(problem|question)/.test(key)) return 'Problem';
-    if (/(given|data|known)/.test(key)) return 'Given';
-    if (/(approach|plan|strategy|method)/.test(key)) return 'Approach';
-    if (/(step|solution|work)/.test(key)) return 'Step-by-step';
-    if (/(check|verify|validation)/.test(key)) return 'Verification';
-    if (/(final|answer|result|therefore)/.test(key)) return 'Final Answer';
-    if (/(note|intuition|insight|tip)/.test(key)) return 'Notes';
-    return raw.trim();
-  },
-
-  createMathSection: function(container, sectionName) {
-    var sec = document.createElement('div');
-    sec.className = 'rm-math-section';
-    var hd = document.createElement('div');
-    hd.className = 'rm-math-section-h';
-    hd.innerHTML = '<span class="rm-math-dot"></span>' + window.StreminiResearch.esc(sectionName);
-    var bd = document.createElement('div');
-    bd.className = 'rm-math-section-b';
-    sec.appendChild(hd);
-    sec.appendChild(bd);
-    container.appendChild(sec);
-    return bd;
-  },
-
-  appendMathBlock: function(target, line, state) {
+  /* ══════════════════════════════════════════
+     MATH RENDERER — clean structured sections
+  ══════════════════════════════════════════ */
+  renderMath: function(content, pid) {
     var self = window.StreminiResearch;
-    if (!line) { state.currentList = null; return; }
+    var body = document.createElement('div');
+    body.className = 'rm2-math-body';
+    body.id = pid;
 
-    if (/^[-*•]\s+/.test(line)) {
-      if (!state.currentList) {
-        state.currentList = document.createElement('ul');
-        state.currentList.className = 'rm-math-list';
-        target.appendChild(state.currentList);
+    // ── Parse the raw content into logical sections ──
+    var lines = content.split('\n');
+    var sections = [];
+    var currentSection = null;
+    var currentLines = [];
+
+    // Section header patterns to recognize
+    var sectionPatterns = [
+      /^#{1,3}\s+(.+)$/,                                  // ## Heading
+      /^([A-Z][A-Z\s&\/\-]{3,40}):?\s*$/,                 // ALL CAPS LABEL
+      /^(Problem|Given|Approach|Step[s]?|Solution|Verification|Answer|Result|Note[s]?|Check)\s*[:\-]?\s*$/i
+    ];
+
+    function isSectionHead(line) {
+      var t = line.trim();
+      if (t.length < 2 || t.length > 80) return false;
+      for (var p of sectionPatterns) { if (p.test(t)) return true; }
+      return false;
+    }
+
+    function extractTitle(line) {
+      var t = line.trim();
+      var m;
+      if ((m = /^#{1,3}\s+(.+)$/.exec(t))) return m[1].trim();
+      return t.replace(/:$/, '').trim();
+    }
+
+    function flush() {
+      if (currentSection !== null || currentLines.length) {
+        sections.push({ title: currentSection, lines: currentLines.slice() });
       }
-      var li = document.createElement('li');
-      li.appendChild(self.formatInlineMath(line.replace(/^[-*•]\s+/, '')));
-      state.currentList.appendChild(li);
-      return;
-    }
-    state.currentList = null;
-
-    var stepMatch = /^(?:step\s*)?(\d+)[\).:-]\s+(.+)/i.exec(line);
-    if (stepMatch) {
-      var row = document.createElement('div');
-      row.className = 'rm-math-step';
-      row.innerHTML = '<span class="rm-math-step-no">' + stepMatch[1] + '</span>';
-      var txt = document.createElement('div');
-      txt.className = 'rm-math-step-txt';
-      txt.appendChild(self.formatInlineMath(stepMatch[2]));
-      row.appendChild(txt);
-      target.appendChild(row);
-      return;
+      currentLines = [];
+      currentSection = null;
     }
 
-    if (/^(final answer|answer|result|therefore)\s*[:\-]/i.test(line)) {
-      var fin = document.createElement('div');
-      fin.className = 'rm-math-final';
-      fin.appendChild(self.formatInlineMath(line));
-      target.appendChild(fin);
-      return;
-    }
-
-    if (/^(note|tip|intuition)\s*[:\-]/i.test(line)) {
-      var note = document.createElement('div');
-      note.className = 'rm-math-note';
-      note.appendChild(self.formatInlineMath(line));
-      target.appendChild(note);
-      return;
-    }
-
-    if (/[=:].*[+\-*/^()]/.test(line) || /\b(sum|integral|sqrt|lim|theta|sigma|pi|alpha|beta)\b/i.test(line)) {
-      var eq = document.createElement('div');
-      eq.className = 'rm-math-eq';
-      eq.textContent = line;
-      target.appendChild(eq);
-      return;
-    }
-
-    var p = document.createElement('div');
-    p.className = 'rm-math-para';
-    p.appendChild(self.formatInlineMath(line));
-    target.appendChild(p);
-  },
-
-  buildMathDOM: async function(allParts) {
-    var self = window.StreminiResearch;
-    var container = document.createElement('div');
-    container.className = 'rm-math-doc';
-
-    var lines = [];
-    for (var i = 0; i < allParts.length; i++) {
-      var p = allParts[i];
-      if (p.kind === 'diagram') {
-        p.el = await self.renderDiagram(p);
-        lines.push({ type: 'diagram', el: p.el });
+    lines.forEach(function(raw) {
+      var t = raw.trim();
+      if (isSectionHead(t)) {
+        flush();
+        currentSection = extractTitle(t);
       } else {
-        p.txt.split('\n').forEach(function(l) { lines.push({ type: 'line', txt: l.trim() }); });
+        currentLines.push(raw);
       }
+    });
+    flush();
+
+    // If we have no named sections, create a single "Solution" section
+    if (sections.length === 0 || (sections.length === 1 && !sections[0].title)) {
+      sections = [{ title: 'Solution', lines: lines }];
     }
 
-    var firstLine = '';
-    for (var k = 0; k < lines.length; k++) {
-      if (lines[k].type === 'line' && lines[k].txt) { firstLine = lines[k].txt; break; }
-    }
+    // ── Render each section ──
+    sections.forEach(function(sec) {
+      var sectionLines = sec.lines.filter(function(l) { return l.trim(); });
+      if (!sectionLines.length && !sec.title) return;
 
-    var header = document.createElement('div');
-    header.className = 'rm-math-header';
-    header.innerHTML = '<div class="rm-math-kicker">Math solution</div>' +
-      '<div class="rm-math-title"></div>';
-    header.querySelector('.rm-math-title').textContent = firstLine.replace(/^#{1,3}\s*/, '');
-    container.appendChild(header);
+      var sectionEl = document.createElement('div');
+      sectionEl.className = 'rm2-section';
 
-    var sectionName = 'Explanation';
-    var sectionBody = self.createMathSection(container, sectionName);
-    var state = { currentList: null };
+      // Section header
+      if (sec.title) {
+        var hd = document.createElement('div');
+        hd.className = 'rm2-section-hd';
+        var dot = document.createElement('span');
+        dot.className = 'rm2-section-dot';
+        hd.appendChild(dot);
+        hd.appendChild(document.createTextNode(sec.title));
+        sectionEl.appendChild(hd);
+      }
 
-    lines.forEach(function(item, idx) {
-      if (item.type === 'diagram') {
-        state.currentList = null;
-        if (item.el) sectionBody.appendChild(item.el);
+      var secBody = document.createElement('div');
+      secBody.className = 'rm2-section-body';
+
+      // ── Detect and render final answer specially ──
+      var isFinalAnswer = sec.title && /^(final\s*answer|answer|result|therefore)\s*$/i.test(sec.title.trim());
+
+      if (isFinalAnswer) {
+        var ansBox = document.createElement('div');
+        ansBox.className = 'rm2-answer';
+        var ansLbl = document.createElement('div');
+        ansLbl.className = 'rm2-answer-lbl';
+        ansLbl.textContent = 'Final Answer';
+        ansBox.appendChild(ansLbl);
+        sectionLines.forEach(function(l) {
+          var t = l.trim();
+          if (!t) return;
+          var isFormula = /[=+\-*/^()]/.test(t) || /\bx\s*=/.test(t) || /\$/.test(t);
+          if (isFormula) {
+            var val = document.createElement('div');
+            val.className = 'rm2-answer-val';
+            val.textContent = t.replace(/^\$|\$$/g, '').replace(/`/g, '');
+            ansBox.appendChild(val);
+          } else {
+            var note = document.createElement('div');
+            note.className = 'rm2-answer-note';
+            note.innerHTML = self.inlineMath(t);
+            ansBox.appendChild(note);
+          }
+        });
+        secBody.appendChild(ansBox);
+        sectionEl.appendChild(secBody);
+        body.appendChild(sectionEl);
         return;
       }
-      var line = item.txt;
-      if (!line) { state.currentList = null; return; }
-      if (idx === 0 && line === firstLine) return;
 
-      var headingMatch = /^#{1,3}\s+(.+)$/.exec(line) || /^([A-Za-z][A-Za-z\s]{1,30})\s*:\s*$/.exec(line);
-      if (headingMatch) {
-        sectionName = self.normalizeMathSection(headingMatch[1]);
-        sectionBody = self.createMathSection(container, sectionName);
-        state.currentList = null;
-        return;
+      // ── Parse section lines into typed elements ──
+      var stepCounter = 0;
+      var currentList = null;
+      var pendingFormulas = [];
+
+      function flushFormulas() {
+        if (!pendingFormulas.length) return;
+        var box = document.createElement('div');
+        box.className = 'rm2-formula';
+        pendingFormulas.forEach(function(f, i) {
+          if (i > 0) { var br = document.createElement('br'); box.appendChild(br); }
+          box.appendChild(document.createTextNode(f));
+        });
+        secBody.appendChild(box);
+        pendingFormulas = [];
       }
 
-      var explicitMatch = /^(problem|given|approach|steps?|verification|final answer|result|notes?)\s*:\s*(.+)$/i.exec(line);
-      if (explicitMatch) {
-        var targetSection = self.normalizeMathSection(explicitMatch[1]);
-        if (targetSection !== sectionName) {
-          sectionName = targetSection;
-          sectionBody = self.createMathSection(container, sectionName);
+      function flushList() {
+        currentList = null;
+      }
+
+      sectionLines.forEach(function(rawLine) {
+        var t = rawLine.trim();
+        if (!t) { flushFormulas(); flushList(); return; }
+
+        // Numbered step: "1. ..." or "Step 1: ..."
+        var stepMatch = /^(?:step\s*)?(\d+)[).:\s]\s+(.+)/i.exec(t);
+        if (stepMatch) {
+          flushFormulas(); flushList();
+          stepCounter++;
+          var row = document.createElement('div');
+          row.className = 'rm2-step';
+          var num = document.createElement('div');
+          num.className = 'rm2-step-no';
+          num.textContent = stepMatch[1];
+          var txt = document.createElement('div');
+          txt.className = 'rm2-step-content';
+          txt.innerHTML = self.inlineMath(stepMatch[2]);
+          row.appendChild(num); row.appendChild(txt);
+          secBody.appendChild(row);
+          return;
         }
-        self.appendMathBlock(sectionBody, explicitMatch[2], state);
-        return;
-      }
 
-      self.appendMathBlock(sectionBody, line, state);
+        // Bullet list
+        if (/^[-*•]\s/.test(t)) {
+          flushFormulas();
+          if (!currentList) {
+            currentList = document.createElement('ul');
+            currentList.className = 'rm2-list';
+            secBody.appendChild(currentList);
+          }
+          var li = document.createElement('li');
+          li.innerHTML = self.inlineMath(t.replace(/^[-*•]\s+/, ''));
+          currentList.appendChild(li);
+          return;
+        }
+        flushList();
+
+        // Note / tip lines
+        if (/^(note|tip|hint|check|verify|therefore|thus)\s*[:\-]/i.test(t)) {
+          flushFormulas();
+          var note = document.createElement('div');
+          note.className = 'rm2-note';
+          note.innerHTML = self.inlineMath(t);
+          secBody.appendChild(note);
+          return;
+        }
+
+        // Formula / equation line: contains math operators or = sign with variables
+        var looksLikeMath = (
+          /[=]/.test(t) && /[+\-*/^x²³√∫∑πθ]|[a-z]\s*[+\-*/=]|\b\d+[a-z]/.test(t)
+        ) || /^\s*\$/.test(t) || /^\s*\\/.test(t);
+
+        if (looksLikeMath) {
+          var clean = t.replace(/^\$|\$$/g, '').replace(/`/g, '');
+          pendingFormulas.push(clean);
+          return;
+        }
+
+        // Plain prose
+        flushFormulas();
+        var para = document.createElement('div');
+        para.className = 'rm2-para';
+        para.innerHTML = self.inlineMath(t);
+        secBody.appendChild(para);
+      });
+
+      flushFormulas();
+      sectionEl.appendChild(secBody);
+      body.appendChild(sectionEl);
     });
 
-    return container;
+    return body;
   },
 
-  /* ── Research/Paper DOM builder ── */
-  renderLine: function(l, state) {
+  /* ══════════════════════════════════════════
+     RESEARCH PAPER RENDERER
+  ══════════════════════════════════════════ */
+  renderPaper: function(content, pid) {
     var self = window.StreminiResearch;
-    if (!l) return;
-    if (/^[━─=\-]{3,}$/.test(l)) return;
-    if (/^(MINDMAP|FLOWCHART|TIMELINE|GRAPH|SEQUENCE)\s/i.test(l)) return;
+    var body = document.createElement('div');
+    body.className = 'rm2-paper-body';
+    body.id = pid;
 
-    function getTarget() { return state.section || state.container; }
-    function flushPara() {
-      if (!state.para.length) return;
-      var text = state.para.join(' ').trim();
-      state.para = [];
-      if (!text) return;
-      if (/^keywords:/i.test(text)) {
-        var kb = document.createElement('div');
-        kb.className = 'rm-keywords';
-        kb.innerHTML = '<strong>Keywords:</strong> ' + self.esc(text.replace(/^keywords:\s*/i,''));
-        getTarget().appendChild(kb);
-      } else {
-        var p = document.createElement('p');
-        p.className = 'rm-para';
-        p.textContent = text;
-        getTarget().appendChild(p);
-      }
+    var lines = content.split('\n').map(function(l) { return l.trim(); });
+
+    // Extract title (first non-empty line before "Authors:")
+    var titleLine = '';
+    var authorsLine = '';
+    var titleIdx = -1;
+    for (var i = 0; i < lines.length; i++) {
+      if (/^authors?:/i.test(lines[i])) { authorsLine = lines[i]; break; }
+      if (!titleLine && lines[i]) { titleLine = lines[i]; titleIdx = i; }
     }
 
-    if (/^REFERENCES\s*$/i.test(l)) {
-      flushPara();
-      state.inRefs = true;
-      var sec = document.createElement('div');
-      sec.className = 'rm-section';
-      var h = document.createElement('div');
-      h.className = 'rm-section-heading';
-      h.textContent = 'References';
-      sec.appendChild(h);
-      state.container.appendChild(sec);
-      state.section = sec;
-      state.refsDiv = sec;
-      return;
+    if (titleLine) {
+      var titleEl = document.createElement('div');
+      titleEl.className = 'rm2-paper-title';
+      titleEl.textContent = titleLine.replace(/^#{1,3}\s*/, '');
+      body.appendChild(titleEl);
     }
-
-    if (state.inRefs) {
-      flushPara();
-      var ri = document.createElement('div');
-      ri.className = 'rm-ref-item';
-      var last = state.refsDiv.lastElementChild;
-      var isNewRef = /^\[\d+\]/.test(l) || /^[A-Z][a-zA-Z]+,/.test(l);
-      if (isNewRef || !last || !last.classList.contains('rm-ref-item')) {
-        ri.textContent = l;
-        state.refsDiv.appendChild(ri);
-      } else {
-        last.textContent += ' ' + l;
-      }
-      return;
-    }
-
-    if (/^ABSTRACT\s*$/i.test(l)) {
-      flushPara();
-      var sec2 = document.createElement('div');
-      sec2.className = 'rm-section';
-      var h2 = document.createElement('div');
-      h2.className = 'rm-section-heading';
-      h2.textContent = 'Abstract';
-      sec2.appendChild(h2);
-      state.container.appendChild(sec2);
-      state.section = sec2;
-      return;
-    }
-
-    var mjMatch = /^(\d+)\.\s+(.+)$/.exec(l);
-    if (mjMatch) {
-      flushPara();
-      var sec3 = document.createElement('div');
-      sec3.className = 'rm-section';
-      var h3 = document.createElement('div');
-      h3.className = 'rm-section-heading';
-      h3.textContent = mjMatch[1] + '. ' + mjMatch[2];
-      sec3.appendChild(h3);
-      state.container.appendChild(sec3);
-      state.section = sec3;
-      return;
-    }
-
-    var sbMatch = /^(\d+\.\d+)\s+(.+)$/.exec(l);
-    if (sbMatch) {
-      flushPara();
-      var sh = document.createElement('div');
-      sh.className = 'rm-sub-heading';
-      sh.textContent = sbMatch[1] + ' ' + sbMatch[2];
-      getTarget().appendChild(sh);
-      return;
-    }
-
-    if (/^keywords:/i.test(l)) {
-      flushPara();
-      var kb2 = document.createElement('div');
-      kb2.className = 'rm-keywords';
-      kb2.innerHTML = '<strong>Keywords:</strong> ' + self.esc(l.replace(/^keywords:\s*/i,''));
-      getTarget().appendChild(kb2);
-      return;
-    }
-
-    state.para.push(l);
-  },
-
-  buildPaperDOM: async function(allParts) {
-    var self = window.StreminiResearch;
-    var container = document.createElement('div');
-
-    for (var i = 0; i < allParts.length; i++) {
-      if (allParts[i].kind === 'diagram') {
-        allParts[i].el = await self.renderDiagram(allParts[i]);
-      }
-    }
-
-    var allLines = [];
-    for (var pi = 0; pi < allParts.length; pi++) {
-      var part = allParts[pi];
-      if (part.kind === 'text') {
-        part.txt.split('\n').map(function(l){ return l.trim(); }).forEach(function(l){ allLines.push(l); });
-      } else {
-        allLines.push('__DIAGRAM__');
-      }
-    }
-
-    var authorsIdx = -1;
-    for (var ai = 0; ai < allLines.length; ai++) {
-      if (/^authors:/i.test(allLines[ai])) { authorsIdx = ai; break; }
-    }
-    var titleIdx = 0;
-    if (authorsIdx > 0) {
-      for (var ti = authorsIdx - 1; ti >= 0; ti--) {
-        if (allLines[ti].trim()) { titleIdx = ti; break; }
-      }
-    }
-
-    if (authorsIdx > 0) {
-      var tb = document.createElement('div');
-      tb.className = 'rm-title-block';
-      var th = document.createElement('div');
-      th.className = 'rm-main-title';
-      th.textContent = allLines[titleIdx];
-      tb.appendChild(th);
-      var metaText = allLines[authorsIdx];
-      var tm = document.createElement('div');
-      tm.className = 'rm-meta';
-      metaText.split('|').map(function(s){ return s.trim(); }).filter(Boolean).forEach(function(seg){
+    if (authorsLine) {
+      var metaEl = document.createElement('div');
+      metaEl.className = 'rm2-paper-meta';
+      authorsLine.split('|').map(function(s) { return s.trim(); }).filter(Boolean).forEach(function(seg) {
         var sp = document.createElement('span');
-        sp.textContent = seg;
-        tm.appendChild(sp);
+        sp.textContent = seg.replace(/^authors?:\s*/i, '');
+        metaEl.appendChild(sp);
       });
-      tb.appendChild(tm);
-      container.appendChild(tb);
+      body.appendChild(metaEl);
     }
 
-    var state = {
-      container: container,
-      section: null,
-      para: [],
-      inRefs: false,
-      refsDiv: null
-    };
+    // Parse sections
+    var sections = [];
+    var curTitle = null, curParas = [];
 
-    var contentStartIdx = authorsIdx >= 0 ? authorsIdx + 1 : 0;
-    var globalIdx = 0;
-
-    function flushParaFinal() {
-      if (!state.para.length) return;
-      var text = state.para.join(' ').trim();
-      state.para = [];
-      if (!text) return;
-      var p = document.createElement('p');
-      p.className = 'rm-para';
-      p.textContent = text;
-      (state.section || container).appendChild(p);
+    function flushPaperSection() {
+      if (curTitle !== null || curParas.length) {
+        sections.push({ title: curTitle, paras: curParas.slice() });
+      }
+      curTitle = null; curParas = [];
     }
 
-    for (var pi2 = 0; pi2 < allParts.length; pi2++) {
-      var part2 = allParts[pi2];
-      if (part2.kind === 'diagram') {
-        flushParaFinal();
-        if (part2.el) (state.section || container).appendChild(part2.el);
-        globalIdx++;
+    var contentStart = authorsLine ? lines.indexOf(authorsLine) + 1 : (titleIdx >= 0 ? titleIdx + 1 : 0);
+    var paraBuffer = [];
+
+    function flushPara() {
+      var txt = paraBuffer.join(' ').trim();
+      paraBuffer = [];
+      if (txt) curParas.push(txt);
+    }
+
+    for (var li = contentStart; li < lines.length; li++) {
+      var l = lines[li];
+      var isSection = /^#{1,3}\s+/.test(l) || /^(\d+)\.\s+[A-Z]/.test(l) || /^(ABSTRACT|INTRODUCTION|CONCLUSION|DISCUSSION|REFERENCES|METHODOLOGY|RESULTS|FINDINGS)\s*$/i.test(l);
+      if (isSection) {
+        flushPara(); flushPaperSection();
+        curTitle = l.replace(/^#{1,3}\s*/, '').replace(/^\d+\.\s+/, '');
+      } else if (!l) {
+        flushPara();
       } else {
-        var lines2 = part2.txt.split('\n').map(function(l){ return l.trim(); });
-        for (var li2 = 0; li2 < lines2.length; li2++) {
-          if (globalIdx >= contentStartIdx) {
-            self.renderLine(lines2[li2], state);
-          }
-          globalIdx++;
-        }
+        paraBuffer.push(l);
       }
     }
-    flushParaFinal();
-    return container;
+    flushPara(); flushPaperSection();
+
+    sections.forEach(function(sec) {
+      if (!sec.title && !sec.paras.length) return;
+      var secEl = document.createElement('div');
+      secEl.className = 'rm2-paper-section';
+      if (sec.title) {
+        var hd = document.createElement('div');
+        hd.className = 'rm2-paper-sec-hd';
+        hd.textContent = sec.title;
+        secEl.appendChild(hd);
+      }
+      sec.paras.forEach(function(p) {
+        if (/^keywords?:/i.test(p)) {
+          var kw = document.createElement('div');
+          kw.className = 'rm2-keywords';
+          kw.innerHTML = '<strong>Keywords:</strong> ' + self.esc(p.replace(/^keywords?:\s*/i, ''));
+          secEl.appendChild(kw);
+        } else if (/^\[\d+\]|^[A-Z][a-z]+,/.test(p)) {
+          var ref = document.createElement('div');
+          ref.className = 'rm2-ref-item';
+          ref.textContent = p;
+          secEl.appendChild(ref);
+        } else {
+          var para = document.createElement('div');
+          para.className = 'rm2-paper-para';
+          para.textContent = p;
+          secEl.appendChild(para);
+        }
+      });
+      body.appendChild(secEl);
+    });
+
+    return body;
   },
 
-  /* ── Main render entry ── */
+  /* ══════════════════════════════════════════
+     MAIN RENDER ENTRY
+  ══════════════════════════════════════════ */
   renderResult: async function(data, container, mode) {
     var self = window.StreminiResearch;
+    self.injectStyles();
+
     var isMath = (data.status === 'SOLUTION' || mode === 'math');
     var content = data.content || data.solution || '';
+    var pid = 'rm2_' + Date.now();
 
     var wrap = document.createElement('div');
-    wrap.className = 'rm-wrap';
+    wrap.className = 'rm2-wrap';
 
-    // Header chip
+    // ── Chip ──
     var chip = document.createElement('div');
-    chip.className = isMath ? 'rm-chip rm-chip-math' : 'rm-chip rm-chip-research';
+    chip.className = 'rm2-chip ' + (isMath ? 'rm2-chip-math' : 'rm2-chip-research');
     chip.innerHTML = isMath
       ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg> Math Solution'
       : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg> Research Paper';
     wrap.appendChild(chip);
 
-    // Paper block
-    var block = document.createElement('div');
-    block.className = 'rm-paper-block';
+    // ── Card ──
+    var card = document.createElement('div');
+    card.className = 'rm2-card';
 
     var hd = document.createElement('div');
-    hd.className = 'rm-paper-hd';
-    var pid = 'rm_' + Date.now();
-    hd.innerHTML = '<span class="rm-paper-hd-label">' + (isMath ? 'Solution' : 'Paper') + '</span>' +
-      '<button class="rm-copy-btn" data-pid="' + pid + '">' +
-      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</button>';
+    hd.className = 'rm2-card-hd';
+    var titleEl = document.createElement('div');
+    titleEl.className = 'rm2-card-title';
+    titleEl.textContent = isMath ? 'Math Solution' : 'Research Paper';
+    var copyBtn = document.createElement('button');
+    copyBtn.className = 'rm2-copy-btn';
+    copyBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+    copyBtn.onclick = function() {
+      var el = document.getElementById(pid);
+      self.copyToClipboard(el ? el.innerText : content, copyBtn);
+    };
+    hd.appendChild(titleEl);
+    hd.appendChild(copyBtn);
+    card.appendChild(hd);
 
-    var body = document.createElement('div');
-    body.className = isMath ? 'rm-paper-bd rm-math-bd' : 'rm-paper-bd';
-    body.id = pid;
+    // ── Body ──
+    var bodyEl = isMath
+      ? self.renderMath(content, pid)
+      : self.renderPaper(content, pid);
+    card.appendChild(bodyEl);
 
-    var parts = self.parseContent(content);
-    var domContent;
-    if (isMath) {
-      domContent = await self.buildMathDOM(parts);
-    } else {
-      domContent = await self.buildPaperDOM(parts);
-    }
-    body.appendChild(domContent);
-
-    block.appendChild(hd);
-    block.appendChild(body);
-    wrap.appendChild(block);
-
-    // Download button
+    // ── Download row ──
     var dlRow = document.createElement('div');
-    dlRow.className = 'rm-dl-row';
+    dlRow.className = 'rm2-dl-row';
     var dlBtn = document.createElement('button');
-    dlBtn.className = 'rm-dl-btn';
-    dlBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .txt';
+    dlBtn.className = 'rm2-dl-btn';
+    dlBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .txt';
     dlBtn.onclick = function() {
       var el = document.getElementById(pid);
       var a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([el ? el.innerText : content], { type: 'text/plain' }));
-      a.download = 'stremini-' + Date.now() + '.txt';
+      a.download = 'stremini-' + (isMath ? 'math' : 'paper') + '-' + Date.now() + '.txt';
       a.click();
     };
     dlRow.appendChild(dlBtn);
-    wrap.appendChild(dlRow);
+    card.appendChild(dlRow);
+
+    wrap.appendChild(card);
 
     if (container) {
       container.innerHTML = '';
       container.appendChild(wrap);
-
-      // Wire copy button
-      setTimeout(function() {
-        var btn = wrap.querySelector('.rm-copy-btn');
-        if (btn) {
-          btn.onclick = function() {
-            var el = document.getElementById(btn.dataset.pid);
-            if (!el) return;
-            navigator.clipboard.writeText(el.innerText || '').then(function() {
-              btn.textContent = 'Copied!';
-              setTimeout(function() {
-                btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
-              }, 2000);
-            }).catch(function(){});
-          };
-        }
-      }, 50);
     }
     return wrap;
-  },
-
-  /* ── CSS injection ── */
-  injectStyles: function() {
-    if (document.getElementById('rm-styles')) return;
-    var s = document.createElement('style');
-    s.id = 'rm-styles';
-    s.textContent = `
-.rm-wrap { font-family: var(--font); }
-.rm-chip { display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:12px; }
-.rm-chip-research { background:#fffbf5;color:#b45309;border:1px solid #fde68a; }
-.rm-chip-math { background:#f5f3ff;color:#6d28d9;border:1px solid #ddd6fe; }
-
-.rm-paper-block { background:var(--bg);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;box-shadow:var(--sh-sm); }
-.rm-paper-hd { display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--bdr);background:var(--bg-sub); }
-.rm-paper-hd-label { font-size:12.5px;font-weight:600;color:var(--tx2); }
-.rm-copy-btn { background:none;border:1px solid var(--bdr);cursor:pointer;font-size:11px;color:var(--tx3);font-family:var(--font);display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:4px;transition:all .15s; }
-.rm-copy-btn:hover { background:var(--bg-hov);color:var(--tx); }
-
-.rm-paper-bd { padding:24px 28px;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;color:var(--tx);max-height:560px;overflow-y:auto; }
-.rm-math-bd { font-family:var(--font)!important;font-size:14.5px;line-height:1.78;background:linear-gradient(180deg,var(--bg) 0%,var(--bg-sub) 100%); }
-
-.rm-title-block { text-align:center;padding-bottom:20px;border-bottom:2px solid var(--bdr);margin-bottom:22px; }
-.rm-main-title { font-family:'Lora',Georgia,serif;font-size:19px;font-weight:700;line-height:1.35;margin-bottom:10px;letter-spacing:-.3px; }
-.rm-meta { font-family:var(--font);font-size:12px;color:var(--tx3);display:flex;gap:16px;justify-content:center;flex-wrap:wrap; }
-
-.rm-section { margin-bottom:20px; }
-.rm-section-heading { font-family:var(--font);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#b45309;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--bdr-soft); }
-.rm-sub-heading { font-family:var(--font);font-size:13px;font-weight:600;color:var(--tx);margin:14px 0 7px; }
-.rm-para { margin-bottom:12px;text-align:justify;hyphens:auto; }
-.rm-keywords { background:var(--bg-sub);border:1px solid var(--bdr-soft);border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:12.5px;color:var(--tx2);font-family:var(--font); }
-.rm-keywords strong { color:var(--tx);margin-right:4px; }
-.rm-ref-item { font-size:13px;line-height:1.65;margin-bottom:7px;padding-left:22px;text-indent:-22px;color:var(--tx2);font-family:var(--font); }
-
-.rm-diagram-wrap { margin:16px 0;border:1px solid var(--bdr);border-radius:10px;overflow:hidden;background:var(--bg-sub); }
-.rm-diagram-bar { display:flex;align-items:center;gap:6px;padding:6px 12px;border-bottom:1px solid var(--bdr);font-family:var(--font);font-size:11px;font-weight:600;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px; }
-.rm-diagram-render { padding:16px;display:flex;justify-content:center;overflow-x:auto; }
-.rm-diagram-render svg { max-width:100%;height:auto; }
-.rm-diagram-err { padding:10px 14px;font-family:var(--mono);font-size:11.5px;color:#dc2626;background:#fee2e2; }
-
-/* Math DOM styles */
-.rm-math-doc { display:flex;flex-direction:column;gap:12px; }
-.rm-math-header { border:1px solid #ddd6fe;background:linear-gradient(180deg,#f5f3ff,#eef2ff);border-radius:10px;padding:13px 15px; }
-.rm-math-kicker { font-size:11px;font-weight:700;color:#6366f1;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px; }
-.rm-math-title { font-family:var(--font);font-size:20px;font-weight:700;line-height:1.35;color:#1f1b4d;letter-spacing:-.2px; }
-.rm-math-section { border:1px solid #e5e7eb;background:var(--bg);border-radius:10px;overflow:hidden; }
-.rm-math-section-h { display:flex;align-items:center;gap:7px;padding:9px 13px;background:var(--bg-sub);border-bottom:1px solid #e5e7eb;font-size:11.5px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px; }
-.rm-math-dot { width:7px;height:7px;border-radius:50%;background:#818cf8;flex-shrink:0; }
-.rm-math-section-b { padding:11px 13px;display:flex;flex-direction:column;gap:8px; }
-.rm-math-para { font-size:14.5px;color:var(--tx);line-height:1.75; }
-.rm-math-list { margin:0 0 0 18px;display:flex;flex-direction:column;gap:5px;color:var(--tx); }
-.rm-math-list li { padding-left:2px;line-height:1.6; }
-.rm-math-step { display:flex;gap:8px;align-items:flex-start;padding:9px 11px;border:1px solid #ddd6fe;background:#f5f3ff;border-radius:8px; }
-.rm-math-step-no { font-size:11.5px;font-weight:700;color:#5b21b6;background:#ede9fe;border-radius:999px;min-width:21px;height:21px;display:inline-flex;align-items:center;justify-content:center; }
-.rm-math-step-txt { flex:1;color:#312e81;line-height:1.68; }
-.rm-math-eq { font-family:var(--mono);font-size:13px;background:#111827;color:#f9fafb;border-radius:7px;padding:9px 12px;overflow-x:auto;line-height:1.6; }
-.rm-math-note { background:#eff6ff;border:1px solid #bfdbfe;border-radius:7px;padding:9px 12px;color:#1e3a8a; }
-.rm-math-final { background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:9px;padding:11px 13px;font-weight:600;line-height:1.65; }
-.rm-math-inline { font-family:var(--mono);background:#eef2ff;border:1px solid #c7d2fe;border-radius:4px;padding:0 5px;font-size:.92em;color:#312e81; }
-
-.rm-dl-row { margin-top:8px; }
-.rm-dl-btn { display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:none;border-radius:7px;font-family:var(--font);font-size:12.5px;font-weight:500;cursor:pointer;background:var(--tx);color:#fff;transition:all .15s; }
-.rm-dl-btn:hover { background:#2d2a26;transform:translateY(-1px); }
-`;
-    document.head.appendChild(s);
   }
 };
