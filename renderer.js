@@ -49,6 +49,9 @@ function inlineMd(s){
   s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
   return s;
 }
+function inlineMdWithBreaks(s){
+  return inlineMd(s).replace(/\n/g,'<br>');
+}
 function copyToClipboard(text,btn){
   const ok=()=>{const o=btn.textContent;btn.classList.add('si-copied');btn.textContent='✓ Copied';setTimeout(()=>{btn.classList.remove('si-copied');btn.textContent=o;},2000);};
   if(navigator.clipboard)navigator.clipboard.writeText(text).then(ok).catch(()=>{fbCopy(text);ok();});
@@ -272,13 +275,20 @@ function parseListItems(text){
 }
 
 function parseMarkdownTable(text){
-  const lines=text.split('\n').filter(l=>l.trim().includes('|'));
-  if(lines.length<3)return null;
+  const lines=text.split('\n');
+  let start=-1;
+  for(let i=0;i<lines.length-1;i++){
+    if(lines[i].includes('|')&&/^[\s|:-]+$/.test(lines[i+1].trim())){start=i;break;}
+  }
+  if(start===-1)return null;
+  let end=start+2;
+  while(end<lines.length&&lines[end].includes('|')&&lines[end].trim())end++;
   const parseRow=l=>l.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
-  const headers=parseRow(lines[0]);
-  const rows=lines.slice(2).filter(l=>!/^[\s|:-]+$/.test(l)).map(parseRow);
+  const tableLines=lines.slice(start,end);
+  const headers=parseRow(tableLines[0]);
+  const rows=tableLines.slice(2).filter(l=>!/^[\s|:-]+$/.test(l)).map(parseRow);
   if(!headers.length||!rows.length)return null;
-  return{headers,rows};
+  return{headers,rows,startLine:start,endLine:end};
 }
 
 /* ─────────────────────────────────────────
@@ -364,8 +374,8 @@ function buildComparisonOutput(text){
   if(text.includes('|')&&text.match(/\|\s*[-:]+\s*\|/)){
     const tbl=parseMarkdownTable(text);
     if(tbl){
-      const tableIdx=text.indexOf('|');
-      const pre=text.slice(0,tableIdx).trim();
+      const lines=text.split('\n');
+      const pre=lines.slice(0,tbl.startLine).join('\n').trim();
       if(pre)root.appendChild(buildProseInner(pre));
       const table=document.createElement('table');table.className='si-cmp-table';
       const thead=document.createElement('thead');const hr=document.createElement('tr');
@@ -378,7 +388,7 @@ function buildComparisonOutput(text){
         tbody.appendChild(tr);
       });
       table.appendChild(tbody);root.appendChild(table);
-      const lastPipe=text.lastIndexOf('|');const post=text.slice(lastPipe+1).trim();
+      const post=lines.slice(tbl.endLine).join('\n').trim();
       if(post)root.appendChild(buildVerdictOrProse(post));
       return root;
     }
@@ -547,18 +557,19 @@ function buildMathOutput(text){
 function buildCreativeOutput(text){
   const root=document.createElement('div');root.className='si-root';root.appendChild(buildBadge('creative'));
   const div=document.createElement('div');div.className='si-creative';
-  text.split(/\n\n+/).forEach(para=>{const p=document.createElement('p');p.innerHTML=inlineMd(para.trim().replace(/\n/g,'<br>'));div.appendChild(p);});
+  text.split(/\n\n+/).forEach(para=>{const p=document.createElement('p');p.innerHTML=inlineMdWithBreaks(para.trim());div.appendChild(p);});
   root.appendChild(div);return root;
 }
 
 function buildChatOutput(text){
   const root=document.createElement('div');root.className='si-root';
   const div=document.createElement('div');div.className='si-chat';
+  let hasChatContent=false;
   parseBlocks(text).forEach(s=>{
-    if(s.type==='code'){root.appendChild(div.cloneNode(true)||div);root.appendChild(buildCodeBlock(s.lang,s.content));}
-    else if(s.content.trim()){const p=buildProseInner(s.content.trim());p.className='si-chat';div.appendChild(p);}
+    if(s.type==='code'){root.appendChild(buildCodeBlock(s.lang,s.content));}
+    else if(s.content.trim()){const p=buildProseInner(s.content.trim());p.className='si-chat';div.appendChild(p);hasChatContent=true;}
   });
-  if(!div.parentNode)root.appendChild(div);
+  if(hasChatContent||!root.children.length)root.appendChild(div);
   return root;
 }
 
@@ -569,7 +580,7 @@ function updateStreamSmart(partialText,container){
   if(!container)return;
   injectRendererStyles();
   const div=document.createElement('div');div.className='si-root si-chat';
-  div.innerHTML=inlineMd(partialText.replace(/\n/g,'<br>'));
+  div.innerHTML=inlineMdWithBreaks(partialText);
   container.innerHTML='';container.appendChild(div);
 }
 function finalizeStreamSmart(userQuery,fullText,container){
