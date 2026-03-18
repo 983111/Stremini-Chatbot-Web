@@ -8,15 +8,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script src="renderer.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>mermaid.initialize({ startOnLoad: false, theme: 'neutral' });</script>
-<script src="research-renderer.js"></script>
-<script src="agent-router.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 
@@ -1430,11 +1428,8 @@ function addMsgRow(role, content, animate, domain) {
   row.innerHTML = avDiv + '<div class="mbody"><div class="mname">'+(isAI?'StreminiAI':'You')+'</div><div class="mc"></div>' + actsHtml + '</div>';
   wrap.appendChild(row);
   var mc = row.querySelector('.mc');
-  if (isAI && window.StreminiRenderer) {
-    var lastUser = _lastUserQuery || '';
-    if (!lastUser) { for(var i = messages.length - 1; i >= 0; i--) { if (messages[i].role === 'user') { lastUser = messages[i].content; break; } } }
-    window.StreminiRenderer.render(lastUser, content, mc, domain || 'general', false);
-  } else { mc.innerHTML = renderMd(content); postRender(mc); }
+  mc.innerHTML = renderMd(content);
+  postRender(mc);
   return row;
 }
 function addStreamRow() {
@@ -1446,15 +1441,14 @@ function addStreamRow() {
 }
 function updateStream(text) {
   var el = document.getElementById('sc');
-  if (el) { if (window.StreminiRenderer) { window.StreminiRenderer.updateStream(text, el); } else { el.innerHTML = renderMd(text); postRender(el); } scrollBottom(); }
+  if (el) { el.innerHTML = renderMd(text); scrollBottom(); }
 }
 function finalizeStream(text, domain) {
   var row = document.getElementById('srow');
   if (!row) return;
   row.id = '';
   var c = row.querySelector('.mc');
-  if (c && window.StreminiRenderer) { window.StreminiRenderer.finalizeStream(_lastUserQuery, text, c, domain || 'general'); }
-  else if (c) { c.innerHTML = renderMd(text); postRender(c); }
+  if (c) { c.innerHTML = renderMd(text); postRender(c); }
   var body = row.querySelector('.mbody');
   if (body && !body.querySelector('.macts')) {
     var a = document.createElement('div'); a.className = 'macts';
@@ -1489,6 +1483,9 @@ function inlineRender(s) {
   s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
   s = s.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  /* Convert literal <br> tags in table cells */
+  s = s.replace(/&lt;br&gt;/gi, '<br>');
+  s = s.replace(/<br\s*\/?>/gi, '<br>');
   return s;
 }
 
@@ -1631,18 +1628,35 @@ function renderMd(raw) {
   return out.join('\n');
 }
 
-/* After rendering, run mermaid + hljs on any un-highlighted blocks */
+/* After rendering, run mermaid + hljs */
 function postRender(el) {
   if (!el) return;
-  /* Mermaid */
-  var merms = el.querySelectorAll('.mermaid:not([data-processed])');
+  /* Mermaid diagrams */
+  var merms = el.querySelectorAll('pre.mermaid:not([data-processed])');
   if (merms.length && window.mermaid) {
-    try { mermaid.init(undefined, merms); } catch(e) {}
+    try {
+      merms.forEach(function(m) { m.setAttribute('data-processed','1'); });
+      mermaid.init(undefined, merms);
+    } catch(e) { console.warn('mermaid error', e); }
   }
-  /* Highlight.js on any raw code blocks */
+  /* hljs on raw code */
   el.querySelectorAll('pre code:not(.hljs)').forEach(function(block) {
     try { hljs.highlightElement(block); } catch(e) {}
   });
+  /* KaTeX auto-render for any leftover \[ \] or $...$ that slipped through */
+  if (window.katex && window.renderMathInElement) {
+    try {
+      renderMathInElement(el, {
+        delimiters: [
+          {left:'$$',right:'$$',display:true},
+          {left:'\\[',right:'\\]',display:true},
+          {left:'$',right:'$',display:false},
+          {left:'\\(',right:'\\)',display:false}
+        ],
+        throwOnError: false
+      });
+    } catch(e) {}
+  }
 }
 
 var DOMAIN_PILL_CONFIG = {
