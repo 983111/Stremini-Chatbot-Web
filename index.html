@@ -15,6 +15,8 @@
 <script src="agent-router.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 
@@ -579,14 +581,14 @@ html, body {
   font-family: var(--mono);
   background: #f4f4f6;
   border: 1px solid #e5e5ea;
-  border-radius: 4px; padding: 1px 6px; font-size: 12.5px; color: #8a4820;
+  border-radius: 4px; padding: 2px 6px; font-size: 12.5px; color: #e8622a;
 }
 .mc pre {
-  background: #1e1a14; border: 1px solid rgba(255,255,255,0.08);
+  background: #1c1c1e; border: 1px solid #3a3a3c;
   border-radius: var(--radius-md); padding: 16px 18px; overflow-x: auto;
-  font-size: 12.5px; line-height: 1.7;
+  font-size: 13px; line-height: 1.7;
 }
-.mc pre code { background:none; border:none; padding:0; color:#e8e0d0; }
+.mc pre code { background:none; border:none; padding:0; color:#e8e8ea; }
 .mc blockquote {
   border-left: 2px solid var(--acc); padding: 8px 0 8px 16px;
   color: var(--tx2); font-style: italic;
@@ -595,9 +597,9 @@ html, body {
 }
 .mc hr { border:none; border-top:1px solid rgba(160,140,110,0.18); }
 .mc table { width:100%; border-collapse:collapse; font-size:13.5px; }
-.mc th { background:rgba(0,0,0,0.04); font-weight:600; text-align:left; padding:8px 12px; border:1px solid rgba(160,140,110,0.18); font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:var(--tx2); }
-.mc td { padding:7px 12px; border:1px solid rgba(160,140,110,0.15); vertical-align:top; }
-.mc tr:nth-child(even) td { background:rgba(0,0,0,0.03); }
+.mc th { background:#f7f7f8; font-weight:600; text-align:left; padding:8px 12px; border:1px solid #e5e5ea; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:var(--tx2); }
+.mc td { padding:7px 12px; border:1px solid #e5e5ea; vertical-align:top; }
+.mc tr:nth-child(even) td { background:#f7f7f8; }
 
 .macts { display:flex; gap:4px; margin-top:10px; opacity:0; transition:opacity 0.15s; }
 .mr:hover .macts { opacity:1; }
@@ -814,6 +816,74 @@ pre.mermaid { background:rgba(255,255,255,0.50); border:1px dashed var(--acc-bdr
 @media(max-width:480px) {
   .auth-card { border:none; box-shadow:none; padding:36px 22px; }
 }
+
+/* ═══════════════════════════════════
+   CODE BLOCKS (new renderer)
+═══════════════════════════════════ */
+.code-block {
+  background: #1c1c1e; border: 1px solid #3a3a3c;
+  border-radius: var(--radius-md); overflow: hidden;
+  margin: 10px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+}
+.code-block-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 14px; background: #2c2c2e;
+  border-bottom: 1px solid #3a3a3c;
+}
+.code-lang {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: #8e8e93; text-transform: lowercase; letter-spacing: 0.03em;
+}
+.code-copy-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: none; border: 1px solid #3a3a3c; cursor: pointer;
+  font-size: 11px; font-weight: 600; color: #8e8e93;
+  font-family: var(--font); padding: 3px 9px; border-radius: 5px;
+  transition: all 0.15s;
+}
+.code-copy-btn:hover { background: #3a3a3c; color: #e8e8ea; }
+.code-copy-btn.copied { background: rgba(52,199,89,0.15); color: #34c759; border-color: rgba(52,199,89,0.3); }
+.code-block pre { margin: 0; border-radius: 0; border: none; background: #1c1c1e; }
+.code-block pre code.hljs {
+  font-family: var(--mono); font-size: 13px; line-height: 1.7;
+  padding: 16px 18px; background: #1c1c1e; display: block;
+}
+
+/* ═══════════════════════════════════
+   MATH (KaTeX)
+═══════════════════════════════════ */
+.math-display, .katex-display {
+  overflow-x: auto; padding: 14px 18px; margin: 10px 0;
+  background: #f7f7f8; border: 1px solid #e5e5ea;
+  border-radius: var(--radius-md); text-align: center;
+}
+.math-inline, .katex { font-size: 1em; }
+.math-block {
+  font-family: var(--mono); background: #f7f7f8;
+  border: 1px solid #e5e5ea; border-radius: var(--radius-md);
+  padding: 12px 16px; overflow-x: auto; font-size: 13px;
+  color: #e8622a; margin: 8px 0;
+}
+
+/* Table wrapper */
+.table-wrap { overflow-x: auto; margin: 10px 0; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.table-wrap th {
+  background: #f7f7f8; font-weight: 600; text-align: left;
+  padding: 8px 12px; border: 1px solid #e5e5ea;
+  font-size: 12px; text-transform: uppercase;
+  letter-spacing: 0.05em; color: #48484a;
+}
+.table-wrap td { padding: 7px 12px; border: 1px solid #e5e5ea; color: var(--tx); }
+.table-wrap tr:nth-child(even) td { background: #f7f7f8; }
+
+/* Mermaid wrapper */
+.mermaid-wrap {
+  background: #f7f7f8; border: 1px solid #e5e5ea;
+  border-radius: var(--radius-md); padding: 16px; margin: 10px 0;
+  overflow-x: auto;
+}
+
 </style>
 </head>
 <body>
@@ -1364,7 +1434,7 @@ function addMsgRow(role, content, animate, domain) {
     var lastUser = _lastUserQuery || '';
     if (!lastUser) { for(var i = messages.length - 1; i >= 0; i--) { if (messages[i].role === 'user') { lastUser = messages[i].content; break; } } }
     window.StreminiRenderer.render(lastUser, content, mc, domain || 'general', false);
-  } else { mc.innerHTML = renderMd(content); }
+  } else { mc.innerHTML = renderMd(content); postRender(mc); }
   return row;
 }
 function addStreamRow() {
@@ -1376,7 +1446,7 @@ function addStreamRow() {
 }
 function updateStream(text) {
   var el = document.getElementById('sc');
-  if (el) { if (window.StreminiRenderer) { window.StreminiRenderer.updateStream(text, el); } else { el.innerHTML = renderMd(text); } scrollBottom(); }
+  if (el) { if (window.StreminiRenderer) { window.StreminiRenderer.updateStream(text, el); } else { el.innerHTML = renderMd(text); postRender(el); } scrollBottom(); }
 }
 function finalizeStream(text, domain) {
   var row = document.getElementById('srow');
@@ -1384,7 +1454,7 @@ function finalizeStream(text, domain) {
   row.id = '';
   var c = row.querySelector('.mc');
   if (c && window.StreminiRenderer) { window.StreminiRenderer.finalizeStream(_lastUserQuery, text, c, domain || 'general'); }
-  else if (c) { c.innerHTML = renderMd(text); }
+  else if (c) { c.innerHTML = renderMd(text); postRender(c); }
   var body = row.querySelector('.mbody');
   if (body && !body.querySelector('.macts')) {
     var a = document.createElement('div'); a.className = 'macts';
@@ -1395,41 +1465,184 @@ function finalizeStream(text, domain) {
 function scrollBottom(){ var a=document.getElementById('chat-area'); a.scrollTop=a.scrollHeight; }
 
 /* ═══════════════════════════════════
-   MARKDOWN RENDERER
+   MARKDOWN + MATH + CODE RENDERER
 ═══════════════════════════════════ */
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function inlineRender(s){
-  if(!s)return '';
-  s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-  s=s.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,!?]|$)/g,'$1<em>$2</em>');
-  s=s.replace(/`([^`\n]+?)`/g,'<code>$1</code>');
-  s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+/* Render math using KaTeX if available, else styled fallback */
+function renderMath(tex, display) {
+  if (window.katex) {
+    try { return window.katex.renderToString(tex, { displayMode: display, throwOnError: false, output: 'html' }); }
+    catch(e) {}
+  }
+  return display
+    ? '<div class="math-block math-display">\\[' + escHtml(tex) + '\\]</div>'
+    : '<span class="math-inline">\\(' + escHtml(tex) + '\\)</span>';
+}
+
+function inlineRender(s) {
+  if (!s) return '';
+  /* Inline math: \(...\) and $...$ (not $$) */
+  s = s.replace(/\\\(([^)]+?)\\\)/g, function(_, tex) { return renderMath(tex, false); });
+  s = s.replace(/(?<!\$)\$(?!\$)([^$\n]+?)(?<!\$)\$(?!\$)/g, function(_, tex) { return renderMath(tex, false); });
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+  s = s.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
   return s;
 }
-function renderMd(raw){
-  if(!raw)return '';
-  function isTableDivider(line){return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line||'');}
-  function parseTableRow(line){var row=(line||'').trim();if(row.startsWith('|'))row=row.slice(1);if(row.endsWith('|'))row=row.slice(0,-1);return row.split('|').map(function(cell){return cell.trim();});}
-  var blocks=[];
-  var t=raw.replace(/\$\$([\s\S]+?)\$\$/g,function(_,expr){var i=blocks.length;blocks.push('<div class="math-block">'+escHtml(expr.trim())+'</div>');return '\x02B'+i+'\x03';});
-  t=t.replace(/```([\w-]*)\n?([\s\S]*?)```/g,function(_,lang,code){var i=blocks.length;var l=(lang||'').toLowerCase();if(l==='mermaid')blocks.push('<pre class="mermaid">'+escHtml(code.trim())+'</pre>');else blocks.push('<pre><code'+(lang?' class="lang-'+escHtml(lang)+'"':'')+'>'+escHtml(code.trim())+'</code></pre>');return '\x02B'+i+'\x03';});
-  var lines=t.split('\n'),out=[],i=0;
-  while(i<lines.length){
-    var l=lines[i];
-    var bm=l.trim().match(/^\x02B(\d+)\x03$/);if(bm){out.push(blocks[+bm[1]]);i++;continue;}
-    var hm=l.match(/^(#{1,3})\s+(.+)$/);if(hm){out.push('<h'+hm[1].length+'>'+inlineRender(escHtml(hm[2]))+'</h'+hm[1].length+'>');i++;continue;}
-    if(l.includes('|')&&i+1<lines.length&&isTableDivider(lines[i+1])){var headerCells=parseTableRow(l),bodyRows=[];i+=2;while(i<lines.length&&lines[i].trim()&&lines[i].includes('|')){bodyRows.push(parseTableRow(lines[i]));i++;}var cols=headerCells.length;var thead='<thead><tr>'+headerCells.map(function(c){return '<th>'+inlineRender(escHtml(c))+'</th>';}).join('')+'</tr></thead>';var tbody='<tbody>'+bodyRows.map(function(r){var cells=[];for(var ci=0;ci<cols;ci++)cells.push('<td>'+inlineRender(escHtml(r[ci]||''))+'</td>');return '<tr>'+cells.join('')+'</tr>';}).join('')+'</tbody>';out.push('<div style="overflow-x:auto"><table>'+thead+tbody+'</table></div>');continue;}
-    if(/^---+$/.test(l.trim())){out.push('<hr>');i++;continue;}
-    if(/^> /.test(l)){var bq=[];while(i<lines.length&&/^> ?/.test(lines[i])){bq.push(lines[i].replace(/^> ?/,''));i++;}out.push('<blockquote>'+inlineRender(escHtml(bq.join(' ')))+'</blockquote>');continue;}
-    if(/^\d+\.\s/.test(l)){var ol=[];while(i<lines.length&&/^\d+\.\s/.test(lines[i])){ol.push('<li>'+inlineRender(escHtml(lines[i].replace(/^\d+\.\s+/,'')))+'</li>');i++;}out.push('<ol>'+ol.join('')+'</ol>');continue;}
-    if(/^[-*]\s/.test(l)){var kv=[],ul=[];while(i<lines.length&&/^[-*]\s/.test(lines[i])){var item=lines[i].replace(/^[-*]\s+/,'');var kvm=item.match(/^([^:]{1,60}):\s+(.+)$/);if(kvm)kv.push('<div class="kv-item"><strong>'+inlineRender(escHtml(kvm[1]))+'</strong><span>'+inlineRender(escHtml(kvm[2]))+'</span></div>');else ul.push('<li>'+inlineRender(escHtml(item))+'</li>');i++;}if(kv.length)out.push('<div class="rs-kv-grid">'+kv.join('')+'</div>');if(ul.length)out.push('<ul>'+ul.join('')+'</ul>');continue;}
-    var sm=l.match(/^Step\s*(\d+)\s*[—-]\s*(.+)$/i);if(sm){out.push('<div class="step-item"><strong>Step '+escHtml(sm[1])+'</strong><span>'+inlineRender(escHtml(sm[2]))+'</span></div>');i++;continue;}
-    if(!l.trim()){i++;continue;}
-    var pl=[];
-    while(i<lines.length){var ll=lines[i];if(!ll.trim()||/^(#{1,3}\s|> |[-*]\s|\d+\.\s|---+$|\x02B)/.test(ll))break;pl.push(inlineRender(escHtml(ll)));i++;}
-    if(pl.length)out.push('<p>'+pl.join('<br>')+'</p>');
+
+/* Build a styled code block with copy button + highlight.js */
+function buildCodeBlock(lang, code) {
+  var id = 'cb_' + Math.random().toString(36).slice(2);
+  var langLabel = lang || 'code';
+  var highlighted = '';
+  if (window.hljs) {
+    try {
+      highlighted = lang ? hljs.highlight(code, { language: lang, ignoreIllegals: true }).value
+                         : hljs.highlightAuto(code).value;
+    } catch(e) { highlighted = escHtml(code); }
+  } else { highlighted = escHtml(code); }
+  return '<div class="code-block">'
+    + '<div class="code-block-hd"><span class="code-lang">' + escHtml(langLabel) + '</span>'
+    + '<button class="code-copy-btn" onclick="copyCode(this,\'' + id + '\')">'
+    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</button></div>'
+    + '<pre><code id="' + id + '" class="hljs' + (lang ? ' language-' + escHtml(lang) : '') + '">' + highlighted + '</code></pre></div>';
+}
+
+function copyCode(btn, id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText).then(function() {
+    btn.innerHTML = '✓ Copied'; btn.classList.add('copied');
+    setTimeout(function(){ btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function renderMd(raw) {
+  if (!raw) return '';
+  var blocks = [];
+
+  /* 1. Protect display math: $$...$$ and \[...\] */
+  raw = raw.replace(/\$\$([\s\S]+?)\$\$/g, function(_, tex) {
+    var i = blocks.length;
+    blocks.push(renderMath(tex.trim(), true));
+    return '\x02B' + i + '\x03';
+  });
+  raw = raw.replace(/\\\[([\s\S]+?)\\\]/g, function(_, tex) {
+    var i = blocks.length;
+    blocks.push(renderMath(tex.trim(), true));
+    return '\x02B' + i + '\x03';
+  });
+
+  /* 2. Protect fenced code blocks */
+  raw = raw.replace(/```([\w-]*)\n?([\s\S]*?)```/g, function(_, lang, code) {
+    var i = blocks.length;
+    var l = (lang || '').toLowerCase();
+    if (l === 'mermaid') {
+      blocks.push('<div class="mermaid-wrap"><pre class="mermaid">' + escHtml(code.trim()) + '</pre></div>');
+    } else {
+      blocks.push(buildCodeBlock(l, code.trim()));
+    }
+    return '\x02B' + i + '\x03';
+  });
+
+  function isTableDivider(line) { return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line || ''); }
+  function parseTableRow(line) {
+    var row = (line || '').trim();
+    if (row.startsWith('|')) row = row.slice(1);
+    if (row.endsWith('|')) row = row.slice(0, -1);
+    return row.split('|').map(function(c) { return c.trim(); });
   }
+
+  var lines = raw.split('\n'), out = [], i = 0;
+  while (i < lines.length) {
+    var l = lines[i];
+    var bm = l.trim().match(/^\x02B(\d+)\x03$/);
+    if (bm) { out.push(blocks[+bm[1]]); i++; continue; }
+
+    /* Headings */
+    var hm = l.match(/^(#{1,4})\s+(.+)$/);
+    if (hm) { out.push('<h' + hm[1].length + '>' + inlineRender(hm[2]) + '</h' + hm[1].length + '>'); i++; continue; }
+
+    /* Tables */
+    if (l.includes('|') && i + 1 < lines.length && isTableDivider(lines[i + 1])) {
+      var headerCells = parseTableRow(l), bodyRows = [];
+      i += 2;
+      while (i < lines.length && lines[i].trim() && lines[i].includes('|')) { bodyRows.push(parseTableRow(lines[i])); i++; }
+      var cols = headerCells.length;
+      var thead = '<thead><tr>' + headerCells.map(function(c) { return '<th>' + inlineRender(c) + '</th>'; }).join('') + '</tr></thead>';
+      var tbody = '<tbody>' + bodyRows.map(function(r) {
+        var cells = []; for (var ci = 0; ci < cols; ci++) cells.push('<td>' + inlineRender(r[ci] || '') + '</td>');
+        return '<tr>' + cells.join('') + '</tr>';
+      }).join('') + '</tbody>';
+      out.push('<div class="table-wrap"><table>' + thead + tbody + '</table></div>');
+      continue;
+    }
+
+    /* HR */
+    if (/^---+$/.test(l.trim())) { out.push('<hr>'); i++; continue; }
+
+    /* Blockquote */
+    if (/^> /.test(l)) {
+      var bq = [];
+      while (i < lines.length && /^> ?/.test(lines[i])) { bq.push(lines[i].replace(/^> ?/, '')); i++; }
+      out.push('<blockquote>' + inlineRender(bq.join(' ')) + '</blockquote>');
+      continue;
+    }
+
+    /* Ordered list */
+    if (/^\d+[.)]\s/.test(l)) {
+      var ol = [];
+      while (i < lines.length && /^\d+[.)]\s/.test(lines[i])) {
+        ol.push('<li>' + inlineRender(lines[i].replace(/^\d+[.)]\s+/, '')) + '</li>'); i++;
+      }
+      out.push('<ol>' + ol.join('') + '</ol>'); continue;
+    }
+
+    /* Unordered list — also handles ❌ ✅ emoji bullets */
+    if (/^[-*•]\s/.test(l) || /^[❌✅⚠️💡🔥⚡►▶]\s/.test(l)) {
+      var ul = [];
+      while (i < lines.length && (/^[-*•]\s/.test(lines[i]) || /^[❌✅⚠️💡🔥⚡►▶]\s/.test(lines[i]))) {
+        ul.push('<li>' + inlineRender(lines[i].replace(/^[-*•❌✅⚠️💡🔥⚡►▶]\s+/, '')) + '</li>'); i++;
+      }
+      out.push('<ul>' + ul.join('') + '</ul>'); continue;
+    }
+
+    /* Step cards */
+    var sm = l.match(/^Step\s*(\d+)\s*[:\-—]\s*(.+)$/i);
+    if (sm) { out.push('<div class="step-item"><strong>Step ' + escHtml(sm[1]) + '</strong><span>' + inlineRender(sm[2]) + '</span></div>'); i++; continue; }
+
+    /* Skip blank lines */
+    if (!l.trim()) { i++; continue; }
+
+    /* Paragraph — collect contiguous non-special lines */
+    var pl = [];
+    while (i < lines.length) {
+      var ll = lines[i];
+      if (!ll.trim()) break;
+      if (/^(#{1,4}\s|> |[-*•]\s|\d+[.)]\s|---+$|\x02B|[❌✅⚠️💡🔥⚡►▶]\s)/.test(ll)) break;
+      /* inline block markers mid-line */
+      pl.push(inlineRender(ll)); i++;
+    }
+    if (pl.length) out.push('<p>' + pl.join('<br>') + '</p>');
+  }
+
   return out.join('\n');
+}
+
+/* After rendering, run mermaid + hljs on any un-highlighted blocks */
+function postRender(el) {
+  if (!el) return;
+  /* Mermaid */
+  var merms = el.querySelectorAll('.mermaid:not([data-processed])');
+  if (merms.length && window.mermaid) {
+    try { mermaid.init(undefined, merms); } catch(e) {}
+  }
+  /* Highlight.js on any raw code blocks */
+  el.querySelectorAll('pre code:not(.hljs)').forEach(function(block) {
+    try { hljs.highlightElement(block); } catch(e) {}
+  });
 }
 
 var DOMAIN_PILL_CONFIG = {
