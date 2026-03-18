@@ -391,6 +391,15 @@ body::before{
   50%{box-shadow:0 0 0 4px rgba(200,146,42,0.10);}
 }
 
+/* Domain pill */
+#domain-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 20px;
+  transition: all 0.3s ease; animation: dpIn .25s ease;
+}
+@keyframes dpIn { from { opacity:0; transform:scale(.85) } to { opacity:1; transform:scale(1) } }
+
 /* Theme toggle */
 #theme-toggle{
   width:34px;height:34px;border-radius:9px;
@@ -759,6 +768,7 @@ pre.mermaid{background:var(--code-bg);border:1px dashed var(--acc-bdr);border-ra
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
       <div class="mpill"><span class="mdot"></span>StreminiAI</div>
+      <div id="domain-pill" style="display:none;"></div>
       <div style="flex:1"></div>
       <!-- Theme Toggle -->
       <button id="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
@@ -775,99 +785,49 @@ pre.mermaid{background:var(--code-bg);border:1px dashed var(--acc-bdr);border-ra
           <p class="wsub">Powered by StreminiAI — think smarter, build faster.</p>
         </div>
         <div class="sugs">
-          <!-- Explain Transformers -->
-          <button class="sc" onclick="useSug('Explain transformer attention mechanism with a clear example')">
-            <div class="sc-inner">
-              <div class="sc-text"><strong>Explain transformers</strong><span>Attention mechanism, clearly explained</span></div>
-              <div class="sc-illus">
-                <svg viewBox="0 0 62 62" width="62" height="62" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs><radialGradient id="tg1" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#7c4a9e"/><stop offset="100%" stop-color="#3a1a5a"/></radialGradient></defs>
-                  <rect width="62" height="62" fill="url(#tg1)"/>
-                  <path d="M31 11l3.5 6 6-2.5 3.5 5-4 4.5 2.5 6-6 1-2 6-6-1.5-5 5-5-5-6 1.5-2-6-6-1 2.5-6-4-4.5 3.5-5 6 2.5z" fill="rgba(180,140,220,0.35)" stroke="rgba(210,180,250,0.65)" stroke-width="1.2"/>
-                  <circle cx="31" cy="31" r="9" fill="rgba(100,60,160,0.55)" stroke="rgba(200,160,255,0.55)" stroke-width="1.5"/>
-                  <circle cx="31" cy="31" r="4" fill="rgba(160,120,220,0.75)"/>
-                  <line x1="31" y1="22" x2="31" y2="26" stroke="rgba(200,170,240,0.6)" stroke-width="1.5"/>
-                  <line x1="31" y1="36" x2="31" y2="40" stroke="rgba(200,170,240,0.6)" stroke-width="1.5"/>
-                  <line x1="22" y1="31" x2="26" y2="31" stroke="rgba(200,170,240,0.6)" stroke-width="1.5"/>
-                  <line x1="36" y1="31" x2="40" y2="31" stroke="rgba(200,170,240,0.6)" stroke-width="1.5"/>
-                  <circle cx="14" cy="20" r="2.5" fill="rgba(180,140,220,0.8)"/>
-                  <circle cx="14" cy="42" r="2.5" fill="rgba(180,140,220,0.8)"/>
-                  <circle cx="48" cy="20" r="2.5" fill="rgba(180,140,220,0.8)"/>
-                  <circle cx="48" cy="42" r="2.5" fill="rgba(180,140,220,0.8)"/>
-                  <line x1="14" y1="20" x2="22" y2="28" stroke="rgba(200,160,255,0.25)" stroke-width="1"/>
-                  <line x1="14" y1="42" x2="22" y2="34" stroke="rgba(200,160,255,0.25)" stroke-width="1"/>
-                  <line x1="48" y1="20" x2="40" y2="28" stroke="rgba(200,160,255,0.25)" stroke-width="1"/>
-                  <line x1="48" y1="42" x2="40" y2="34" stroke="rgba(200,160,255,0.25)" stroke-width="1"/>
-                  <ellipse cx="25" cy="14" rx="12" ry="4" fill="rgba(255,255,255,0.10)" transform="rotate(-15 25 14)"/>
-                </svg>
-              </div>
-            </div>
-          </button>
-          <!-- Write Python Code -->
-          <button class="sc" onclick="useSug('Write a Python script to scrape a webpage with BeautifulSoup')">
-            <div class="sc-inner">
-              <div class="sc-text"><strong>Write Python code</strong><span>Scrape and parse a webpage</span></div>
-              <div class="sc-illus">
-                <svg viewBox="0 0 62 62" width="62" height="62" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs><linearGradient id="pyg1" x1="0" y1="0" x2="62" y2="62"><stop offset="0%" stop-color="#2a1f0e"/><stop offset="100%" stop-color="#1a1408"/></linearGradient></defs>
-                  <rect width="62" height="62" fill="url(#pyg1)"/>
-                  <path d="M48 8C55 15 55 30 40 38L30 50 28 43C38 36 48 22 42 14Z" fill="rgba(220,200,150,0.30)" stroke="rgba(240,220,150,0.55)" stroke-width="1"/>
-                  <path d="M42 14C38 20 34 26 30 30L28 43" stroke="rgba(200,170,90,0.45)" stroke-width="1" fill="none"/>
-                  <rect x="8" y="15" width="22" height="2" rx="1" fill="rgba(200,160,70,0.70)"/>
-                  <rect x="8" y="22" width="28" height="2" rx="1" fill="rgba(140,200,140,0.60)"/>
-                  <rect x="12" y="29" width="18" height="2" rx="1" fill="rgba(140,190,255,0.50)"/>
-                  <rect x="12" y="36" width="14" height="2" rx="1" fill="rgba(240,140,130,0.50)"/>
-                  <circle cx="28" cy="50" r="3" fill="rgba(220,180,70,0.60)" stroke="rgba(240,200,90,0.75)" stroke-width="0.8"/>
-                  <ellipse cx="18" cy="10" rx="14" ry="4" fill="rgba(255,255,255,0.05)" transform="rotate(-8 18 10)"/>
-                </svg>
-              </div>
-            </div>
-          </button>
-          <!-- AI Safety Research -->
-          <button class="sc" onclick="useSug('What are the latest AI safety research directions?')">
-            <div class="sc-inner">
-              <div class="sc-text"><strong>AI safety research</strong><span>Latest directions and open problems</span></div>
-              <div class="sc-illus">
-                <svg viewBox="0 0 62 62" width="62" height="62" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs><radialGradient id="sfg1" cx="40%" cy="30%" r="70%"><stop offset="0%" stop-color="#5a3a10"/><stop offset="100%" stop-color="#2a1a06"/></radialGradient></defs>
-                  <rect width="62" height="62" fill="url(#sfg1)"/>
-                  <line x1="31" y1="46" x2="31" y2="22" stroke="rgba(200,160,60,0.80)" stroke-width="1.5"/>
-                  <line x1="19" y1="22" x2="43" y2="22" stroke="rgba(200,160,60,0.80)" stroke-width="1.5"/>
-                  <path d="M13 28Q19 33 25 28" stroke="rgba(200,160,60,0.65)" stroke-width="1.2" fill="rgba(180,140,50,0.18)"/>
-                  <path d="M37 28Q43 33 49 28" stroke="rgba(200,160,60,0.65)" stroke-width="1.2" fill="rgba(180,140,50,0.18)"/>
-                  <line x1="19" y1="22" x2="13" y2="28" stroke="rgba(200,160,60,0.45)" stroke-width="1"/>
-                  <line x1="19" y1="22" x2="25" y2="28" stroke="rgba(200,160,60,0.45)" stroke-width="1"/>
-                  <line x1="43" y1="22" x2="37" y2="28" stroke="rgba(200,160,60,0.45)" stroke-width="1"/>
-                  <line x1="43" y1="22" x2="49" y2="28" stroke="rgba(200,160,60,0.45)" stroke-width="1"/>
-                  <path d="M31 7L39 10.5 39 18.5C39 23 35 26.5 31 27.5 27 26.5 23 23 23 18.5L23 10.5Z" fill="rgba(180,140,50,0.22)" stroke="rgba(220,180,70,0.65)" stroke-width="1.2"/>
-                  <text x="28" y="21" font-size="8" fill="rgba(230,190,80,0.9)" font-weight="bold" font-family="serif">AI</text>
-                  <rect x="26" y="46" width="10" height="2.5" rx="1.2" fill="rgba(200,160,60,0.60)"/>
-                  <ellipse cx="24" cy="10" rx="12" ry="3.5" fill="rgba(255,255,255,0.07)" transform="rotate(-10 24 10)"/>
-                </svg>
-              </div>
-            </div>
-          </button>
-          <!-- Code Review -->
-          <button class="sc" onclick="useSug('Review my code and suggest improvements for performance and readability')">
-            <div class="sc-inner">
-              <div class="sc-text"><strong>Code review</strong><span>Performance and readability suggestions</span></div>
-              <div class="sc-illus">
-                <svg viewBox="0 0 62 62" width="62" height="62" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs><linearGradient id="rvg1" x1="0" y1="0" x2="62" y2="62"><stop offset="0%" stop-color="#1a2a3a"/><stop offset="100%" stop-color="#0e1820"/></linearGradient></defs>
-                  <rect width="62" height="62" fill="url(#rvg1)"/>
-                  <circle cx="35" cy="27" r="12" fill="rgba(100,160,220,0.14)" stroke="rgba(140,190,240,0.60)" stroke-width="2"/>
-                  <line x1="26" y1="36" x2="15" y2="49" stroke="rgba(140,190,240,0.65)" stroke-width="2.5" stroke-linecap="round"/>
-                  <rect x="29" y="22" width="10" height="2" rx="1" fill="rgba(160,220,150,0.60)"/>
-                  <rect x="27" y="26" width="14" height="2" rx="1" fill="rgba(140,200,255,0.50)"/>
-                  <rect x="31" y="30" width="8" height="2" rx="1" fill="rgba(240,160,120,0.50)"/>
-                  <circle cx="45" cy="15" r="7" fill="rgba(50,180,100,0.22)" stroke="rgba(80,220,120,0.65)" stroke-width="1.5"/>
-                  <path d="M41 15L43.5 17.5 49 12" stroke="rgba(80,230,140,0.90)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                  <ellipse cx="22" cy="10" rx="14" ry="4" fill="rgba(255,255,255,0.04)" transform="rotate(-8 22 10)"/>
-                </svg>
-              </div>
-            </div>
-          </button>
-        </div>
+  <!-- Math -->
+  <button class="sc" onclick="useSug('Solve: 2x^2 + 5x - 3 = 0. Show all working and verify.')">
+    <div class="sc-inner">
+      <div class="sc-text"><strong>∑ Solve math</strong><span>Step-by-step with verification</span></div>
+      <div class="sc-illus" style="background:linear-gradient(135deg,#0369a1,#0c4a6e);display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:22px;color:#7dd3fc;font-style:italic;">∑</div>
+    </div>
+  </button>
+  <!-- Code -->
+  <button class="sc" onclick="useSug('Build a REST API in Python FastAPI with JWT auth, CRUD endpoints, and PostgreSQL using SQLAlchemy')">
+    <div class="sc-inner">
+      <div class="sc-text"><strong>⌨ Write code</strong><span>Production-ready with error handling</span></div>
+      <div class="sc-illus" style="background:linear-gradient(135deg,#1e1b4b,#312e81);display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:16px;color:#7dd3fc;">&lt;/&gt;</div>
+    </div>
+  </button>
+  <!-- Finance -->
+  <button class="sc" onclick="useSug('Build a SaaS financial model with MRR projections, unit economics (LTV/CAC), and 3 scenarios: bear, base, bull')">
+    <div class="sc-inner">
+      <div class="sc-text"><strong>$ Finance model</strong><span>MRR, unit economics, scenarios</span></div>
+      <div class="sc-illus" style="background:linear-gradient(135deg,#14532d,#166534);display:flex;align-items:center;justify-content:center;font-size:26px;color:#86efac;">$</div>
+    </div>
+  </button>
+  <!-- Architecture -->
+  <button class="sc" onclick="useSug('Design a production RAG pipeline architecture for a 10M document knowledge base. Include vector DB selection, chunking strategy, and cost analysis.')">
+    <div class="sc-inner">
+      <div class="sc-text"><strong>🏗 AI Architecture</strong><span>RAG pipeline, system design</span></div>
+      <div class="sc-illus" style="background:linear-gradient(135deg,#431407,#7c2d12);display:flex;align-items:center;justify-content:center;font-size:26px;color:#fed7aa;">⬡</div>
+    </div>
+  </button>
+  <!-- Data -->
+  <button class="sc" onclick="useSug('Our D7 retention dropped from 42% to 28% in 2 weeks. DAU is flat but session length fell 35%. Diagnose root cause and give prioritized fixes.')">
+    <div class="sc-inner">
+      <div class="sc-text"><strong>📊 Data diagnosis</strong><span>Retention, metrics, root cause</span></div>
+      <div class="sc-illus" style="background:linear-gradient(135deg,#1e3a8a,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:26px;color:#bfdbfe;">◉</div>
+    </div>
+  </button>
+  <!-- Concept -->
+  <button class="sc" onclick="useSug('Explain transformer attention mechanism — analogy, diagram, and a concrete numeric worked example')">
+    <div class="sc-inner">
+      <div class="sc-text"><strong>💡 Explain anything</strong><span>Analogy, diagram, examples</span></div>
+      <div class="sc-illus" style="background:linear-gradient(135deg,#134e4a,#0d9488);display:flex;align-items:center;justify-content:center;font-size:26px;color:#99f6e4;">◈</div>
+    </div>
+  </button>
+</div>
       </div>
       <div id="msgs-wrap"></div>
       <div class="pad"></div>
@@ -1537,7 +1497,7 @@ function showWelcome() {
 /* ═══════════════════════════════════
    MESSAGE ROW BUILDERS
 ═══════════════════════════════════ */
-function addMsgRow(role, content, animate) {
+function addMsgRow(role, content, animate, domain) {
   if(animate===undefined) animate=true;
   var wrap=document.getElementById('msgs-wrap');
   wrap.style.display='flex';
@@ -1554,7 +1514,7 @@ function addMsgRow(role, content, animate) {
   if (isAI && window.StreminiRenderer) {
     var lastUser = _lastUserQuery || '';
     if (!lastUser) { for(var i = messages.length - 1; i >= 0; i--) { if (messages[i].role === 'user') { lastUser = messages[i].content; break; } } }
-    window.StreminiRenderer.render(lastUser, content, mc);
+    window.StreminiRenderer.render(lastUser, content, mc, domain || 'general', false);
   } else {
     mc.innerHTML = renderMd(content);
   }
@@ -1575,12 +1535,12 @@ function updateStream(text) {
     scrollBottom();
   }
 }
-function finalizeStream(text) {
+function finalizeStream(text, domain) {
   var row = document.getElementById('srow');
   if (!row) return;
   row.id = '';
   var c = row.querySelector('.mc');
-  if (c && window.StreminiRenderer) { window.StreminiRenderer.finalizeStream(_lastUserQuery, text, c); }
+  if (c && window.StreminiRenderer) { window.StreminiRenderer.finalizeStream(_lastUserQuery, text, c, domain || 'general'); }
   else if (c) { c.innerHTML = renderMd(text); }
   var body = row.querySelector('.mbody');
   if (body && !body.querySelector('.macts')) {
@@ -1643,145 +1603,126 @@ function renderMd(raw){
   return out.join('\n');
 }
 
+var DOMAIN_PILL_CONFIG = {
+  math:        { label:'∑ Math',       color:'#0369a1', bg:'#e0f2fe', bdr:'#bae6fd' },
+  code:        { label:'⌨ Code',       color:'#7c3aed', bg:'#f5f3ff', bdr:'#ddd6fe' },
+  research:    { label:'◈ Research',   color:'#b45309', bg:'#fffbf5', bdr:'#fde68a' },
+  data:        { label:'📊 Data',      color:'#1d4ed8', bg:'#eff6ff', bdr:'#bfdbfe' },
+  finance:     { label:'$ Finance',    color:'#15803d', bg:'#f0fdf4', bdr:'#bbf7d0' },
+  architect:   { label:'🏗 Architect', color:'#c2410c', bg:'#fff7ed', bdr:'#fed7aa' },
+  competitive: { label:'🔍 Intel',     color:'#6d28d9', bg:'#f5f3ff', bdr:'#ddd6fe' },
+  growth:      { label:'⚡ Growth',    color:'#b45309', bg:'#fffbf5', bdr:'#fde68a' },
+  legal:       { label:'⚖ Legal',     color:'#be123c', bg:'#fff1f2', bdr:'#fecdd3' },
+  concept:     { label:'💡 Concept',   color:'#0d9488', bg:'#f0fdfa', bdr:'#99f6e4' },
+};
+
+function showDomainPill(domain) {
+  var pill = document.getElementById('domain-pill');
+  if (!pill) return;
+  var cfg = DOMAIN_PILL_CONFIG[domain];
+  if (!cfg) { pill.style.display = 'none'; return; }
+  pill.style.cssText = 'display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:'+cfg.bg+';color:'+cfg.color+';border:1px solid '+cfg.bdr+';animation:dpIn .25s ease;';
+  pill.textContent = cfg.label;
+}
+
 /* ═══════════════════════════════════
    SEND MESSAGE (full pipeline)
 ═══════════════════════════════════ */
 async function sendMsg() {
-  if(busy||!currentUser)return;
-  var inp=document.getElementById('inp'), text=inp.value.trim();
+  if (busy || !currentUser) return;
+  var inp = document.getElementById('inp'), text = inp.value.trim();
   _lastUserQuery = text;
-  if(!text)return;
+  if (!text) return;
 
-  if(!activeId){
-    try{ activeId=await createChat(text.slice(0,52)+(text.length>52?'…':'')); }
-    catch(e){ toast('Error creating chat: '+e.message); return; }
+  if (!activeId) {
+    try { activeId = await createChat(text.slice(0, 52) + (text.length > 52 ? '…' : '')); }
+    catch (e) { toast('Error creating chat: ' + e.message); return; }
   }
 
-  inp.value=''; resize(inp);
+  inp.value = ''; resize(inp);
 
-  var hist = messages.slice(-MAX_H).map(function(m){return{role:m.role,content:m.content};});
-  await saveMessage(activeId,'user',text);
-  if(messages.filter(function(m){return m.role==='user';}).length===1){
-    updateChatTitle(activeId, text.slice(0,52)+(text.length>52?'…':''));
+  var hist = messages.slice(-20).map(function(m) { return { role: m.role, content: m.content }; });
+  await saveMessage(activeId, 'user', text);
+  if (messages.filter(function(m) { return m.role === 'user'; }).length === 1) {
+    updateChatTitle(activeId, text.slice(0, 52) + (text.length > 52 ? '…' : ''));
   }
   addMsgRow('user', text);
   setBusy(true);
 
   var answer = '';
-
-  // ── Branch: specialist agent router ──
-  if (window.StreminiAgentRouter) {
-    var agentType = window.StreminiAgentRouter.detect(text);
-    if (agentType) {
-      addStreamRow();
-      var agentLabels = { math:'Solving…', research:'Researching…', growth:'Building growth strategy…', strategy:'Building strategy report…', legal:'Analysing legal query…', competitive:'Running competitive intelligence…' };
-      updateStream(agentLabels[agentType] || 'Processing…');
-      try {
-        var srowAgent = document.getElementById('srow');
-        if (srowAgent) srowAgent.remove();
-        var mwAgent = document.getElementById('msgs-wrap');
-        mwAgent.style.display = 'flex';
-        document.getElementById('welcome').style.display = 'none';
-        var rowAgent = document.createElement('div'); rowAgent.className = 'mr';
-        var agentSlotId = 'agent-slot-' + Date.now();
-        rowAgent.innerHTML = '<div class="mav ai">S</div><div class="mbody"><div class="mname">StreminiAI</div><div class="mc" id="' + agentSlotId + '"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div><div class="macts"><button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div></div>';
-        mwAgent.appendChild(rowAgent);
-        scrollBottom();
-        var agentSlot = document.getElementById(agentSlotId);
-        var handled = await window.StreminiAgentRouter.handle(text, hist, agentSlot);
-        if (handled) {
-          scrollBottom();
-          var agentContent = agentSlot ? agentSlot.innerText : text;
-          await saveMessage(activeId, 'assistant', agentContent.slice(0, 4000));
-          setBusy(false); return;
-        }
-        rowAgent.remove();
-      } catch(agentErr) {
-        var srowClean = document.getElementById('srow');
-        if (srowClean) srowClean.remove();
-        var errMsgAgent = 'Error: ' + escHtml(agentErr.message);
-        addMsgRow('assistant', errMsgAgent);
-        await saveMessage(activeId, 'assistant', errMsgAgent);
-        setBusy(false); return;
-      }
-    }
-  }
-
-  // ── Branch: code query ──
-  if (isCodeQuery(text)) {
-    var codeMode = detectCodeMode(text);
-    addStreamRow();
-    updateStream('Analyzing code query…');
-    try {
-      answer = await callCodeAPI(text, codeMode, hist);
-      if (!answer || !answer.trim()) answer = 'No response from code agent.';
-      var srow = document.getElementById('srow');
-      if (srow) srow.remove();
-      addCodeMsgRow(answer, codeMode);
-      scrollBottom();
-      await saveMessage(activeId, 'assistant', answer);
-    } catch(err) {
-      var srow2 = document.getElementById('srow');
-      if (srow2) srow2.remove();
-      var errMsg = 'Error: ' + escHtml(err.message);
-      addMsgRow('assistant', errMsg);
-      await saveMessage(activeId, 'assistant', errMsg);
-    }
-    setBusy(false); return;
-  }
-
-  // ── Normal flow ──
-  var route = await getRoutingDecision(text);
-  var systemPrompt = buildUnifiedSystemPrompt(route.primary, route.collaborators);
-  hist.unshift({role:'system',content:systemPrompt});
-  if(userContext) hist.unshift({role:'system',content:'User context: '+userContext});
+  var detectedDomain = 'general';
 
   addStreamRow();
 
   try {
     if (docFile) {
-      var docQuestion = systemPrompt + '\n\nUser question:\n' + text;
-      answer = await callDoc(docQuestion, docFile.text);
-    } else {
-      answer = await callStream(text, hist);
+      var docAnswer = await callDoc(text, docFile.text);
+      answer = docAnswer || 'No response.';
+      finalizeStream(answer, detectedDomain);
+      await saveMessage(activeId, 'assistant', answer);
+      setBusy(false);
+      return;
     }
-    if(!answer||!answer.trim()) answer='No response from model. Please try again.';
-    finalizeStream(answer);
-    await saveMessage(activeId,'assistant',answer);
-  } catch(err){
-    var em = err.message==='stopped' ? '*(Generation stopped)*' : 'Error: '+escHtml(err.message);
-    finalizeStream(em);
-    if(err.message!=='stopped') await saveMessage(activeId,'assistant',em);
-  } finally{ setBusy(false); }
+
+    // Streaming path — domain is sent as first SSE event
+    answer = await callStream(text, hist, function(domain) {
+      detectedDomain = domain || 'general';
+      showDomainPill(detectedDomain);
+    });
+
+    if (!answer || !answer.trim()) answer = 'No response from model. Please try again.';
+    finalizeStream(answer, detectedDomain);
+    await saveMessage(activeId, 'assistant', answer);
+
+  } catch (err) {
+    var em = err.message === 'stopped' ? '*(Generation stopped)*' : 'Error: ' + escHtml(err.message);
+    finalizeStream(em, detectedDomain);
+    if (err.message !== 'stopped') await saveMessage(activeId, 'assistant', em);
+  } finally {
+    setBusy(false);
+  }
 }
 
 /* ═══════════════════════════════════
    API CALLERS
 ═══════════════════════════════════ */
-async function callStream(message,history){
+async function callStream(message, history, onDomain) {
   var res;
-  try{ res=await fetch(API+'/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:message,history:history})}); }
-  catch(e){ throw new Error('Network error: '+e.message); }
-  if(!res.ok){ console.warn('Stream failed '+res.status+', fallback'); return await callMessage(message,history); }
-  var reader=res.body.getReader(); streamRdr=reader;
-  var dec=new TextDecoder(), buf='', full='';
-  try{
-    while(true){
-      if(stopFlag){reader.cancel();throw new Error('stopped');}
-      var r=await reader.read(); if(r.done)break;
-      buf+=dec.decode(r.value,{stream:true});
-      var lines=buf.split('\n'); buf=lines.pop();
-      for(var j=0;j<lines.length;j++){
-        var line=lines[j].trim();
-        if(!line.startsWith('data:'))continue;
-        var data=line.slice(5).trim();
-        if(data==='[DONE]')return full;
-        try{ var p=JSON.parse(data); if(p.token){full+=p.token;updateStream(full);} if(p.error)throw new Error(p.error); }
-        catch(pe){}
+  try {
+    res = await fetch(API + '/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: message, history: history, userContext: userContext || '' })
+    });
+  } catch (e) { throw new Error('Network error: ' + e.message); }
+
+  if (!res.ok) { console.warn('Stream failed ' + res.status + ', fallback'); return await callMessage(message, history); }
+
+  var reader = res.body.getReader(); streamRdr = reader;
+  var dec = new TextDecoder(), buf = '', full = '';
+
+  try {
+    while (true) {
+      if (stopFlag) { reader.cancel(); throw new Error('stopped'); }
+      var r = await reader.read(); if (r.done) break;
+      buf += dec.decode(r.value, { stream: true });
+      var lines = buf.split('\n'); buf = lines.pop();
+      for (var j = 0; j < lines.length; j++) {
+        var line = lines[j].trim();
+        if (!line.startsWith('data:')) continue;
+        var data = line.slice(5).trim();
+        if (data === '[DONE]') return full;
+        try {
+          var p = JSON.parse(data);
+          if (p.domain && onDomain) onDomain(p.domain);
+          if (p.token) { full += p.token; updateStream(full); }
+          if (p.error) throw new Error(p.error);
+        } catch (pe) {}
       }
     }
-  } finally{ streamRdr=null; }
-  if(!full.trim()) return await callMessage(message,history);
+  } finally { streamRdr = null; }
+
+  if (!full.trim()) return await callMessage(message, history);
   return full;
 }
 async function callMessage(message,history){
