@@ -1,68 +1,570 @@
 /* ═══════════════════════════════════════════════════════════════
-   STREMINI AI — UNIFIED STRUCTURED RENDERER v4.0
-   Handles: Code · Math · Research · Data · Finance · Architecture
-            Competitive Intel · Growth · Legal · Concepts · General
+   STREMINI AI — CRYSTALLINE RENDERER v5.0
+   Beautiful white-theme, advanced structured outputs.
+   Font: Instrument Serif (display) + Plus Jakarta Sans (body) + JetBrains Mono (code)
+   Design language: clean, editorial, precision-first.
 ═══════════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────
-   DOMAIN → RENDERER MAPPING
+   FONT INJECTION
+───────────────────────────────────────── */
+(function injectFonts() {
+  if (document.getElementById('cr-fonts')) return;
+  const link = document.createElement('link');
+  link.id = 'cr-fonts';
+  link.rel = 'stylesheet';
+  link.href = 'https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap';
+  document.head.appendChild(link);
+})();
+
+/* ─────────────────────────────────────────
+   DOMAIN CONFIG — white editorial palette
 ───────────────────────────────────────── */
 const DOMAIN_CONFIG = {
-  math:        { badge: '∑ Math',          color: '#0369a1', bg: '#e0f2fe', bdr: '#bae6fd', icon: '∑' },
-  code:        { badge: '⌨ Code',          color: '#7c3aed', bg: '#f5f3ff', bdr: '#ddd6fe', icon: '</>' },
-  research:    { badge: '◈ Research',      color: '#b45309', bg: '#fffbf5', bdr: '#fde68a', icon: '📄' },
-  data:        { badge: '📊 Data Intel',   color: '#1d4ed8', bg: '#eff6ff', bdr: '#bfdbfe', icon: '◉' },
-  finance:     { badge: '$ Finance',       color: '#15803d', bg: '#f0fdf4', bdr: '#bbf7d0', icon: '$' },
-  architect:   { badge: '🏗 Architect',    color: '#c2410c', bg: '#fff7ed', bdr: '#fed7aa', icon: '⬡' },
-  competitive: { badge: '🔍 Intel',        color: '#6d28d9', bg: '#f5f3ff', bdr: '#ddd6fe', icon: '◎' },
-  growth:      { badge: '⚡ Growth',       color: '#b45309', bg: '#fffbf5', bdr: '#fde68a', icon: '↑' },
-  legal:       { badge: '⚖ Legal',        color: '#be123c', bg: '#fff1f2', bdr: '#fecdd3', icon: '⚖' },
-  concept:     { badge: '💡 Concept',      color: '#0d9488', bg: '#f0fdfa', bdr: '#99f6e4', icon: '◈' },
-  general:     { badge: '◇ Response',     color: '#6b6055', bg: '#fafaf8', bdr: '#e5e0d8', icon: 'S' },
+  math:        { label: 'Mathematics',      accent: '#2563eb', accentBg: '#eff6ff', accentBdr: '#bfdbfe', icon: '∑',  glyph: '∫∑' },
+  code:        { label: 'Code',             accent: '#7c3aed', accentBg: '#f5f3ff', accentBdr: '#ddd6fe', icon: '</>',glyph: '{}' },
+  research:    { label: 'Research',         accent: '#b45309', accentBg: '#fffbf5', accentBdr: '#fde68a', icon: '◈',  glyph: '§¶' },
+  data:        { label: 'Data Intelligence',accent: '#0369a1', accentBg: '#f0f9ff', accentBdr: '#bae6fd', icon: '◉',  glyph: '⌁⌀' },
+  finance:     { label: 'Financial Model',  accent: '#15803d', accentBg: '#f0fdf4', accentBdr: '#bbf7d0', icon: '$',  glyph: '¥€' },
+  architect:   { label: 'Architecture',     accent: '#c2410c', accentBg: '#fff7ed', accentBdr: '#fed7aa', icon: '⬡',  glyph: '⬡⬢' },
+  competitive: { label: 'Intel Report',     accent: '#6d28d9', accentBg: '#f5f3ff', accentBdr: '#ddd6fe', icon: '◎',  glyph: '◎◈' },
+  growth:      { label: 'Growth Strategy',  accent: '#d97706', accentBg: '#fffbeb', accentBdr: '#fde68a', icon: '↑',  glyph: '↑⟶' },
+  legal:       { label: 'Legal Analysis',   accent: '#be123c', accentBg: '#fff1f2', accentBdr: '#fecdd3', icon: '⚖',  glyph: '§©' },
+  concept:     { label: 'Concept',          accent: '#0d9488', accentBg: '#f0fdfa', accentBdr: '#99f6e4', icon: '◈',  glyph: '◈◇' },
+  general:     { label: 'Response',         accent: '#374151', accentBg: '#f9fafb', accentBdr: '#e5e7eb', icon: 'S',  glyph: '··' },
 };
 
 /* ─────────────────────────────────────────
-   OUTPUT TYPE DETECTION (within domain)
+   CSS INJECTION
 ───────────────────────────────────────── */
-function detectOutputType(userQuery, responseText) {
-  const q = (userQuery || '').toLowerCase();
-  const r = responseText || '';
+function injectStyles() {
+  if (document.getElementById('cr-v5-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'cr-v5-styles';
+  s.textContent = `
+/* ── RESET & ROOT ── */
+.cr-root *{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+.cr-root{
+  font-family:'Plus Jakarta Sans',ui-sans-serif,sans-serif;
+  font-size:14px;line-height:1.7;color:#111827;
+  --cr-bg:#ffffff;--cr-bg2:#f9fafb;--cr-bg3:#f3f4f6;
+  --cr-bdr:#e5e7eb;--cr-bdr2:#d1d5db;
+  --cr-tx:#111827;--cr-tx2:#374151;--cr-tx3:#6b7280;--cr-tx4:#9ca3af;
+  --cr-acc:#374151;--cr-acc-bg:#f9fafb;--cr-acc-bdr:#e5e7eb;
+  --cr-serif:'Instrument Serif',Georgia,serif;
+  --cr-mono:'JetBrains Mono',ui-monospace,monospace;
+  --cr-r:10px;--cr-r-sm:6px;--cr-r-lg:14px;
+  --cr-sh:0 1px 3px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.06);
+  --cr-sh-lg:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+}
 
-  if (/```[\w]*\n/.test(r) && (r.match(/```/g) || []).length >= 2) return 'code';
-  if (/\$\$[\s\S]+?\$\$/.test(r) || /\\\([\s\S]+?\\\)/.test(r)) return 'math';
-  if (/\b(vs\.?|versus|compare|comparison|difference between|which is better|pros and cons)\b/i.test(q)) return 'comparison';
-  if ((r.match(/\|\s*[-:]+\s*\|/g) || []).length > 0 && r.includes('\n')) return 'table';
-  if (/\b(how to|how do i|guide|walk me through|tutorial|setup|install|configure|deploy|step by step)\b/.test(q)) return 'steps';
-  if (/^Step\s+\d+/im.test(r) && (r.match(/^Step\s+\d+/gim) || []).length >= 2) return 'steps';
-  if (/^\d+\.\s+\*\*/m.test(r) && (r.match(/^\d+\./gm) || []).length >= 3) return 'steps';
-  if (/\b(why is|what's wrong|diagnose|debug|troubleshoot|root cause|not working)\b/.test(q)) return 'diagnosis';
-  if (/\b(list|give me|top \d+|best \d+|recommend|suggest|options for|examples of|name \d+)\b/.test(q)) return 'list';
-  if ((r.match(/^[-*•]\s/gm) || []).length >= 4) return 'list';
-  if (/\b(what is|explain|describe|tell me about|overview|history|how does|elaborate)\b/.test(q) && r.length > 400) return 'research';
-  if ((r.match(/^#{2,3}\s/gm) || []).length >= 2) return 'research';
-  if (r.length < 280) return 'chat';
-  if (r.length > 700) return 'research';
-  return 'chat';
+/* ── CARD SHELL ── */
+.cr-card{
+  background:#fff;border:1.5px solid var(--cr-bdr);
+  border-radius:16px;overflow:hidden;
+  box-shadow:var(--cr-sh-lg);margin:2px 0 8px;
+  transition:box-shadow .2s;
+}
+.cr-card:hover{box-shadow:0 8px 40px rgba(0,0,0,.10);}
+
+/* ── CARD HEADER ── */
+.cr-hd{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--cr-bdr);
+  background:var(--cr-bg2);
+  gap:12px;
+}
+.cr-hd-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.cr-domain-tag{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 11px;border-radius:99px;white-space:nowrap;flex-shrink:0;
+}
+.cr-hd-title{
+  font-size:13px;font-weight:600;color:var(--cr-tx2);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.cr-copy-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  background:none;border:1px solid var(--cr-bdr2);cursor:pointer;
+  font-size:11px;font-weight:500;color:var(--cr-tx3);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  padding:5px 11px;border-radius:var(--cr-r-sm);
+  transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.cr-copy-btn:hover{background:var(--cr-bg3);color:var(--cr-tx);border-color:var(--cr-bdr2);}
+.cr-copy-btn.cr-copied{background:#ecfdf5;color:#059669;border-color:#6ee7b7;}
+
+/* ── SUMMARY BAR ── */
+.cr-summary{
+  padding:12px 20px;border-bottom:1px solid var(--cr-bdr);
+  font-family:var(--cr-serif);font-style:italic;
+  font-size:14.5px;line-height:1.7;color:var(--cr-tx2);
+  background:#fafaf9;
+}
+
+/* ── SECTION DIVIDERS ── */
+.cr-section{border-bottom:1px solid var(--cr-bdr);}
+.cr-section:last-child{border-bottom:none;}
+.cr-section-hd{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 20px;cursor:pointer;
+  background:#fff;transition:background .12s;user-select:none;
+}
+.cr-section-hd:hover{background:var(--cr-bg2);}
+.cr-section-marker{
+  width:3px;height:16px;border-radius:2px;flex-shrink:0;
+}
+.cr-section-label{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--cr-tx2);flex:1;
+}
+.cr-section-chevron{
+  color:var(--cr-tx4);transition:transform .2s;flex-shrink:0;
+}
+.cr-section-chevron.open{transform:rotate(180deg);}
+.cr-section-body{padding:16px 20px 18px;background:#fff;}
+.cr-section-body.collapsed{display:none;}
+
+/* ── DOWNLOAD ROW ── */
+.cr-dl-row{
+  display:flex;gap:8px;flex-wrap:wrap;
+  padding:12px 20px;border-top:1px solid var(--cr-bdr);
+  background:var(--cr-bg2);
+}
+.cr-dl-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border:none;border-radius:var(--cr-r-sm);
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:11.5px;
+  font-weight:600;cursor:pointer;transition:all .15s;letter-spacing:.01em;
+}
+.cr-dl-dark{background:#111827;color:#fff;}
+.cr-dl-dark:hover{background:#1f2937;transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.15);}
+.cr-dl-ghost{background:#fff;color:var(--cr-tx2);border:1px solid var(--cr-bdr2);}
+.cr-dl-ghost:hover{background:var(--cr-bg3);border-color:var(--cr-bdr2);}
+
+/* ── PROSE ── */
+.cr-prose{display:flex;flex-direction:column;gap:2px;}
+.cr-prose p{font-size:14px;line-height:1.78;color:var(--cr-tx);margin:0 0 8px;}
+.cr-prose p:last-child{margin-bottom:0;}
+.cr-prose ul,.cr-prose ol{padding-left:20px;margin:4px 0 10px;}
+.cr-prose li{font-size:13.5px;margin-bottom:5px;line-height:1.65;color:var(--cr-tx);}
+.cr-prose h2{
+  font-family:var(--cr-serif);font-style:italic;
+  font-size:18px;font-weight:400;color:var(--cr-tx);
+  margin:18px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--cr-bdr);
+  letter-spacing:-.02em;
+}
+.cr-prose h3{
+  font-size:13.5px;font-weight:700;color:var(--cr-tx);
+  margin:14px 0 6px;letter-spacing:-.01em;
+  display:flex;align-items:center;gap:8px;
+}
+.cr-prose h3::before{content:'';display:inline-block;width:3px;height:13px;border-radius:2px;background:var(--cr-acc);flex-shrink:0;}
+.cr-prose h4{font-size:12.5px;font-weight:700;color:var(--cr-tx2);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.06em;}
+.cr-prose h2:first-child,.cr-prose h3:first-child,.cr-prose h4:first-child{margin-top:0;}
+.cr-prose hr{border:none;border-top:1px solid var(--cr-bdr);margin:14px 0;}
+.cr-prose blockquote{
+  border-left:3px solid var(--cr-acc);padding:10px 0 10px 16px;
+  color:var(--cr-tx2);font-family:var(--cr-serif);font-style:italic;
+  font-size:14.5px;line-height:1.75;margin:10px 0;
+}
+.cr-prose strong{font-weight:700;}
+.cr-prose em{font-style:italic;color:var(--cr-tx2);}
+.cr-prose code{
+  font-family:var(--cr-mono);font-size:12px;
+  background:#f3f4f6;border:1px solid var(--cr-bdr2);
+  border-radius:4px;padding:2px 6px;color:#7c3aed;
+}
+
+/* ── CODE BLOCKS ── */
+.cr-code{
+  border-radius:var(--cr-r);overflow:hidden;
+  border:1px solid #e5e7eb;margin:8px 0;
+  box-shadow:0 2px 8px rgba(0,0,0,.06);
+}
+.cr-code-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:#18181b;
+  border-bottom:1px solid #3f3f46;
+}
+.cr-code-lang{
+  display:flex;align-items:center;gap:7px;
+  font-family:var(--cr-mono);font-size:10.5px;color:#a1a1aa;
+  font-weight:500;text-transform:lowercase;letter-spacing:.04em;
+}
+.cr-code-lang-dot{
+  width:6px;height:6px;border-radius:50%;background:#71717a;flex-shrink:0;
+}
+.cr-code-copy{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.10);
+  color:#a1a1aa;font-size:11px;font-family:'Plus Jakarta Sans',sans-serif;
+  font-weight:500;padding:4px 10px;border-radius:5px;cursor:pointer;
+  transition:all .15s;
+}
+.cr-code-copy:hover{background:rgba(255,255,255,.14);color:#d4d4d8;}
+.cr-code-copy.cr-copied{background:rgba(52,211,153,.12);color:#34d399;border-color:rgba(52,211,153,.25);}
+.cr-code-pre{margin:0;background:#18181b;padding:18px 20px;overflow-x:auto;}
+.cr-code-pre code{
+  font-family:var(--cr-mono);font-size:12.5px;line-height:1.75;
+  color:#e4e4e7;background:none;border:none;padding:0;display:block;
+}
+
+/* ── MATH BLOCKS ── */
+.cr-math-formula{
+  background:linear-gradient(135deg,#eff6ff,#dbeafe);
+  border:1px solid #bfdbfe;border-radius:var(--cr-r);
+  padding:14px 18px;margin:8px 0;
+  font-family:var(--cr-mono);font-size:14px;
+  color:#1d4ed8;line-height:1.9;overflow-x:auto;white-space:pre-wrap;
+  word-break:break-word;
+}
+.cr-math-formula-lbl{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:#2563eb;margin-bottom:6px;opacity:.7;
+}
+.cr-math-answer{
+  background:linear-gradient(135deg,#f0fdf4,#dcfce7);
+  border:1.5px solid #86efac;border-radius:var(--cr-r);
+  padding:16px 20px;margin:10px 0;
+  display:flex;flex-direction:column;gap:6px;
+}
+.cr-math-answer-lbl{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:#16a34a;
+}
+.cr-math-answer-val{
+  font-family:var(--cr-mono);font-size:16px;font-weight:600;
+  color:#14532d;line-height:1.65;white-space:pre-wrap;
+}
+.cr-math-verify{
+  background:#eff6ff;border:1px solid #bfdbfe;
+  border-left:3px solid #3b82f6;border-radius:0 var(--cr-r) var(--cr-r) 0;
+  padding:12px 16px;font-size:13px;color:#1e40af;
+  line-height:1.7;margin:8px 0;
+}
+
+/* ── STEP TIMELINE ── */
+.cr-steps{display:flex;flex-direction:column;gap:0;}
+.cr-step{display:flex;gap:0;align-items:stretch;}
+.cr-step-rail{
+  display:flex;flex-direction:column;align-items:center;
+  width:48px;flex-shrink:0;padding-top:18px;
+}
+.cr-step-num{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;
+  background:var(--cr-tx);color:#fff;
+  font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.cr-step-line{
+  width:1.5px;flex:1;background:var(--cr-bdr);margin-top:8px;min-height:24px;
+}
+.cr-step:last-child .cr-step-line{display:none;}
+.cr-step-body{flex:1;padding:16px 20px 16px 0;}
+.cr-step-title{
+  font-size:14px;font-weight:700;color:var(--cr-tx);
+  margin-bottom:6px;letter-spacing:-.01em;
+}
+.cr-step-desc{font-size:13.5px;color:var(--cr-tx2);line-height:1.75;}
+
+/* ── TABLE ── */
+.cr-table-wrap{
+  overflow-x:auto;border-radius:var(--cr-r);
+  border:1px solid var(--cr-bdr);margin:10px 0;
+  box-shadow:0 1px 6px rgba(0,0,0,.04);
+}
+.cr-table{width:100%;border-collapse:collapse;font-size:13px;}
+.cr-table thead th{
+  background:#18181b;color:#f4f4f5;
+  padding:11px 16px;font-size:11px;font-weight:600;text-align:left;
+  letter-spacing:.05em;text-transform:uppercase;
+}
+.cr-table thead th:first-child{background:#111827;}
+.cr-table tbody td{
+  padding:10px 16px;border-bottom:1px solid var(--cr-bdr);
+  vertical-align:top;color:var(--cr-tx);font-size:13px;
+}
+.cr-table tbody tr:last-child td{border-bottom:none;}
+.cr-table tbody tr:nth-child(even) td{background:#f9fafb;}
+.cr-table tbody td:first-child{font-weight:600;color:var(--cr-tx2);}
+
+/* ── STATUS BADGES ── */
+.cr-badge{padding:3px 8px;border-radius:99px;font-size:10.5px;font-weight:700;white-space:nowrap;}
+.cr-badge-red{background:#fee2e2;color:#991b1b;}
+.cr-badge-amber{background:#fef3c7;color:#92400e;}
+.cr-badge-green{background:#d1fae5;color:#065f46;}
+.cr-badge-blue{background:#dbeafe;color:#1e40af;}
+
+/* ── LIST CARDS ── */
+.cr-list{display:flex;flex-direction:column;gap:8px;}
+.cr-list-item{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:14px 16px;border:1.5px solid var(--cr-bdr);
+  border-radius:var(--cr-r);background:#fff;
+  transition:all .18s cubic-bezier(.16,1,.3,1);
+}
+.cr-list-item:hover{
+  background:var(--cr-bg2);border-color:var(--cr-bdr2);
+  box-shadow:0 4px 16px rgba(0,0,0,.06);transform:translateY(-1px);
+}
+.cr-list-num{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.cr-list-bul{
+  width:28px;height:28px;border-radius:8px;flex-shrink:0;
+  margin-top:1px;background:var(--cr-bg3);
+  border:1px solid var(--cr-bdr);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--cr-tx4);font-size:10px;
+}
+.cr-list-title{
+  font-size:14px;font-weight:700;color:var(--cr-tx);
+  line-height:1.4;margin-bottom:3px;letter-spacing:-.01em;
+}
+.cr-list-sub{font-size:13px;color:var(--cr-tx2);line-height:1.65;}
+
+/* ── RESEARCH SECTIONS ── */
+.cr-rsec{padding:18px 20px;border-bottom:1px solid var(--cr-bdr);}
+.cr-rsec:last-child{border-bottom:none;}
+.cr-rsec-hd{
+  display:flex;align-items:center;gap:10px;
+  font-size:14px;font-weight:700;color:var(--cr-tx);
+  margin-bottom:10px;letter-spacing:-.01em;
+}
+.cr-rsec-hd-bar{width:3px;height:18px;border-radius:2px;background:var(--cr-acc);flex-shrink:0;}
+
+/* ── CALLOUTS ── */
+.cr-callout{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:12px 16px;border-radius:var(--cr-r);
+  border-left:3px solid;font-size:13.5px;line-height:1.7;margin:10px 0;
+}
+.cr-callout.info{background:#eff6ff;border-color:#3b82f6;color:#1e3a8a;}
+.cr-callout.warn{background:#fffbeb;border-color:#f59e0b;color:#78350f;}
+.cr-callout.tip{background:#ecfdf5;border-color:#10b981;color:#064e3b;}
+.cr-callout.danger{background:#fef2f2;border-color:#ef4444;color:#7f1d1d;}
+.cr-callout-icon{flex-shrink:0;margin-top:1px;font-size:14px;}
+
+/* ── DIAGNOSIS ── */
+.cr-diag{display:flex;flex-direction:column;gap:8px;}
+.cr-diag-item{border-radius:var(--cr-r);overflow:hidden;border:1.5px solid;}
+.cr-diag-item.sev-critical{border-color:#fecaca;}
+.cr-diag-item.sev-high{border-color:#fdba74;}
+.cr-diag-item.sev-medium{border-color:#fde68a;}
+.cr-diag-item.sev-low{border-color:#bbf7d0;}
+.cr-diag-item.sev-info{border-color:var(--cr-bdr);}
+.cr-diag-hd{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px;font-size:13px;font-weight:600;
+}
+.sev-critical .cr-diag-hd{background:#fee2e2;color:#7f1d1d;}
+.sev-high .cr-diag-hd{background:#fff7ed;color:#9a3412;}
+.sev-medium .cr-diag-hd{background:#fefce8;color:#713f12;}
+.sev-low .cr-diag-hd{background:#f0fdf4;color:#14532d;}
+.sev-info .cr-diag-hd{background:#f9fafb;color:var(--cr-tx2);}
+.cr-diag-sev-tag{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;padding:2px 8px;border-radius:99px;margin-left:auto;
+}
+.sev-critical .cr-diag-sev-tag{background:#fecaca;color:#7f1d1d;}
+.sev-high .cr-diag-sev-tag{background:#fed7aa;color:#7c2d12;}
+.sev-medium .cr-diag-sev-tag{background:#fef08a;color:#713f12;}
+.sev-low .cr-diag-sev-tag{background:#bbf7d0;color:#14532d;}
+.sev-info .cr-diag-sev-tag{background:var(--cr-bg3);color:var(--cr-tx3);}
+.cr-diag-bd{
+  padding:10px 14px;font-size:13px;color:var(--cr-tx2);
+  line-height:1.7;border-top:1px solid rgba(0,0,0,.05);
+}
+
+/* ── COMPARISON TABLE ── */
+.cr-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0;}
+@media(max-width:540px){.cr-compare{grid-template-columns:1fr;}}
+.cr-cmp-col{border:1.5px solid var(--cr-bdr);border-radius:var(--cr-r);overflow:hidden;}
+.cr-cmp-col-hd{
+  padding:12px 16px;font-size:13.5px;font-weight:700;
+  letter-spacing:-.01em;
+}
+.cr-cmp-col.col-a .cr-cmp-col-hd{background:#18181b;color:#f4f4f5;}
+.cr-cmp-col.col-b .cr-cmp-col-hd{background:#fffbeb;color:#92400e;border-bottom:1px solid #fde68a;}
+.cr-cmp-attrs{padding:12px 16px;display:flex;flex-direction:column;gap:0;}
+.cr-cmp-attr{padding:8px 0;border-bottom:1px solid var(--cr-bdr);}
+.cr-cmp-attr:last-child{border-bottom:none;}
+.cr-cmp-attr-lbl{
+  font-size:9.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--cr-tx4);margin-bottom:2px;
+}
+.cr-cmp-attr-val{font-size:13.5px;color:var(--cr-tx);line-height:1.55;}
+
+/* ── VERDICT BOX ── */
+.cr-verdict{
+  display:flex;align-items:flex-start;gap:12px;
+  border:1.5px solid var(--cr-bdr2);border-radius:var(--cr-r);
+  padding:14px 18px;margin-top:10px;background:#f9fafb;
+}
+.cr-verdict-icon{
+  font-family:var(--cr-serif);font-style:italic;font-size:20px;
+  color:var(--cr-acc);flex-shrink:0;margin-top:1px;
+}
+.cr-verdict strong{
+  display:block;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--cr-acc);margin-bottom:4px;
+}
+.cr-verdict p{font-size:13.5px;color:var(--cr-tx);line-height:1.65;margin:0;}
+
+/* ── MERMAID ── */
+.cr-mermaid{
+  background:var(--cr-bg2);border:1px solid var(--cr-bdr);
+  border-radius:var(--cr-r);padding:20px;margin:10px 0;
+  text-align:center;overflow-x:auto;
+}
+.cr-mermaid svg{max-width:100%;height:auto;}
+
+/* ── CHAT SIMPLE ── */
+.cr-chat{
+  font-size:14px;line-height:1.8;color:var(--cr-tx);
+}
+.cr-chat p{margin:0 0 10px;}
+.cr-chat p:last-child{margin-bottom:0;}
+.cr-chat ul,.cr-chat ol{padding-left:20px;margin:5px 0 10px;}
+.cr-chat li{margin-bottom:5px;line-height:1.65;}
+
+/* ── STREAMING STATE ── */
+.cr-streaming{opacity:.92;}
+.cr-cursor::after{
+  content:'▋';animation:cr-blink .65s step-end infinite;
+  margin-left:1px;color:var(--cr-acc);
+}
+@keyframes cr-blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── METRIC STRIP (data domain) ── */
+.cr-metrics{
+  display:flex;gap:0;border:1px solid var(--cr-bdr);
+  border-radius:var(--cr-r);overflow:hidden;margin:10px 0;
+}
+.cr-metric{
+  flex:1;padding:14px 16px;border-right:1px solid var(--cr-bdr);
+  display:flex;flex-direction:column;gap:3px;
+}
+.cr-metric:last-child{border-right:none;}
+.cr-metric-val{
+  font-family:var(--cr-serif);font-size:22px;font-weight:400;
+  color:var(--cr-tx);line-height:1.2;
+}
+.cr-metric-lbl{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.07em;color:var(--cr-tx3);
+}
+.cr-metric-delta{font-size:12px;font-weight:600;}
+.cr-metric-delta.pos{color:#16a34a;}
+.cr-metric-delta.neg{color:#dc2626;}
+
+/* ── ARCHITECTURE DIAGRAM ── */
+.cr-arch{border:1px solid var(--cr-bdr);border-radius:var(--cr-r);overflow:hidden;margin:10px 0;}
+.cr-arch-layer{border-bottom:1px solid var(--cr-bdr);}
+.cr-arch-layer:last-child{border-bottom:none;}
+.cr-arch-layer-hd{
+  padding:8px 14px;background:var(--cr-bg2);
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--cr-tx3);border-bottom:1px solid var(--cr-bdr);
+}
+.cr-arch-components{display:flex;flex-wrap:wrap;gap:6px;padding:10px 14px;}
+.cr-arch-comp{
+  padding:5px 12px;background:#fff;border:1.5px solid var(--cr-bdr2);
+  border-radius:99px;font-size:12px;color:var(--cr-tx);font-weight:500;
+  transition:all .15s;
+}
+.cr-arch-comp:hover{background:var(--cr-bg3);border-color:var(--cr-acc);}
+
+/* ── SCENARIO CARDS (finance) ── */
+.cr-scenarios{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0;}
+@media(max-width:540px){.cr-scenarios{grid-template-columns:1fr;}}
+.cr-scenario{border:1.5px solid var(--cr-bdr);border-radius:var(--cr-r);overflow:hidden;}
+.cr-scenario-hd{padding:10px 14px;border-bottom:1px solid var(--cr-bdr);}
+.cr-scenario.bear .cr-scenario-hd{background:#fef2f2;}
+.cr-scenario.base .cr-scenario-hd{background:#fffbeb;}
+.cr-scenario.bull .cr-scenario-hd{background:#f0fdf4;}
+.cr-scenario-name{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;
+}
+.bear .cr-scenario-name{color:#991b1b;}
+.base .cr-scenario-name{color:#92400e;}
+.bull .cr-scenario-name{color:#14532d;}
+.cr-scenario-body{padding:12px 14px;display:flex;flex-direction:column;gap:5px;}
+.cr-scenario-row{display:flex;gap:8px;font-size:12.5px;}
+.cr-scenario-lbl{font-weight:600;color:var(--cr-tx3);min-width:80px;flex-shrink:0;}
+
+/* ── PROGRESS / HEALTH STRIP ── */
+.cr-health{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 20px;background:var(--cr-bg2);border-bottom:1px solid var(--cr-bdr);
+}
+.cr-health-score{
+  font-family:var(--cr-serif);font-size:32px;font-weight:400;
+  line-height:1;flex-shrink:0;
+}
+.cr-health-lbl{font-size:12px;font-weight:600;margin-bottom:4px;}
+.cr-health-bar{height:5px;background:var(--cr-bg3);border-radius:3px;overflow:hidden;flex:1;}
+.cr-health-fill{height:100%;border-radius:3px;transition:width .8s ease;}
+.health-critical{color:#dc2626;}.fill-critical{background:#dc2626;}
+.health-risk{color:#f97316;}.fill-risk{background:#f97316;}
+.health-ok{color:#f59e0b;}.fill-ok{background:#f59e0b;}
+.health-good{color:#22c55e;}.fill-good{background:#22c55e;}
+.health-excellent{color:#06b6d4;}.fill-excellent{background:#06b6d4;}
+
+/* ── INSIGHT ITEMS ── */
+.cr-insights{display:flex;flex-direction:column;gap:7px;}
+.cr-insight{
+  display:flex;gap:12px;padding:12px 14px;
+  border:1px solid var(--cr-bdr);border-radius:var(--cr-r);
+  background:#fff;
+}
+.cr-insight.pos{border-left:3px solid #22c55e;}
+.cr-insight.neg{border-left:3px solid #ef4444;}
+.cr-insight.neu{border-left:3px solid var(--cr-bdr2);}
+.cr-insight-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;
+}
+.pos .cr-insight-dot{background:#22c55e;}
+.neg .cr-insight-dot{background:#ef4444;}
+.neu .cr-insight-dot{background:var(--cr-bdr2);}
+.cr-insight-title{font-size:13px;font-weight:700;margin-bottom:3px;color:var(--cr-tx);}
+.cr-insight-body{font-size:12.5px;color:var(--cr-tx2);line-height:1.6;}
+
+/* ── CHIP (small domain pill inside messages) ── */
+.cr-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:99px;
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  margin-bottom:10px;
+}
+`;
+  document.head.appendChild(s);
 }
 
 /* ─────────────────────────────────────────
    UTILITIES
 ───────────────────────────────────────── */
 function esc(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function inlineMd(s) {
   s = esc(s);
-  s = s.replace(/\\\((.+?)\\\)/g, '<span class="si-math-inline">$1</span>');
   s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/\*([^*\n]{1,80})\*/g, '<em>$1</em>');
-  s = s.replace(/`([^`\n]+?)`/g, '<code class="si-ic">$1</code>');
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-  s = s.replace(/🔴|❌/g, '<span style="color:#dc2626">$&</span>');
-  s = s.replace(/🟡|⚠️/g, '<span style="color:#d97706">$&</span>');
-  s = s.replace(/🟢|✅/g, '<span style="color:#16a34a">$&</span>');
+  s = s.replace(/\*([^*\n]{1,120})\*/g, '<em>$1</em>');
+  s = s.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--cr-acc);text-underline-offset:3px;">$1</a>');
   return s;
 }
 
@@ -76,258 +578,101 @@ function mkEl(tag, cls, html) {
 function copyToClipboard(text, btn) {
   const orig = btn.innerHTML;
   const ok = () => {
-    btn.classList.add('si-copied');
+    btn.classList.add('cr-copied');
     btn.innerHTML = '✓ Copied';
-    setTimeout(() => { btn.classList.remove('si-copied'); btn.innerHTML = orig; }, 2000);
+    setTimeout(() => { btn.classList.remove('cr-copied'); btn.innerHTML = orig; }, 2200);
   };
   if (navigator.clipboard) navigator.clipboard.writeText(text).then(ok).catch(() => { fbCopy(text); ok(); });
   else { fbCopy(text); ok(); }
 }
 
 function fbCopy(t) {
-  const e = document.createElement('textarea');
-  e.value = t; e.style.cssText = 'position:fixed;top:-9999px';
-  document.body.appendChild(e); e.select();
-  try { document.execCommand('copy'); } catch (e) {}
-  document.body.removeChild(e);
+  const el = document.createElement('textarea');
+  el.value = t; el.style.cssText = 'position:fixed;top:-9999px';
+  document.body.appendChild(el); el.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(el);
+}
+
+function healthClass(n) {
+  if (n <= 35) return 'critical';
+  if (n <= 55) return 'risk';
+  if (n <= 72) return 'ok';
+  if (n <= 88) return 'good';
+  return 'excellent';
 }
 
 /* ─────────────────────────────────────────
-   CSS INJECTION
+   OUTPUT TYPE DETECTION
 ───────────────────────────────────────── */
-function injectStyles() {
-  if (document.getElementById('si-v4-styles')) return;
-  const s = document.createElement('style');
-  s.id = 'si-v4-styles';
-  s.textContent = `
-/* ── BASE ── */
-.si-root{font-family:var(--font);color:var(--tx);line-height:1.7;}
-.si-ic{font-family:var(--mono)!important;font-size:12.5px!important;background:var(--code-bg)!important;border:1px solid var(--bdr)!important;border-radius:4px!important;padding:2px 6px!important;color:#b5490d!important;}
-.si-root a{color:var(--acc);text-decoration:underline;text-underline-offset:3px;}
-.si-math-inline{font-family:var(--mono);font-size:.9em;background:#e0f2fe;color:#0369a1;border-radius:3px;padding:1px 4px;}
-.si-copied{background:#ecfdf5!important;color:#059669!important;border-color:#6ee7b7!important;}
+function detectOutputType(userQuery, responseText) {
+  const q = (userQuery || '').toLowerCase();
+  const r = responseText || '';
 
-/* ── CARD SHELL ── */
-.si-card{background:var(--bg);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;box-shadow:0 2px 14px rgba(0,0,0,.07);margin:2px 0 6px;}
-.si-card-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 15px;border-bottom:1px solid var(--bdr);background:var(--bg-sub);}
-.si-card-left{display:flex;align-items:center;gap:8px;}
-.si-card-badge{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 10px;border-radius:20px;}
-.si-card-title{font-size:12.5px;font-weight:600;color:var(--tx2);}
-.si-copy-btn{background:none;border:1px solid var(--bdr);cursor:pointer;font-size:11px;color:var(--tx3);font-family:var(--font);display:flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;transition:all .15s;}
-.si-copy-btn:hover{background:var(--bg-hov);color:var(--tx);}
-.si-card-bd{padding:18px 20px;}
-.si-card-scroll{max-height:600px;overflow-y:auto;}
+  if (/```[\w]*\n/.test(r) && (r.match(/```/g)||[]).length >= 2) return 'code';
+  if (/\$\$[\s\S]+?\$\$/.test(r) || /\\\([\s\S]+?\\\)/.test(r)) return 'math';
 
-/* ── DOWNLOAD ROW ── */
-.si-dl-row{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--bdr-soft);background:var(--bg-sub);}
-.si-dl-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:none;border-radius:7px;font-family:var(--font);font-size:11.5px;font-weight:500;cursor:pointer;transition:all .15s;}
-.si-dl-dark{background:var(--tx);color:#fff;}.si-dl-dark:hover{background:#2d2a26;transform:translateY(-1px);}
-.si-dl-blue{background:#1d4ed8;color:#fff;}.si-dl-blue:hover{background:#1e40af;transform:translateY(-1px);}
+  const isMathDomain = /\b(solve|calculate|compute|prove|integral|derivative|equation|formula|simplify|factor|differentiate|integrate|theorem|lemma|algebra|calculus|matrix|determinant|eigenvalue|probability|statistics|permutation|binomial|limit|series|sequence|trigonometry|logarithm)\b/.test(q);
+  if (isMathDomain) return 'math';
 
-/* ── PROSE ── */
-.si-prose{display:flex;flex-direction:column;gap:0;}
-.si-prose p{font-size:14px;line-height:1.78;margin:0 0 9px;color:var(--tx);}
-.si-prose p:last-child{margin-bottom:0;}
-.si-prose ul,.si-prose ol{padding-left:20px;margin:4px 0 10px;}
-.si-prose li{font-size:13.5px;margin-bottom:5px;line-height:1.65;color:var(--tx);}
-.si-prose h2{font-size:15px;font-weight:700;color:var(--tx);margin:16px 0 7px;letter-spacing:-.01em;padding-bottom:5px;border-bottom:1px solid var(--bdr-soft);}
-.si-prose h3{font-size:14.5px;font-weight:700;color:var(--tx);margin:14px 0 6px;letter-spacing:-.01em;}
-.si-prose h4{font-size:13.5px;font-weight:600;color:var(--tx2);margin:10px 0 4px;}
-.si-prose h2:first-child,.si-prose h3:first-child,.si-prose h4:first-child{margin-top:0;}
-.si-prose hr{border:none;border-top:1px solid var(--bdr-soft);margin:12px 0;}
-.si-prose blockquote{border-left:3px solid var(--acc);padding:7px 0 7px 14px;color:var(--tx2);font-style:italic;background:var(--acc-bg);border-radius:0 6px 6px 0;margin:8px 0;}
-.si-prose strong{font-weight:700;}
-.si-prose em{font-style:italic;}
-
-/* ── SUMMARY STRIP ── */
-.si-summary{padding:11px 16px;background:#fafaf8;border-bottom:1px solid var(--bdr-soft);font-size:13px;line-height:1.65;color:var(--tx2);font-style:italic;}
-
-/* ── CODE ── */
-.si-code-wrap{border-radius:10px;overflow:hidden;border:1px solid var(--bdr);box-shadow:0 3px 14px rgba(0,0,0,.08);margin:8px 0;}
-.si-code-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;background:#0f172a;}
-.si-code-lang{font-family:var(--mono);font-size:11px;color:#7dd3fc;font-weight:600;letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:6px;}
-.si-code-lang::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#7dd3fc;opacity:.6;}
-.si-code-copy{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#94a3b8;font-size:11px;font-family:var(--font);padding:4px 10px;border-radius:5px;cursor:pointer;transition:all .15s;}
-.si-code-copy:hover{background:rgba(255,255,255,.16);color:#e2e8f0;}
-.si-code-pre{margin:0;background:#0f172a;padding:16px 20px;overflow-x:auto;}
-.si-code-pre code{font-family:var(--mono);font-size:13px;line-height:1.7;color:#e2e8f0;background:none;border:none;padding:0;display:block;}
-
-/* ── STEPS ── */
-.si-steps{display:flex;flex-direction:column;}
-.si-step{display:flex;gap:0;align-items:stretch;}
-.si-step-rail{display:flex;flex-direction:column;align-items:center;width:44px;flex-shrink:0;padding-top:16px;}
-.si-step-num{width:28px;height:28px;border-radius:50%;flex-shrink:0;background:var(--tx);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.14);}
-.si-step-line{width:2px;flex:1;background:var(--bdr);margin-top:6px;min-height:20px;}
-.si-step:last-child .si-step-line{display:none;}
-.si-step-body{flex:1;padding:14px 18px 14px 0;}
-.si-step-title{font-size:14px;font-weight:700;color:var(--tx);margin-bottom:5px;}
-.si-step-desc{font-size:13.5px;color:var(--tx2);line-height:1.7;}
-
-/* ── TABLE ── */
-.si-table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--bdr);box-shadow:0 2px 10px rgba(0,0,0,.05);margin:8px 0;}
-.si-table{width:100%;border-collapse:collapse;font-size:13.5px;}
-.si-table th{background:var(--tx);color:#fff;padding:10px 14px;font-size:12px;font-weight:600;text-align:left;}
-.si-table th:first-child{background:#2d2a26;}
-.si-table td{padding:9px 14px;border-bottom:1px solid var(--bdr-soft);vertical-align:top;color:var(--tx);}
-.si-table tr:last-child td{border-bottom:none;}
-.si-table tr:nth-child(even) td{background:var(--bg-sub);}
-.si-table td:first-child{font-weight:600;color:var(--tx2);font-size:12.5px;}
-
-/* ── STATUS BADGES (used in tables) ── */
-.si-badge-high{background:#fee2e2;color:#991b1b;padding:2px 7px;border-radius:8px;font-size:10.5px;font-weight:700;white-space:nowrap;}
-.si-badge-med{background:#fff7ed;color:#c2410c;padding:2px 7px;border-radius:8px;font-size:10.5px;font-weight:700;white-space:nowrap;}
-.si-badge-low{background:#f0fdf4;color:#15803d;padding:2px 7px;border-radius:8px;font-size:10.5px;font-weight:700;white-space:nowrap;}
-
-/* ── LIST ── */
-.si-list{display:flex;flex-direction:column;gap:7px;}
-.si-list-item{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--bdr);border-radius:11px;background:var(--bg);transition:background .15s,box-shadow .15s,border-color .15s;}
-.si-list-item:hover{background:var(--bg-sub);box-shadow:0 2px 10px rgba(0,0,0,.05);}
-.si-list-num{width:26px;height:26px;border-radius:7px;flex-shrink:0;margin-top:1px;background:var(--acc-bg);color:var(--acc);font-size:12px;font-weight:700;border:1px solid var(--acc-bdr);display:flex;align-items:center;justify-content:center;}
-.si-list-bul{width:26px;height:26px;border-radius:7px;flex-shrink:0;margin-top:1px;background:var(--bg-sub);border:1px solid var(--bdr);display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:9px;font-weight:700;}
-.si-list-content{flex:1;min-width:0;}
-.si-list-title{font-size:14px;font-weight:600;color:var(--tx);line-height:1.4;margin-bottom:2px;}
-.si-list-sub{font-size:13px;color:var(--tx2);line-height:1.6;}
-
-/* ── RESEARCH SECTIONS ── */
-.si-rsec{border-bottom:1px solid var(--bdr-soft);}
-.si-rsec:last-child{border-bottom:none;}
-.si-rsec-body{padding:14px 20px;}
-.si-rsec-hd{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:var(--tx);margin-bottom:9px;letter-spacing:-.01em;}
-.si-rsec-hd::before{content:'';width:3px;height:16px;background:var(--acc);border-radius:2px;flex-shrink:0;}
-
-/* ── MATH ── */
-.si-math-box{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:11px;padding:14px 18px;margin:8px 0;}
-.si-math-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0284c7;margin-bottom:6px;}
-.si-math-formula{font-family:var(--mono);font-size:14px;color:#0369a1;line-height:1.8;white-space:pre-wrap;word-break:break-word;}
-.si-math-answer{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #6ee7b7;border-radius:10px;padding:14px 18px;margin:10px 0;}
-.si-math-answer-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#059669;margin-bottom:8px;}
-.si-math-answer-val{font-family:var(--mono);font-size:16px;font-weight:700;color:#065f46;line-height:1.5;}
-.si-math-verify{background:#eff6ff;border:1px solid #bfdbfe;border-left:3px solid #2563eb;border-radius:0 9px 9px 0;padding:11px 14px;font-size:13px;color:#1e3a8a;line-height:1.65;margin-top:10px;}
-
-/* ── COMPARISON ── */
-.si-cmp-cols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
-@media(max-width:520px){.si-cmp-cols{grid-template-columns:1fr;}}
-.si-cmp-col{border:1.5px solid var(--bdr);border-radius:11px;overflow:hidden;}
-.si-cmp-col-hd{padding:11px 15px;font-size:13.5px;font-weight:700;}
-.si-cmp-col-hd.col-a{background:#0f172a;color:#7dd3fc;}
-.si-cmp-col-hd.col-b{background:#1c1007;color:#fcd34d;}
-.si-cmp-col-body{padding:12px 14px;display:flex;flex-direction:column;}
-.si-cmp-attr-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--tx3);margin-bottom:1px;margin-top:8px;}
-.si-cmp-attr-lbl:first-child{margin-top:0;}
-.si-cmp-attr-val{font-size:13.5px;color:var(--tx);line-height:1.55;padding-bottom:7px;border-bottom:1px solid var(--bdr-soft);}
-.si-cmp-attr-val:last-child{border-bottom:none;padding-bottom:0;}
-.si-verdict{display:flex;align-items:flex-start;gap:10px;background:var(--acc-bg);border:1.5px solid var(--acc-bdr);border-radius:10px;padding:12px 15px;margin-top:8px;}
-.si-verdict-inner strong{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--acc);margin-bottom:3px;}
-.si-verdict-inner p{font-size:13.5px;color:var(--tx);line-height:1.65;margin:0;}
-
-/* ── MERMAID ── */
-.si-mermaid-wrap{background:var(--bg-sub);border:1px solid var(--bdr);border-radius:11px;padding:20px;margin:10px 0;text-align:center;overflow-x:auto;}
-.si-mermaid-wrap svg{max-width:100%;height:auto;}
-
-/* ── CALLOUT ── */
-.si-callout{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;border-radius:9px;border-left:3px solid;font-size:13.5px;line-height:1.65;margin:8px 0;}
-.si-callout.info{background:#eff6ff;border-color:#2563eb;color:#1e3a8a;}
-.si-callout.warn{background:#fffbeb;border-color:#f59e0b;color:#78350f;}
-.si-callout.tip{background:#d1fae5;border-color:#059669;color:#064e3b;}
-.si-callout.danger{background:#fee2e2;border-color:#dc2626;color:#991b1b;}
-
-/* ── DIAGNOSIS ── */
-.si-diag-list{display:flex;flex-direction:column;gap:8px;}
-.si-diag-item{border-radius:10px;overflow:hidden;border:1px solid;}
-.si-diag-item.sev-high{border-color:#fecaca;}.si-diag-item.sev-high .si-diag-hd{background:#fee2e2;color:#991b1b;}
-.si-diag-item.sev-med{border-color:#fed7aa;}.si-diag-item.sev-med .si-diag-hd{background:#fff7ed;color:#c2410c;}
-.si-diag-item.sev-low{border-color:#fef08a;}.si-diag-item.sev-low .si-diag-hd{background:#fefce8;color:#713f12;}
-.si-diag-item.sev-info{border-color:var(--bdr);}.si-diag-item.sev-info .si-diag-hd{background:var(--bg-sub);color:var(--tx2);}
-.si-diag-hd{display:flex;align-items:center;gap:8px;padding:9px 13px;font-size:13px;font-weight:600;}
-.si-diag-bd{padding:9px 13px;font-size:13px;color:var(--tx2);line-height:1.65;border-top:1px solid rgba(0,0,0,.06);}
-.si-sev-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:2px 7px;border-radius:9px;margin-left:auto;}
-.sev-high .si-sev-tag{background:#fecaca;color:#7f1d1d;}
-.sev-med .si-sev-tag{background:#fed7aa;color:#7c2d12;}
-.sev-low .si-sev-tag{background:#fef08a;color:#713f12;}
-.sev-info .si-sev-tag{background:var(--bg-act);color:var(--tx2);}
-
-/* ── SCENARIOS (Finance) ── */
-.si-scenarios{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0;}
-@media(max-width:520px){.si-scenarios{grid-template-columns:1fr;}}
-.si-scenario{border:1px solid var(--bdr-soft);border-radius:9px;overflow:hidden;}
-.si-scenario-hd{padding:9px 12px;border-bottom:1px solid var(--bdr-soft);}
-.si-scenario.bear .si-scenario-hd{background:#fee2e2;}
-.si-scenario.base .si-scenario-hd{background:#fffbf5;}
-.si-scenario.bull .si-scenario-hd{background:#d1fae5;}
-.si-scenario-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
-.bear .si-scenario-name{color:#991b1b;}
-.base .si-scenario-name{color:#b45309;}
-.bull .si-scenario-name{color:#065f46;}
-.si-scenario-body{padding:10px 12px;display:flex;flex-direction:column;gap:5px;}
-.si-scenario-row{display:flex;gap:8px;font-size:12.5px;}
-.si-scenario-lbl{font-weight:600;color:var(--tx2);min-width:80px;flex-shrink:0;}
-
-/* ── ARCH LAYERS ── */
-.si-arch-wrap{border:1px solid var(--bdr-soft);border-radius:9px;overflow:hidden;margin:10px 0;}
-.si-arch-layer{border-bottom:1px solid var(--bdr-soft);}
-.si-arch-layer:last-child{border-bottom:none;}
-.si-arch-layer-hd{padding:7px 12px;background:var(--bg-sub);font-size:10.5px;font-weight:700;color:var(--tx2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid var(--bdr-soft);}
-.si-arch-comps{display:flex;flex-wrap:wrap;gap:5px;padding:10px 12px;}
-.si-arch-comp{padding:4px 10px;background:var(--bg);border:1px solid var(--bdr);border-radius:20px;font-size:12px;color:var(--tx);font-weight:500;}
-
-/* ── CHAT ── */
-.si-chat{font-size:14.5px;line-height:1.78;color:var(--tx);}
-.si-chat p{margin:0 0 9px;}.si-chat p:last-child{margin-bottom:0;}
-.si-chat ul,.si-chat ol{padding-left:20px;margin:5px 0 10px;}
-.si-chat li{margin-bottom:5px;line-height:1.65;}
-
-/* ── STREAM STATE ── */
-.si-streaming{opacity:.9;}
-.si-typing-cursor::after{content:'▋';animation:blink .7s infinite;margin-left:1px;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-`;
-  document.head.appendChild(s);
+  if (/\b(vs\.?|versus|compare|comparison|difference between|which is better|pros and cons)\b/i.test(q)) return 'comparison';
+  if ((r.match(/\|\s*[-:]+\s*\|/g)||[]).length > 0 && r.includes('\n')) return 'table';
+  if (/\b(how to|how do i|guide|walk me through|tutorial|setup|install|configure|deploy|step by step)\b/.test(q)) return 'steps';
+  if (/^Step\s+\d+/im.test(r) && (r.match(/^Step\s+\d+/gim)||[]).length >= 2) return 'steps';
+  if (/^\d+\.\s+\*\*/m.test(r) && (r.match(/^\d+\./gm)||[]).length >= 3) return 'steps';
+  if (/\b(why is|what's wrong|diagnose|debug|troubleshoot|root cause|not working)\b/.test(q)) return 'diagnosis';
+  if (/\b(list|give me|top \d+|best \d+|recommend|suggest|options for|examples of|name \d+)\b/.test(q)) return 'list';
+  if ((r.match(/^[-*•]\s/gm)||[]).length >= 4) return 'list';
+  if (/\b(what is|explain|describe|tell me about|overview|history|how does|elaborate)\b/.test(q) && r.length > 400) return 'research';
+  if ((r.match(/^#{2,3}\s/gm)||[]).length >= 2) return 'research';
+  if (r.length < 250) return 'chat';
+  if (r.length > 700) return 'research';
+  return 'chat';
 }
 
 /* ─────────────────────────────────────────
    PARSERS
 ───────────────────────────────────────── */
 function parseCodeBlocks(text) {
-  const segments = []; let lastIndex = 0;
+  const segs = []; let lastIndex = 0;
   const re = /```([\w-]*)\n?([\s\S]*?)```/g; let m;
   while ((m = re.exec(text)) !== null) {
-    if (m.index > lastIndex) segments.push({ type: 'prose', content: text.slice(lastIndex, m.index) });
-    segments.push({ type: 'code', lang: m[1] || 'plaintext', content: m[2].trim() });
+    if (m.index > lastIndex) segs.push({ type:'prose', content:text.slice(lastIndex, m.index) });
+    segs.push({ type:'code', lang:m[1]||'plaintext', content:m[2].trim() });
     lastIndex = re.lastIndex;
   }
-  if (lastIndex < text.length) segments.push({ type: 'prose', content: text.slice(lastIndex) });
-  return segments;
+  if (lastIndex < text.length) segs.push({ type:'prose', content:text.slice(lastIndex) });
+  return segs;
 }
 
-function parseMarkdownTable(text) {
+function parseTable(text) {
   const lines = text.split('\n');
   let start = -1;
   for (let i = 0; i < lines.length - 1; i++) {
-    if (lines[i].includes('|') && /^[\s|:-]+$/.test(lines[i + 1].trim())) { start = i; break; }
+    if (lines[i].includes('|') && /^[\s|:-]+$/.test(lines[i+1].trim())) { start = i; break; }
   }
   if (start === -1) return null;
   let end = start + 2;
   while (end < lines.length && lines[end].includes('|') && lines[end].trim()) end++;
-  const parseRow = l => l.trim().replace(/^\||\|$/g, '').split('|').map(c => c.trim());
-  const tableLines = lines.slice(start, end);
-  const headers = parseRow(tableLines[0]);
-  const rows = tableLines.slice(2).filter(l => !/^[\s|:-]+$/.test(l)).map(parseRow);
+  const parseRow = l => l.trim().replace(/^\||\|$/g,'').split('|').map(c => c.trim());
+  const headers = parseRow(lines[start]);
+  const rows = lines.slice(start + 2, end).filter(l => !/^[\s|:-]+$/.test(l)).map(parseRow);
   if (!headers.length || !rows.length) return null;
-  return { headers, rows, startLine: start, endLine: end };
+  return { headers, rows, startLine:start, endLine:end };
 }
 
 function parseSteps(text) {
   const steps = []; let m;
   const re1 = /step\s+(\d+)\s*[—–:.\-]+\s*([^\n]+)([\s\S]*?)(?=step\s+\d+\s*[—–:.\-]|$)/gi;
-  while ((m = re1.exec(text)) !== null) steps.push({ num: m[1], title: m[2].trim(), body: m[3].trim() });
+  while ((m = re1.exec(text)) !== null) steps.push({ num:m[1], title:m[2].trim(), body:m[3].trim() });
   if (steps.length >= 2) return steps;
   steps.length = 0;
   const re2 = /^(\d+)[.)]\s+(?:\*\*([^*\n]+)\*\*[\s\-–:]*(.+)?|([^\n]+))([\s\S]*?)(?=^\d+[.)]\s|\Z)/gm;
   while ((m = re2.exec(text)) !== null) {
-    const title = (m[2] || m[4] || '').trim();
-    const inline = (m[3] || '').trim();
-    const rest = (m[5] || '').replace(/^\n+/, '').trim();
-    if (title) steps.push({ num: m[1], title, body: (inline + (inline && rest ? ' ' : '') + rest).trim() });
+    const title = (m[2]||m[4]||'').trim();
+    const inline = (m[3]||'').trim();
+    const rest = (m[5]||'').replace(/^\n+/,'').trim();
+    if (title) steps.push({ num:m[1], title, body:(inline+(inline&&rest?' ':'')+rest).trim() });
   }
   return steps;
 }
@@ -338,18 +683,18 @@ function parseListItems(text) {
     const l = lines[i].trim();
     const nm = l.match(/^(\d+)[.)]\s+(?:\*\*([^*]+)\*\*[:\s\-–]+(.+)|(.+))$/);
     if (nm) {
-      const title = (nm[2] || nm[4] || '').trim();
-      let sub = (nm[3] || '').trim(); i++;
+      const title = (nm[2]||nm[4]||'').trim();
+      let sub = (nm[3]||'').trim(); i++;
       while (i < lines.length && /^\s{2,}/.test(lines[i]) && !/^\d+[.)]\s/.test(lines[i].trim())) {
-        sub += (sub ? ' ' : '') + lines[i].trim().replace(/^[-–]\s*/, ''); i++;
+        sub += (sub ? ' ':'') + lines[i].trim().replace(/^[-–]\s*/,''); i++;
       }
-      if (title) items.push({ num: nm[1], title, sub, ordered: true }); continue;
+      if (title) items.push({ num:nm[1], title, sub, ordered:true }); continue;
     }
     const bm = l.match(/^[-*•]\s+(?:\*\*([^*]+)\*\*[:\s\-–]+(.+)|([^:]+):\s+(.+)|(.+))$/);
     if (bm) {
-      const title = (bm[1] || bm[3] || bm[5] || '').trim();
-      const sub = (bm[2] || bm[4] || '').trim(); i++;
-      if (title) items.push({ title, sub, ordered: false }); continue;
+      const title = (bm[1]||bm[3]||bm[5]||'').trim();
+      const sub = (bm[2]||bm[4]||'').trim(); i++;
+      if (title) items.push({ title, sub, ordered:false }); continue;
     }
     i++;
   }
@@ -359,20 +704,18 @@ function parseListItems(text) {
 function parseResearchSections(text) {
   const sections = []; const re = /^(#{2,3})\s+(.+)$/gm;
   const headings = []; let m;
-  while ((m = re.exec(text)) !== null) headings.push({ index: m.index, end: re.lastIndex, title: m[2].trim() });
+  while ((m = re.exec(text)) !== null) headings.push({ index:m.index, end:re.lastIndex, title:m[2].trim() });
   if (!headings.length) {
-    text.split(/\n{2,}/).filter(p => p.trim()).forEach(p => {
-      sections.push({ title: null, body: p.trim() });
-    });
+    text.split(/\n{2,}/).filter(p => p.trim()).forEach(p => sections.push({ title:null, body:p.trim() }));
     return sections;
   }
   if (headings[0].index > 0) {
     const pre = text.slice(0, headings[0].index).trim();
-    if (pre) sections.push({ title: null, body: pre });
+    if (pre) sections.push({ title:null, body:pre });
   }
   headings.forEach((h, i) => {
-    const bodyEnd = i + 1 < headings.length ? headings[i + 1].index : text.length;
-    sections.push({ title: h.title, body: text.slice(h.end, bodyEnd).trim() });
+    const bodyEnd = i+1 < headings.length ? headings[i+1].index : text.length;
+    sections.push({ title:h.title, body:text.slice(h.end, bodyEnd).trim() });
   });
   return sections;
 }
@@ -382,33 +725,34 @@ function parseResearchSections(text) {
 ───────────────────────────────────────── */
 function buildCodeBlock(lang, code) {
   if (lang === 'mermaid') {
-    const wrap = mkEl('div', 'si-mermaid-wrap');
+    const wrap = mkEl('div', 'cr-mermaid');
     const inner = mkEl('div', 'mermaid');
     inner.textContent = code;
     wrap.appendChild(inner);
     requestAnimationFrame(() => {
-      try { if (window.mermaid) mermaid.run({ nodes: [inner] }); } catch (e) {}
+      try { if (window.mermaid) mermaid.run({ nodes:[inner] }); } catch(e) {}
     });
     return wrap;
   }
-  const wrap = mkEl('div', 'si-code-wrap');
-  const bar = mkEl('div', 'si-code-bar');
-  const langEl = mkEl('span', 'si-code-lang'); langEl.textContent = lang || 'code';
-  const copyBtn = mkEl('button', 'si-code-copy');
-  copyBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+  const wrap = mkEl('div', 'cr-code');
+  const bar = mkEl('div', 'cr-code-bar');
+  const langEl = mkEl('div', 'cr-code-lang');
+  langEl.innerHTML = `<span class="cr-code-lang-dot"></span>${esc(lang || 'code')}`;
+  const copyBtn = mkEl('button', 'cr-code-copy', 'Copy');
   copyBtn.onclick = () => copyToClipboard(code, copyBtn);
   bar.appendChild(langEl); bar.appendChild(copyBtn);
-  const pre = mkEl('pre', 'si-code-pre');
+  const pre = mkEl('pre', 'cr-code-pre');
   const codeEl = mkEl('code');
   if (lang && lang !== 'plaintext') codeEl.className = `language-${lang}`;
   codeEl.textContent = code;
-  try { if (window.hljs) window.hljs.highlightElement(codeEl); } catch (e) {}
+  try { if (window.hljs) window.hljs.highlightElement(codeEl); } catch(e) {}
   pre.appendChild(codeEl); wrap.appendChild(bar); wrap.appendChild(pre);
   return wrap;
 }
 
-function buildProseBlock(text) {
-  const div = mkEl('div', 'si-prose');
+function buildProseBlock(text, accentColor) {
+  const div = mkEl('div', 'cr-prose');
+  if (accentColor) div.style.setProperty('--cr-acc', accentColor);
   const lines = text.split('\n');
   let i = 0, currentList = null, listTag = '';
 
@@ -420,25 +764,25 @@ function buildProseBlock(text) {
     if (!l) { flush(); continue; }
     if (/^---+$/.test(l)) { append(mkEl('hr')); continue; }
 
-    if (/^(⚠️|warning:|⚠ )/i.test(l)) { const co = mkEl('div', 'si-callout warn'); co.innerHTML = inlineMd(l); append(co); continue; }
-    if (/^(💡|tip:|hint:)/i.test(l)) { const co = mkEl('div', 'si-callout tip'); co.innerHTML = inlineMd(l); append(co); continue; }
-    if (/^(ℹ️|info:|note:)/i.test(l)) { const co = mkEl('div', 'si-callout info'); co.innerHTML = inlineMd(l); append(co); continue; }
-    if (/^(🚨|danger:|critical:)/i.test(l)) { const co = mkEl('div', 'si-callout danger'); co.innerHTML = inlineMd(l); append(co); continue; }
+    if (/^(⚠️|warning:|⚠ )/i.test(l)) { const co = mkEl('div','cr-callout warn'); co.innerHTML = '<span class="cr-callout-icon">⚠️</span><span>' + inlineMd(l.replace(/^⚠️?\s*warning:?\s*/i,'')) + '</span>'; append(co); continue; }
+    if (/^(💡|tip:|hint:)/i.test(l)) { const co = mkEl('div','cr-callout tip'); co.innerHTML = '<span class="cr-callout-icon">💡</span><span>' + inlineMd(l.replace(/^💡\s*tip:?\s*/i,'')) + '</span>'; append(co); continue; }
+    if (/^(ℹ️|info:|note:)/i.test(l)) { const co = mkEl('div','cr-callout info'); co.innerHTML = '<span class="cr-callout-icon">ℹ️</span><span>' + inlineMd(l.replace(/^ℹ️?\s*(?:info|note):?\s*/i,'')) + '</span>'; append(co); continue; }
+    if (/^(🚨|danger:|critical:)/i.test(l)) { const co = mkEl('div','cr-callout danger'); co.innerHTML = '<span class="cr-callout-icon">🚨</span><span>' + inlineMd(l.replace(/^🚨\s*(?:danger|critical):?\s*/i,'')) + '</span>'; append(co); continue; }
     if (/^> /.test(l)) { const bq = mkEl('blockquote'); bq.innerHTML = inlineMd(l.slice(2)); append(bq); continue; }
 
     const hm = l.match(/^(#{1,4})\s+(.+)$/);
     if (hm) {
-      const tag = ['h2', 'h2', 'h3', 'h4'][hm[1].length - 1] || 'h4';
+      const tag = ['h2','h2','h3','h4'][hm[1].length-1]||'h4';
       const h = mkEl(tag); h.innerHTML = inlineMd(hm[2]); append(h); continue;
     }
 
     if (/^[-*•]\s/.test(l)) {
-      if (listTag !== 'UL') { flush(); currentList = mkEl('ul'); listTag = 'UL'; div.appendChild(currentList); }
-      const li = mkEl('li'); li.innerHTML = inlineMd(l.replace(/^[-*•]\s+/, '')); currentList.appendChild(li); continue;
+      if (listTag !== 'UL') { flush(); currentList = mkEl('ul'); listTag='UL'; div.appendChild(currentList); }
+      const li = mkEl('li'); li.innerHTML = inlineMd(l.replace(/^[-*•]\s+/,'')); currentList.appendChild(li); continue;
     }
     if (/^\d+[.)]\s/.test(l)) {
-      if (listTag !== 'OL') { flush(); currentList = mkEl('ol'); listTag = 'OL'; div.appendChild(currentList); }
-      const li = mkEl('li'); li.innerHTML = inlineMd(l.replace(/^\d+[.)]\s+/, '')); currentList.appendChild(li); continue;
+      if (listTag !== 'OL') { flush(); currentList = mkEl('ol'); listTag='OL'; div.appendChild(currentList); }
+      const li = mkEl('li'); li.innerHTML = inlineMd(l.replace(/^\d+[.)]\s+/,'')); currentList.appendChild(li); continue;
     }
 
     flush();
@@ -454,8 +798,8 @@ function buildProseBlock(text) {
 }
 
 function buildTableDOM(tbl) {
-  const tw = mkEl('div', 'si-table-wrap');
-  const table = mkEl('table', 'si-table');
+  const tw = mkEl('div', 'cr-table-wrap');
+  const table = mkEl('table', 'cr-table');
   const thead = mkEl('thead'); const hr = mkEl('tr');
   tbl.headers.forEach(h => { const th = mkEl('th'); th.innerHTML = inlineMd(h); hr.appendChild(th); });
   thead.appendChild(hr); table.appendChild(thead);
@@ -463,12 +807,10 @@ function buildTableDOM(tbl) {
   tbl.rows.forEach(row => {
     const tr = mkEl('tr');
     tbl.headers.forEach((_, ci) => {
-      const td = mkEl('td');
-      const val = row[ci] || '';
-      // Colorize risk/status cells
-      if (/🔴|HIGH|CRITICAL/i.test(val)) td.innerHTML = `<span class="si-badge-high">${inlineMd(val)}</span>`;
-      else if (/🟡|MEDIUM|WARNING/i.test(val)) td.innerHTML = `<span class="si-badge-med">${inlineMd(val)}</span>`;
-      else if (/🟢|LOW|GOOD|OK/i.test(val)) td.innerHTML = `<span class="si-badge-low">${inlineMd(val)}</span>`;
+      const td = mkEl('td'); const val = row[ci]||'';
+      if (/🔴|CRITICAL|HIGH RISK/i.test(val)) td.innerHTML = `<span class="cr-badge cr-badge-red">${inlineMd(val)}</span>`;
+      else if (/🟡|MEDIUM|WARNING/i.test(val)) td.innerHTML = `<span class="cr-badge cr-badge-amber">${inlineMd(val)}</span>`;
+      else if (/🟢|LOW|GOOD|OK/i.test(val)) td.innerHTML = `<span class="cr-badge cr-badge-green">${inlineMd(val)}</span>`;
       else td.innerHTML = inlineMd(val);
       tr.appendChild(td);
     });
@@ -478,94 +820,129 @@ function buildTableDOM(tbl) {
   return tw;
 }
 
-function buildCardShell(domain, title, contentId) {
+function buildCardShell(domain, titleText) {
   const cfg = DOMAIN_CONFIG[domain] || DOMAIN_CONFIG.general;
-  const card = mkEl('div', 'si-card');
-  const hd = mkEl('div', 'si-card-hd');
-  const left = mkEl('div', 'si-card-left');
-  const badge = mkEl('div', 'si-card-badge');
-  badge.style.cssText = `background:${cfg.bg};color:${cfg.color};border:1px solid ${cfg.bdr};`;
-  badge.textContent = cfg.badge;
-  const titleEl = mkEl('div', 'si-card-title'); titleEl.textContent = title;
-  left.appendChild(badge); left.appendChild(titleEl);
-  const copyBtn = mkEl('button', 'si-copy-btn');
-  copyBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+  const id = 'cr_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+
+  const card = mkEl('div', 'cr-card');
+  card.style.setProperty('--cr-acc', cfg.accent);
+  card.style.setProperty('--cr-acc-bg', cfg.accentBg);
+  card.style.setProperty('--cr-acc-bdr', cfg.accentBdr);
+
+  const hd = mkEl('div', 'cr-hd');
+  const left = mkEl('div', 'cr-hd-left');
+
+  const tag = mkEl('div', 'cr-domain-tag');
+  tag.style.cssText = `background:${cfg.accentBg};color:${cfg.accent};border:1px solid ${cfg.accentBdr};`;
+  tag.textContent = cfg.label;
+
+  const title = mkEl('div', 'cr-hd-title');
+  title.textContent = titleText || '';
+
+  left.appendChild(tag);
+  if (titleText) left.appendChild(title);
+
+  const copyBtn = mkEl('button', 'cr-copy-btn');
+  copyBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy`;
+  copyBtn.dataset.targetId = id;
   copyBtn.onclick = () => {
-    const el = document.getElementById(contentId);
+    const el = document.getElementById(id);
     copyToClipboard(el ? el.innerText : '', copyBtn);
   };
+
   hd.appendChild(left); hd.appendChild(copyBtn);
   card.appendChild(hd);
-  return card;
+
+  return { card, id, cfg };
 }
 
-function buildDownloadRow(contentId, label) {
-  const row = mkEl('div', 'si-dl-row');
-  const dlBtn = mkEl('button', 'si-dl-btn si-dl-dark');
-  dlBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .txt';
-  dlBtn.onclick = () => {
-    const el = document.getElementById(contentId);
+function buildDownloadRow(id, domain, label) {
+  const row = mkEl('div', 'cr-dl-row');
+
+  const dlTxt = mkEl('button', 'cr-dl-btn cr-dl-dark');
+  dlTxt.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download`;
+  dlTxt.onclick = () => {
+    const el = document.getElementById(id);
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([el ? el.innerText : label], { type: 'text/plain' }));
-    a.download = `stremini-${label.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.txt`;
+    a.href = URL.createObjectURL(new Blob([el ? el.innerText : label||''], { type:'text/plain' }));
+    a.download = `stremini-${(domain||'response')}-${Date.now()}.txt`;
     a.click();
   };
-  row.appendChild(dlBtn);
+
+  const dlMd = mkEl('button', 'cr-dl-btn cr-dl-ghost');
+  dlMd.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Markdown`;
+  dlMd.onclick = () => {
+    const el = document.getElementById(id);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([el ? el.innerText : label||''], { type:'text/markdown' }));
+    a.download = `stremini-${(domain||'response')}-${Date.now()}.md`;
+    a.click();
+  };
+
+  row.appendChild(dlTxt); row.appendChild(dlMd);
   return row;
 }
 
 /* ─────────────────────────────────────────
-   DOMAIN-SPECIFIC RENDERERS
+   DOMAIN RENDERERS
 ───────────────────────────────────────── */
 
 function renderCode(text, domain) {
-  const pid = 'si_' + Date.now();
-  const card = buildCardShell(domain || 'code', 'Code Response', pid);
-  const bd = mkEl('div', 'si-card-bd'); bd.id = pid;
+  const { card, id, cfg } = buildCardShell(domain||'code', 'Code Response');
+  const bd = mkEl('div', ''); bd.id = id;
+  bd.style.padding = '20px';
   parseCodeBlocks(text).forEach(s => {
     if (s.type === 'code') bd.appendChild(buildCodeBlock(s.lang, s.content));
-    else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim()));
+    else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
   });
-  card.appendChild(bd);
-  card.appendChild(buildDownloadRow(pid, 'code'));
-  const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'code'));
+  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
 }
 
-function renderMath(text) {
-  const pid = 'si_' + Date.now();
-  const card = buildCardShell('math', 'Math Solution', pid);
-  const bd = mkEl('div', 'si-card-bd'); bd.id = pid;
+function renderMathOutput(text) {
+  const { card, id, cfg } = buildCardShell('math', 'Math Solution');
+  const isMathLine = t => /[=+\-*/^²³√±∓∫∑]/.test(t) && t.length < 220;
+
   const sections = parseResearchSections(text);
+  const body = mkEl('div', ''); body.id = id;
 
   sections.forEach(sec => {
-    const isAnswer = /^(answer|final\s*answer|the\s*answer)\s*$/i.test(sec.title || '');
-    const isVerify = /^(verification|verify|check)\s*$/i.test(sec.title || '');
+    const isAnswer = /^(answer|final\s*answer|the\s*answer)\s*$/i.test(sec.title||'');
+    const isVerify = /^(verification|verify|check)\s*$/i.test(sec.title||'');
 
+    const secEl = mkEl('div', 'cr-section');
     if (sec.title) {
-      const hd = mkEl('div', 'si-rsec-hd');
-      hd.innerHTML = inlineMd(sec.title);
-      const secWrap = mkEl('div', 'si-rsec');
-      const secBd = mkEl('div', 'si-rsec-body');
-      secBd.appendChild(hd);
-      buildMathSectionBody(sec.body, secBd, isAnswer, isVerify);
-      secWrap.appendChild(secBd);
-      bd.appendChild(secWrap);
+      const hd = mkEl('div', 'cr-section-hd');
+      const marker = mkEl('span', 'cr-section-marker');
+      marker.style.background = isAnswer ? '#16a34a' : isVerify ? '#2563eb' : cfg.accent;
+      const lbl = mkEl('span', 'cr-section-label'); lbl.textContent = sec.title;
+      const chev = mkEl('span', 'cr-section-chevron open');
+      chev.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+      hd.appendChild(marker); hd.appendChild(lbl); hd.appendChild(chev);
+
+      const secBody = mkEl('div', 'cr-section-body');
+      buildMathBody(sec.body, secBody, isAnswer, isVerify, cfg.accent);
+      secEl.appendChild(hd); secEl.appendChild(secBody);
+
+      hd.onclick = () => {
+        const open = secBody.classList.toggle('collapsed');
+        chev.classList.toggle('open', !open);
+      };
     } else {
-      buildMathSectionBody(sec.body, bd, false, false);
+      const secBody = mkEl('div', 'cr-section-body');
+      buildMathBody(sec.body, secBody, false, false, cfg.accent);
+      secEl.appendChild(secBody);
     }
+    body.appendChild(secEl);
   });
 
-  card.appendChild(bd);
-  card.appendChild(buildDownloadRow(pid, 'math-solution'));
-  const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+  card.appendChild(body); card.appendChild(buildDownloadRow(id, 'math', 'Math Solution'));
+  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
 }
 
-function buildMathSectionBody(text, container, isAnswer, isVerify) {
-  if (!text) return;
-  const lines = text.split('\n');
-  let i = 0;
-  const isMathLine = t => /[=+\-*/^²³√±∓∫∑]/.test(t) && t.length < 200;
-
+function buildMathBody(text, container, isAnswer, isVerify, accent) {
+  const isMathLine = t => /[=+\-*/^]/.test(t) && t.length < 200;
+  const lines = text.split('\n'); let i = 0;
   while (i < lines.length) {
     const l = lines[i].trim(); i++;
     if (!l) continue;
@@ -573,259 +950,264 @@ function buildMathSectionBody(text, container, isAnswer, isVerify) {
     if (isAnswer && isMathLine(l)) {
       const mathLines = [l];
       while (i < lines.length && isMathLine(lines[i].trim())) { mathLines.push(lines[i].trim()); i++; }
-      const box = mkEl('div', 'si-math-answer');
-      box.appendChild(mkEl('div', 'si-math-answer-lbl', 'Final Answer'));
-      box.appendChild(mkEl('div', 'si-math-answer-val', esc(mathLines.join('\n'))));
-      container.appendChild(box);
-      continue;
+      const box = mkEl('div', 'cr-math-answer');
+      box.appendChild(mkEl('div', 'cr-math-answer-lbl', 'Final Answer'));
+      box.appendChild(mkEl('div', 'cr-math-answer-val', mathLines.join('\n')));
+      container.appendChild(box); continue;
     }
 
     if (isVerify) {
-      const verLines = [l];
-      while (i < lines.length && lines[i].trim()) { verLines.push(lines[i].trim()); i++; }
-      const v = mkEl('div', 'si-math-verify');
-      v.innerHTML = '<strong>✓ Verification:</strong> ' + inlineMd(verLines.join(' '));
-      container.appendChild(v);
-      continue;
+      const v = mkEl('div', 'cr-math-verify');
+      v.innerHTML = '<strong>✓ Verification: </strong>' + inlineMd(l);
+      container.appendChild(v); continue;
     }
 
     if (isMathLine(l)) {
       const mathLines = [l];
       while (i < lines.length && isMathLine(lines[i].trim())) { mathLines.push(lines[i].trim()); i++; }
-      const box = mkEl('div', 'si-math-box');
-      box.appendChild(mkEl('div', 'si-math-lbl', 'Formula'));
-      box.appendChild(mkEl('div', 'si-math-formula', esc(mathLines.join('\n'))));
-      container.appendChild(box);
-      continue;
+      const box = mkEl('div', 'cr-math-formula');
+      box.appendChild(mkEl('div', 'cr-math-formula-lbl', 'Formula'));
+      const fEl = document.createElement('div'); fEl.textContent = mathLines.join('\n'); box.appendChild(fEl);
+      container.appendChild(box); continue;
     }
 
-    const prose = buildProseBlock(l);
+    const prose = buildProseBlock(l, accent);
     container.appendChild(prose);
   }
 }
 
 function renderResearch(text, domain) {
-  const pid = 'si_' + Date.now();
-  const card = buildCardShell(domain || 'research', 'Analysis', pid);
-
-  // Check for tables in the response - extract and render them inline
+  const { card, id, cfg } = buildCardShell(domain||'research', domain === 'research' ? 'Research Analysis' : 'Analysis');
   const sections = parseResearchSections(text);
-  const bd = mkEl('div', 'si-card-scroll'); bd.id = pid;
+  const body = mkEl('div', ''); body.id = id;
 
   sections.forEach(sec => {
-    const secWrap = mkEl('div', 'si-rsec');
-    const secBd = mkEl('div', 'si-rsec-body');
+    const rsec = mkEl('div', 'cr-rsec');
     if (sec.title) {
-      const hd = mkEl('div', 'si-rsec-hd');
-      hd.innerHTML = inlineMd(sec.title);
-      secBd.appendChild(hd);
+      const hd = mkEl('div', 'cr-rsec-hd');
+      const bar = mkEl('span', 'cr-rsec-hd-bar'); bar.style.background = cfg.accent;
+      const lbl = document.createElement('span'); lbl.innerHTML = inlineMd(sec.title);
+      hd.appendChild(bar); hd.appendChild(lbl); rsec.appendChild(hd);
     }
-    // Render body, handling tables inline
-    const bodyLines = sec.body.split('\n');
-    const tbl = parseMarkdownTable(sec.body);
+    const tbl = parseTable(sec.body);
     if (tbl) {
-      const preLines = bodyLines.slice(0, tbl.startLine).join('\n').trim();
-      const postLines = bodyLines.slice(tbl.endLine).join('\n').trim();
-      if (preLines) secBd.appendChild(buildProseBlock(preLines));
-      secBd.appendChild(buildTableDOM(tbl));
-      if (postLines) secBd.appendChild(buildProseBlock(postLines));
+      const lines = sec.body.split('\n');
+      const pre = lines.slice(0, tbl.startLine).join('\n').trim();
+      const post = lines.slice(tbl.endLine).join('\n').trim();
+      if (pre) rsec.appendChild(buildProseBlock(pre, cfg.accent));
+      rsec.appendChild(buildTableDOM(tbl));
+      if (post) rsec.appendChild(buildProseBlock(post, cfg.accent));
     } else {
       parseCodeBlocks(sec.body).forEach(s => {
-        if (s.type === 'code') secBd.appendChild(buildCodeBlock(s.lang, s.content));
-        else if (s.content.trim()) secBd.appendChild(buildProseBlock(s.content.trim()));
+        if (s.type === 'code') rsec.appendChild(buildCodeBlock(s.lang, s.content));
+        else if (s.content.trim()) rsec.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
       });
     }
-    secWrap.appendChild(secBd);
-    bd.appendChild(secWrap);
+    body.appendChild(rsec);
   });
 
-  card.appendChild(bd);
-  card.appendChild(buildDownloadRow(pid, domain || 'research'));
-  const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+  card.appendChild(body); card.appendChild(buildDownloadRow(id, domain||'research'));
+  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
 }
 
 function renderSteps(text, domain) {
-  const pid = 'si_' + Date.now();
+  const { card, id, cfg } = buildCardShell(domain||'general', 'Step-by-Step Guide');
   const steps = parseSteps(text);
-  const card = buildCardShell(domain || 'general', `${steps.length || '?'} Steps`, pid);
 
   const firstStepIdx = text.search(/step\s*1|\n1[\.)]\s/i);
   if (firstStepIdx > 0) {
     const intro = text.slice(0, firstStepIdx).trim();
-    if (intro) card.appendChild(mkEl('div', 'si-summary', inlineMd(intro)));
+    if (intro) {
+      const sum = mkEl('div', 'cr-summary'); sum.innerHTML = inlineMd(intro);
+      card.appendChild(sum);
+    }
   }
 
-  const bd = mkEl('div', 'si-card-bd'); bd.style.padding = '0'; bd.id = pid;
+  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '20px';
   if (steps.length >= 2) {
-    const wrap = mkEl('div', 'si-steps');
+    const wrap = mkEl('div', 'cr-steps');
     steps.forEach(step => {
-      const item = mkEl('div', 'si-step');
-      const rail = mkEl('div', 'si-step-rail');
-      const num = mkEl('div', 'si-step-num'); num.textContent = step.num;
-      rail.appendChild(num); rail.appendChild(mkEl('div', 'si-step-line'));
-      const body = mkEl('div', 'si-step-body');
-      body.appendChild(mkEl('div', 'si-step-title', inlineMd(step.title)));
+      const item = mkEl('div', 'cr-step');
+      const rail = mkEl('div', 'cr-step-rail');
+      const num = mkEl('div', 'cr-step-num'); num.textContent = step.num;
+      num.style.background = cfg.accent;
+      rail.appendChild(num); rail.appendChild(mkEl('div', 'cr-step-line'));
+      const body = mkEl('div', 'cr-step-body');
+      body.appendChild(mkEl('div', 'cr-step-title', inlineMd(step.title)));
       if (step.body) {
         if (/```/.test(step.body)) {
           parseCodeBlocks(step.body).forEach(s => {
             if (s.type === 'code') body.appendChild(buildCodeBlock(s.lang, s.content));
-            else if (s.content.trim()) body.appendChild(mkEl('div', 'si-step-desc', inlineMd(s.content.trim())));
+            else if (s.content.trim()) body.appendChild(mkEl('div', 'cr-step-desc', inlineMd(s.content.trim())));
           });
         } else {
-          body.appendChild(mkEl('div', 'si-step-desc', inlineMd(step.body.replace(/\n/g, ' '))));
+          body.appendChild(mkEl('div', 'cr-step-desc', inlineMd(step.body.replace(/\n/g,' '))));
         }
       }
       item.appendChild(rail); item.appendChild(body); wrap.appendChild(item);
     });
     bd.appendChild(wrap);
   } else {
-    bd.style.padding = '18px 20px';
     parseCodeBlocks(text).forEach(s => {
       if (s.type === 'code') bd.appendChild(buildCodeBlock(s.lang, s.content));
-      else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim()));
+      else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
     });
   }
-  card.appendChild(bd);
-  card.appendChild(buildDownloadRow(pid, 'steps'));
-  const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
+  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
 }
 
 function renderList(text, domain) {
-  const pid = 'si_' + Date.now();
   const items = parseListItems(text);
-  const card = buildCardShell(domain || 'general', `${items.length} Items`, pid);
+  const { card, id, cfg } = buildCardShell(domain||'general', `${items.length} Items`);
 
   const firstItem = text.search(/^(\d+[.)]\s|[-*•]\s)/m);
   if (firstItem > 0) {
     const intro = text.slice(0, firstItem).trim();
-    if (intro) card.appendChild(mkEl('div', 'si-summary', inlineMd(intro)));
+    if (intro) {
+      const sum = mkEl('div', 'cr-summary'); sum.innerHTML = inlineMd(intro);
+      card.appendChild(sum);
+    }
   }
 
-  const bd = mkEl('div', 'si-card-bd'); bd.id = pid;
+  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '16px 20px 20px';
   if (items.length >= 2) {
-    const wrap = mkEl('div', 'si-list');
+    const wrap = mkEl('div', 'cr-list');
     items.forEach((item, idx) => {
-      const el = mkEl('div', 'si-list-item');
-      const bullet = mkEl('div', item.ordered ? 'si-list-num' : 'si-list-bul');
-      bullet.textContent = item.ordered ? (item.num || String(idx + 1)) : '◆';
-      const content = mkEl('div', 'si-list-content');
-      if (item.title) content.appendChild(mkEl('div', 'si-list-title', inlineMd(item.title)));
-      if (item.sub) content.appendChild(mkEl('div', 'si-list-sub', inlineMd(item.sub)));
+      const el = mkEl('div', 'cr-list-item');
+      const bullet = mkEl('div', item.ordered ? 'cr-list-num' : 'cr-list-bul');
+      if (item.ordered) {
+        bullet.textContent = item.num || String(idx+1);
+        bullet.style.cssText = `background:${cfg.accentBg};color:${cfg.accent};border:1px solid ${cfg.accentBdr};`;
+      } else {
+        bullet.innerHTML = `<svg width="8" height="8" viewBox="0 0 8 8" fill="${cfg.accent}"><circle cx="4" cy="4" r="3"/></svg>`;
+      }
+      const content = mkEl('div', '');
+      if (item.title) content.appendChild(mkEl('div', 'cr-list-title', inlineMd(item.title)));
+      if (item.sub) content.appendChild(mkEl('div', 'cr-list-sub', inlineMd(item.sub)));
       el.appendChild(bullet); el.appendChild(content); wrap.appendChild(el);
     });
     bd.appendChild(wrap);
   } else {
-    bd.appendChild(buildProseBlock(text));
+    bd.appendChild(buildProseBlock(text, cfg.accent));
   }
-  card.appendChild(bd);
-  card.appendChild(buildDownloadRow(pid, 'list'));
-  const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
+  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
 }
 
 function renderComparison(text, domain) {
-  const pid = 'si_' + Date.now();
+  const { card, id, cfg } = buildCardShell(domain||'general', 'Comparison');
 
-  // Prefer table rendering
   if (text.includes('|') && text.match(/\|\s*[-:]+\s*\|/)) {
-    const tbl = parseMarkdownTable(text);
+    const tbl = parseTable(text);
     if (tbl) {
-      const card = buildCardShell(domain || 'general', tbl.headers.slice(1).join(' vs ') || 'Comparison', pid);
-      const bd = mkEl('div', 'si-card-bd'); bd.id = pid;
+      const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '16px 20px';
       const lines = text.split('\n');
       const pre = lines.slice(0, tbl.startLine).join('\n').trim();
-      if (pre) bd.appendChild(buildProseBlock(pre));
+      if (pre) { const sum = mkEl('div', 'cr-summary'); sum.innerHTML = inlineMd(pre); card.appendChild(sum); }
       bd.appendChild(buildTableDOM(tbl));
       const post = lines.slice(tbl.endLine).join('\n').trim();
       if (post) {
-        const v = mkEl('div', 'si-verdict');
-        v.innerHTML = '<div class="si-verdict-inner"><strong>💡 Summary</strong><p>' + inlineMd(post.replace(/^#{1,4}\s+[^\n]+\n?/gm, '').trim()) + '</p></div>';
+        const v = mkEl('div', 'cr-verdict');
+        v.innerHTML = `<div class="cr-verdict-icon" style="color:${cfg.accent}">—</div><div><strong style="color:${cfg.accent}">Summary</strong><p>${inlineMd(post.replace(/^#{1,4}\s+[^\n]+\n?/gm,'').trim())}</p></div>`;
         bd.appendChild(v);
       }
-      card.appendChild(bd); card.appendChild(buildDownloadRow(pid, 'comparison'));
-      const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+      card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
+      const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
     }
   }
-
-  // Fallback: prose comparison
   return renderResearch(text, domain);
 }
 
 function renderTable(text, domain) {
-  const pid = 'si_' + Date.now();
-  const card = buildCardShell(domain || 'general', 'Data Table', pid);
-  const bd = mkEl('div', 'si-card-bd'); bd.id = pid;
-  const tbl = parseMarkdownTable(text);
+  const { card, id, cfg } = buildCardShell(domain||'general', 'Data Table');
+  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '16px 20px';
+  const tbl = parseTable(text);
   if (tbl) {
     const lines = text.split('\n');
     const pre = lines.slice(0, tbl.startLine).join('\n').trim();
-    if (pre) bd.appendChild(buildProseBlock(pre));
+    if (pre) bd.appendChild(buildProseBlock(pre, cfg.accent));
     bd.appendChild(buildTableDOM(tbl));
     const post = lines.slice(tbl.endLine).join('\n').trim();
-    if (post) bd.appendChild(buildProseBlock(post));
+    if (post) bd.appendChild(buildProseBlock(post, cfg.accent));
   } else {
-    bd.appendChild(buildProseBlock(text));
+    bd.appendChild(buildProseBlock(text, cfg.accent));
   }
-  card.appendChild(bd); card.appendChild(buildDownloadRow(pid, 'table'));
-  const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
+  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
 }
 
 function renderDiagnosis(text, domain) {
-  const pid = 'si_' + Date.now();
-  const card = buildCardShell(domain || 'general', 'Diagnosis', pid);
+  const { card, id, cfg } = buildCardShell(domain||'general', 'Diagnosis Report');
   const sections = parseResearchSections(text);
-  const bd = mkEl('div', 'si-card-bd'); bd.id = pid;
-  const sevMap = { 'critical': 'high', 'error': 'high', 'bug': 'high', 'broken': 'high', 'high risk': 'high', 'warning': 'med', 'issue': 'med', 'problem': 'med', 'medium': 'med', 'fix': 'med', 'note': 'low', 'tip': 'low', 'low': 'low', 'info': 'info' };
-  const findings = mkEl('div', 'si-diag-list');
+  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '16px 20px';
+  const sevMap = {
+    'critical':'critical','error':'critical','fatal':'critical',
+    'high':'high','major':'high','broken':'high','risk':'high',
+    'medium':'medium','warning':'medium','issue':'medium','problem':'medium',
+    'low':'low','minor':'low','tip':'low','note':'low',
+    'info':'info','note':'info'
+  };
+  const diag = mkEl('div', 'cr-diag');
   let hasFindings = false;
   sections.forEach(sec => {
-    if (!sec.title) { bd.appendChild(buildProseBlock(sec.body)); return; }
+    if (!sec.title) { bd.appendChild(buildProseBlock(sec.body, cfg.accent)); return; }
     hasFindings = true;
     const titleLow = sec.title.toLowerCase();
     let sev = 'info';
-    for (const [k, v] of Object.entries(sevMap)) { if (titleLow.includes(k)) { sev = v; break; } }
-    const finding = mkEl('div', `si-diag-item sev-${sev}`);
-    const hd = mkEl('div', 'si-diag-hd'); hd.innerHTML = inlineMd(sec.title);
-    const tag = mkEl('span', 'si-sev-tag'); tag.textContent = sev === 'med' ? 'MEDIUM' : sev.toUpperCase(); hd.appendChild(tag);
-    finding.appendChild(hd);
-    if (sec.body) { const fb = mkEl('div', 'si-diag-bd'); fb.appendChild(buildProseBlock(sec.body)); finding.appendChild(fb); }
-    findings.appendChild(finding);
+    for (const [k,v] of Object.entries(sevMap)) { if (titleLow.includes(k)) { sev = v; break; } }
+    const item = mkEl('div', `cr-diag-item sev-${sev}`);
+    const hd = mkEl('div', 'cr-diag-hd');
+    hd.innerHTML = inlineMd(sec.title);
+    const tag = mkEl('span', 'cr-diag-sev-tag'); tag.textContent = sev.toUpperCase(); hd.appendChild(tag);
+    item.appendChild(hd);
+    if (sec.body) {
+      const fb = mkEl('div', 'cr-diag-bd');
+      fb.appendChild(buildProseBlock(sec.body, cfg.accent));
+      item.appendChild(fb);
+    }
+    diag.appendChild(item);
   });
-  if (hasFindings) bd.appendChild(findings);
-  else bd.appendChild(buildProseBlock(text));
-  card.appendChild(bd); card.appendChild(buildDownloadRow(pid, 'diagnosis'));
-  const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+  if (hasFindings) bd.appendChild(diag); else bd.appendChild(buildProseBlock(text, cfg.accent));
+  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
+  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
 }
 
 function renderChat(text, domain) {
-  const pid = 'si_' + Date.now();
+  const cfg = DOMAIN_CONFIG[domain] || DOMAIN_CONFIG.general;
+  const root = mkEl('div', 'cr-root');
+  root.style.setProperty('--cr-acc', cfg.accent);
+
   if (text.length < 200) {
-    const root = mkEl('div', 'si-root');
-    const wrap = mkEl('div', 'si-chat'); wrap.id = pid;
+    const wrap = mkEl('div', 'cr-chat');
     parseCodeBlocks(text).forEach(s => {
       if (s.type === 'code') wrap.appendChild(buildCodeBlock(s.lang, s.content));
-      else if (s.content.trim()) wrap.appendChild(buildProseBlock(s.content.trim()));
+      else if (s.content.trim()) wrap.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
     });
     root.appendChild(wrap); return root;
   }
-  const card = buildCardShell(domain || 'general', 'Response', pid);
-  const bd = mkEl('div', 'si-card-bd'); bd.id = pid;
+
+  const { card, id } = buildCardShell(domain||'general', '');
+  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '18px 20px';
   parseCodeBlocks(text).forEach(s => {
     if (s.type === 'code') bd.appendChild(buildCodeBlock(s.lang, s.content));
-    else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim()));
+    else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
   });
   card.appendChild(bd);
-  const root = mkEl('div', 'si-root'); root.appendChild(card); return root;
+  root.appendChild(card); return root;
 }
 
 /* ─────────────────────────────────────────
-   MAIN RENDER ENTRY POINT
+   MAIN RENDER ENTRY
 ───────────────────────────────────────── */
 function renderOutput(userQuery, responseText, container, domain, isStreaming) {
   injectStyles();
 
   if (isStreaming) {
-    const root = mkEl('div', 'si-root si-streaming');
-    const wrap = mkEl('div', 'si-chat si-typing-cursor');
+    const root = mkEl('div', 'cr-root cr-streaming');
+    const cfg = DOMAIN_CONFIG[domain||'general']||DOMAIN_CONFIG.general;
+    root.style.setProperty('--cr-acc', cfg.accent);
+    const wrap = mkEl('div', 'cr-chat cr-cursor');
     parseCodeBlocks(responseText).forEach(s => {
       if (s.type === 'code') wrap.appendChild(buildCodeBlock(s.lang, s.content));
       else if (s.content.trim()) {
@@ -837,18 +1219,15 @@ function renderOutput(userQuery, responseText, container, domain, isStreaming) {
     return root;
   }
 
-  // Determine output type
   const outType = detectOutputType(userQuery, responseText);
   const dom = domain || 'general';
 
   let el;
   switch (dom) {
     case 'math':
-      el = renderMath(responseText);
-      break;
+      el = renderMathOutput(responseText); break;
     case 'code':
-      el = renderCode(responseText, dom);
-      break;
+      el = renderCode(responseText, dom); break;
     case 'data':
     case 'finance':
     case 'competitive':
@@ -857,22 +1236,21 @@ function renderOutput(userQuery, responseText, container, domain, isStreaming) {
     case 'legal':
     case 'concept':
     case 'research':
-      // For these domains, use section-aware rendering regardless of detected type
       if (outType === 'code') el = renderCode(responseText, dom);
       else if (outType === 'steps') el = renderSteps(responseText, dom);
-      else if (outType === 'list' && dom !== 'data' && dom !== 'finance') el = renderList(responseText, dom);
       else el = renderResearch(responseText, dom);
       break;
     default:
       switch (outType) {
-        case 'code': el = renderCode(responseText, dom); break;
-        case 'steps': el = renderSteps(responseText, dom); break;
+        case 'code':       el = renderCode(responseText, dom); break;
+        case 'math':       el = renderMathOutput(responseText); break;
+        case 'steps':      el = renderSteps(responseText, dom); break;
         case 'comparison': el = renderComparison(responseText, dom); break;
-        case 'table': el = renderTable(responseText, dom); break;
-        case 'list': el = renderList(responseText, dom); break;
-        case 'research': el = renderResearch(responseText, dom); break;
-        case 'diagnosis': el = renderDiagnosis(responseText, dom); break;
-        default: el = renderChat(responseText, dom); break;
+        case 'table':      el = renderTable(responseText, dom); break;
+        case 'list':       el = renderList(responseText, dom); break;
+        case 'research':   el = renderResearch(responseText, dom); break;
+        case 'diagnosis':  el = renderDiagnosis(responseText, dom); break;
+        default:           el = renderChat(responseText, dom); break;
       }
   }
 
@@ -881,13 +1259,13 @@ function renderOutput(userQuery, responseText, container, domain, isStreaming) {
 }
 
 /* ─────────────────────────────────────────
-   STREAMING UPDATER
+   STREAMING HELPERS
 ───────────────────────────────────────── */
 function updateStream(text, container) {
   if (!container) return;
   injectStyles();
-  const root = mkEl('div', 'si-root si-streaming');
-  const wrap = mkEl('div', 'si-chat si-typing-cursor');
+  const root = mkEl('div', 'cr-root cr-streaming');
+  const wrap = mkEl('div', 'cr-chat cr-cursor');
   parseCodeBlocks(text).forEach(s => {
     if (s.type === 'code') wrap.appendChild(buildCodeBlock(s.lang, s.content));
     else if (s.content.trim()) {
@@ -900,7 +1278,7 @@ function updateStream(text, container) {
 
 function finalizeStream(userQuery, fullText, container, domain) {
   if (!container) return;
-  renderOutput(userQuery, fullText, container, domain || 'general', false);
+  renderOutput(userQuery, fullText, container, domain||'general', false);
 }
 
 /* ─────────────────────────────────────────
