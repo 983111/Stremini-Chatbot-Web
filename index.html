@@ -36,8 +36,6 @@
   --sh-send:0 2px 12px rgba(232,98,42,0.45),0 1px 3px rgba(0,0,0,0.10);
 }
 [data-theme="light"]{--tx:#0d0d0f;--tx2:#48484a;--tx3:#8e8e93;}
-
-/* ── RESET ── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
 html,body{height:100%;font-family:var(--font);font-size:14px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow:hidden;}
 ::-webkit-scrollbar{width:4px;}
@@ -103,16 +101,7 @@ html,body{height:100%;font-family:var(--font);font-size:14px;line-height:1.6;-we
 .sb-foot{padding:8px 10px 12px;border-top:1px solid var(--sb-bdr);display:flex;flex-direction:column;gap:2px;}
 .sb-foot-btn{width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-md);border:none;background:none;cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;color:var(--sb-tx2);transition:all .15s;}
 .sb-foot-btn:hover{background:var(--sb-hover-bg);color:var(--sb-tx);}
-
-/* ── NOTION BUTTON — the important one ── */
-#notion-btn{
-  width:100%;display:flex;align-items:center;gap:8px;
-  padding:8px 10px;border-radius:var(--r-md);
-  border:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.04);
-  cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;
-  color:var(--sb-tx2);transition:all .15s;margin-bottom:2px;
-}
+#notion-btn{width:100%;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-md);border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:500;color:var(--sb-tx2);transition:all .15s;margin-bottom:2px;}
 #notion-btn:hover{background:rgba(255,255,255,.09);color:var(--sb-tx);border-color:rgba(255,255,255,.14);}
 #notion-btn.connected{color:#4ade80;border-color:rgba(74,222,128,.25);background:rgba(74,222,128,.06);}
 #notion-btn.connected:hover{background:rgba(74,222,128,.10);}
@@ -121,7 +110,6 @@ html,body{height:100%;font-family:var(--font);font-size:14px;line-height:1.6;-we
 .n-badge{font-size:9px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:99px;flex-shrink:0;}
 .n-badge.off{background:rgba(255,255,255,.08);color:var(--sb-tx3);}
 .n-badge.on{background:rgba(74,222,128,.20);color:#4ade80;}
-
 #ctx-panel{display:none;padding:4px 2px 6px;}
 #ctx-panel.open{display:block;}
 #ctx-panel textarea{width:100%;border:1.5px solid rgba(255,255,255,.12);border-radius:var(--r-md);padding:9px 12px;font-family:var(--font);font-size:12px;color:var(--sb-tx);resize:none;outline:none;line-height:1.5;height:80px;background:rgba(255,255,255,.05);}
@@ -324,13 +312,8 @@ html,body{height:100%;font-family:var(--font);font-size:14px;line-height:1.6;-we
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-
     <div class="clist" id="clist"></div>
-
-    <!-- SIDEBAR FOOTER -->
     <div class="sb-foot">
-
-      <!-- My Context -->
       <button class="sb-foot-btn" onclick="toggleCtx()">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>
         My context
@@ -339,18 +322,13 @@ html,body{height:100%;font-family:var(--font);font-size:14px;line-height:1.6;-we
         <textarea id="ctx-text" placeholder="Tell StreminiAI about yourself…"></textarea>
         <button class="ctx-save" onclick="saveContext()">Save context</button>
       </div>
-
-      <!-- ✅ NOTION CONNECT BUTTON -->
       <button id="notion-btn" onclick="notionConnectOrDisconnect()">
         <svg id="notion-btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <rect x="3" y="3" width="18" height="18" rx="2"/>
-          <path d="M8 12h8M12 8v8"/>
+          <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/>
         </svg>
         <span id="notion-btn-label">Connect Notion</span>
         <span class="n-badge off" id="notion-badge">OFF</span>
       </button>
-
-      <!-- User row -->
       <div class="urow">
         <div class="uav" id="user-av">S</div>
         <div class="uinfo">
@@ -361,7 +339,6 @@ html,body{height:100%;font-family:var(--font);font-size:14px;line-height:1.6;-we
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
       </div>
-
     </div>
   </nav>
 
@@ -474,224 +451,273 @@ function toggleTheme(){var h=document.documentElement;h.setAttribute('data-theme
 (function(){var s=localStorage.getItem('sai-theme');if(s)document.documentElement.setAttribute('data-theme',s);})();
 
 /* ═══════════════════════════════════
-   NOTION
+   NOTION — FIXED ROUTING
 ═══════════════════════════════════ */
-var notionState={connected:false,workspace_name:null};
+var notionState = { connected: false, workspace_name: null };
 
-var NOTION_PATTERNS=[
+// Tracks whether the current active chat started as a Notion conversation.
+// Key: chatId → true/false
+var notionChatSessions = {};
+
+/* ── Primary trigger patterns ── */
+var NOTION_TRIGGER_PATTERNS = [
+  // Explicit Notion mention anywhere in the message
   /\bnotion\b/i,
-  /\bmy notion\b/i,
-  /\bnotion page\b/i,
-  /\bnotion database\b/i,
-  /\bnotion workspace\b/i,
-  /\bin my notion\b/i,
-  /\b(create|make|add|build)\b.{0,40}\b(page|database|tracker|crm|kanban)\b.{0,20}\bnotion\b/i,
-  /\bnotion\b.{0,40}\b(create|make|add|build|find|search|list|show|update|edit)\b/i,
+
+  // Create/make/build + any Notion object type
+  /\b(create|make|add|build|set up|setup|generate)\b[\s\S]{0,80}\b(page|database|table|tracker|crm|kanban|board|doc|note|calendar|log|journal)\b/i,
+
+  // Read/find/show/list things
+  /\b(show|list|find|search|get|fetch|read|open|display)\b[\s\S]{0,60}\b(pages?|databases?|tables?|trackers?|notes?|docs?|entries|rows?|records?)\b/i,
+
+  // Update/edit/modify things
+  /\b(update|edit|change|mark|set|move|archive|delete|remove|rename|complete)\b[\s\S]{0,60}\b(page|row|entry|task|item|record|status|title|property)\b/i,
+
+  // Append / write to page
+  /\b(append|write|add|insert|put)\b[\s\S]{0,40}\b(to|into|on|onto)\b[\s\S]{0,40}\b(page|doc|note|entry)\b/i,
+
+  // Common named Notion templates / workflows
+  /\b(task tracker|habit tracker|project tracker|content calendar|reading list|meeting notes|kanban board|crm database|expense tracker|goal tracker)\b/i,
 ];
 
-function isNotionQuery(text){
-  for(var i=0;i<NOTION_PATTERNS.length;i++){if(NOTION_PATTERNS[i].test(text))return true;}
+/* ── Follow-up patterns (used when chat session is already Notion) ── */
+var NOTION_FOLLOWUP_PATTERNS = [
+  /\b(tell me more|more details|explain more|what else|show more)\b/i,
+  /\b(add|create|update|change|list|show|find|read|open|mark|set|delete|remove|archive|append|insert)\b/i,
+  /\b(the tracker|this tracker|that tracker|the database|the page|the table|the board|the list|that page|this page)\b/i,
+  /\b(add a row|add a task|add an entry|new entry|new task|new row|update status|show all|list all|filter by|sort by)\b/i,
+  /\b(how do i|how can i|what can i|can you)\b/i,
+];
+
+function isNotionQuery(text) {
+  // If current chat is already a Notion session, be permissive with follow-ups
+  if (activeId && notionChatSessions[activeId]) {
+    for (var i = 0; i < NOTION_FOLLOWUP_PATTERNS.length; i++) {
+      if (NOTION_FOLLOWUP_PATTERNS[i].test(text)) return true;
+    }
+  }
+  // Check primary trigger patterns
+  for (var j = 0; j < NOTION_TRIGGER_PATTERNS.length; j++) {
+    if (NOTION_TRIGGER_PATTERNS[j].test(text)) return true;
+  }
   return false;
 }
 
-function notionFetch(path,opts){
-  var uid=currentUser?currentUser.id:'';
-  var hdrs=Object.assign({'Content-Type':'application/json'},(opts&&opts.headers)||{});
-  if(uid)hdrs['Authorization']='Bearer '+uid;
-  return fetch(NOTION_API+path,Object.assign({},opts||{},{headers:hdrs})).then(function(r){return r.json();});
+function notionFetch(path, opts) {
+  var uid = currentUser ? currentUser.id : '';
+  var hdrs = Object.assign({'Content-Type':'application/json'}, (opts && opts.headers) || {});
+  if (uid) hdrs['Authorization'] = 'Bearer ' + uid;
+  return fetch(NOTION_API + path, Object.assign({}, opts || {}, { headers: hdrs })).then(function(r){ return r.json(); });
 }
 
-async function checkNotionStatus(){
-  if(!currentUser)return;
-  try{
-    var d=await notionFetch('/status');
-    notionState.connected=!!d.connected;
-    notionState.workspace_name=d.workspace_name||null;
+async function checkNotionStatus() {
+  if (!currentUser) return;
+  try {
+    var d = await notionFetch('/status');
+    notionState.connected = !!d.connected;
+    notionState.workspace_name = d.workspace_name || null;
     updateNotionBtn();
-  }catch(e){}
+  } catch(e) {}
 }
 
-function updateNotionBtn(){
-  var btn=document.getElementById('notion-btn');
-  var lbl=document.getElementById('notion-btn-label');
-  var badge=document.getElementById('notion-badge');
-  var icon=document.getElementById('notion-btn-icon');
-  var ind=document.getElementById('notion-indicator');
-  if(!btn)return;
-  if(notionState.connected){
-    btn.className='';
-    btn.id='notion-btn';
+function updateNotionBtn() {
+  var btn   = document.getElementById('notion-btn');
+  var lbl   = document.getElementById('notion-btn-label');
+  var badge = document.getElementById('notion-badge');
+  var icon  = document.getElementById('notion-btn-icon');
+  var ind   = document.getElementById('notion-indicator');
+  if (!btn) return;
+  if (notionState.connected) {
     btn.classList.add('connected');
-    lbl.textContent=notionState.workspace_name||'Notion Connected';
-    badge.textContent='ON';
-    badge.className='n-badge on';
-    if(ind)ind.classList.add('on');
-    icon.innerHTML='<polyline points="20 6 9 17 4 12"/>';
-  }else{
+    lbl.textContent = notionState.workspace_name || 'Notion Connected';
+    badge.textContent = 'ON'; badge.className = 'n-badge on';
+    if (ind) ind.classList.add('on');
+    icon.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+  } else {
     btn.classList.remove('connected');
-    lbl.textContent='Connect Notion';
-    badge.textContent='OFF';
-    badge.className='n-badge off';
-    if(ind)ind.classList.remove('on');
-    icon.innerHTML='<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/>';
+    lbl.textContent = 'Connect Notion';
+    badge.textContent = 'OFF'; badge.className = 'n-badge off';
+    if (ind) ind.classList.remove('on');
+    icon.innerHTML = '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 12h8M12 8v8"/>';
   }
 }
 
-async function notionConnectOrDisconnect(){
-  if(!currentUser){toast('Please sign in first');return;}
-  if(notionState.connected){
-    if(!confirm('Disconnect Notion workspace "'+(notionState.workspace_name||'')+'"?'))return;
-    try{
-      await notionFetch('/disconnect',{method:'POST',body:JSON.stringify({userId:currentUser.id})});
-      notionState.connected=false;notionState.workspace_name=null;
-      updateNotionBtn();toast('Notion disconnected');
-    }catch(e){toast('Disconnect failed');}
+async function notionConnectOrDisconnect() {
+  if (!currentUser) { toast('Please sign in first'); return; }
+  if (notionState.connected) {
+    if (!confirm('Disconnect Notion workspace "' + (notionState.workspace_name || '') + '"?')) return;
+    try {
+      await notionFetch('/disconnect', { method:'POST', body:JSON.stringify({ userId:currentUser.id }) });
+      notionState.connected = false; notionState.workspace_name = null;
+      notionChatSessions = {}; // clear all session flags on disconnect
+      updateNotionBtn(); toast('Notion disconnected');
+    } catch(e) { toast('Disconnect failed'); }
     return;
   }
-  try{
-    var d=await notionFetch('/auth/url');
-    if(!d.url){toast('Could not get Notion auth URL');return;}
-    sessionStorage.setItem('notion_oauth_state',d.state||'');
-    sessionStorage.setItem('notion_oauth_user',currentUser.id);
+  try {
+    var d = await notionFetch('/auth/url');
+    if (!d.url) { toast('Could not get Notion auth URL'); return; }
+    sessionStorage.setItem('notion_oauth_state', d.state || '');
+    sessionStorage.setItem('notion_oauth_user', currentUser.id);
     var w=600,h=700,left=Math.floor((screen.width-w)/2),top=Math.floor((screen.height-h)/2);
-    var popup=window.open(d.url,'notion_oauth','width='+w+',height='+h+',left='+left+',top='+top+',toolbar=0,menubar=0');
-    if(!popup){window.location.href=d.url;return;}
-    var poll=setInterval(function(){if(popup.closed){clearInterval(poll);setTimeout(checkNotionStatus,800);}},600);
-  }catch(e){toast('Notion connect failed: '+e.message);}
+    var popup = window.open(d.url, 'notion_oauth', 'width='+w+',height='+h+',left='+left+',top='+top+',toolbar=0,menubar=0');
+    if (!popup) { window.location.href = d.url; return; }
+    var poll = setInterval(function(){ if (popup.closed) { clearInterval(poll); setTimeout(checkNotionStatus, 800); } }, 600);
+  } catch(e) { toast('Notion connect failed: ' + e.message); }
 }
 
-async function handleNotionCallback(){
-  var params=new URLSearchParams(window.location.search);
-  var code=params.get('code');
-  if(!code)return;
-  var userId=sessionStorage.getItem('notion_oauth_user');
-  var state=sessionStorage.getItem('notion_oauth_state');
+async function handleNotionCallback() {
+  var params = new URLSearchParams(window.location.search);
+  var code   = params.get('code');
+  if (!code) return;
+  var userId = sessionStorage.getItem('notion_oauth_user');
+  var state  = sessionStorage.getItem('notion_oauth_state');
   sessionStorage.removeItem('notion_oauth_user');
   sessionStorage.removeItem('notion_oauth_state');
-  window.history.replaceState({},document.title,window.location.pathname);
-  if(!userId){toast('OAuth session expired');return;}
-  try{
-    var d=await fetch(NOTION_API+'/auth/callback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,userId:userId,state:state})}).then(function(r){return r.json();});
-    if(d.success){toast('✓ Notion connected: '+(d.workspace_name||'workspace'));await checkNotionStatus();}
-    else toast('Notion auth failed: '+(d.error||'unknown error'));
-  }catch(e){toast('OAuth callback failed: '+e.message);}
+  window.history.replaceState({}, document.title, window.location.pathname);
+  if (!userId) { toast('OAuth session expired'); return; }
+  try {
+    var d = await fetch(NOTION_API + '/auth/callback', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ code, userId, state }),
+    }).then(function(r){ return r.json(); });
+    if (d.success) { toast('✓ Notion connected: ' + (d.workspace_name || 'workspace')); await checkNotionStatus(); }
+    else toast('Notion auth failed: ' + (d.error || 'unknown error'));
+  } catch(e) { toast('OAuth callback failed: ' + e.message); }
 }
 
-async function executeNotionRequest(message){
-  return notionFetch('/execute',{method:'POST',body:JSON.stringify({message:message})});
+async function executeNotionRequest(message) {
+  return notionFetch('/execute', { method:'POST', body:JSON.stringify({ message }) });
 }
 
 /* ═══════════════════════════════════
    AUTH
 ═══════════════════════════════════ */
-window.addEventListener('DOMContentLoaded',function(){
+window.addEventListener('DOMContentLoaded', function() {
   handleNotionCallback();
-  if(window.pdfjsLib)window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  try{sb=window.supabase.createClient(SB_URL,SB_ANON,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:true}});}
-  catch(e){hideLoading();showAuth('Could not init auth.');return;}
-  sb.auth.onAuthStateChange(function(event,session){
-    if(session&&session.user){currentUser=session.user;if(!booted){booted=true;startApp();}}
-    else if(event==='SIGNED_OUT'){currentUser=null;booted=false;chats={};activeId=null;messages=[];userContext='';document.getElementById('app').style.display='none';showAuth();}
+  if (window.pdfjsLib) window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  try { sb = window.supabase.createClient(SB_URL, SB_ANON, { auth:{ autoRefreshToken:true, persistSession:true, detectSessionInUrl:true } }); }
+  catch(e) { hideLoading(); showAuth('Could not init auth.'); return; }
+  sb.auth.onAuthStateChange(function(event, session) {
+    if (session && session.user) { currentUser = session.user; if (!booted) { booted=true; startApp(); } }
+    else if (event === 'SIGNED_OUT') { currentUser=null; booted=false; chats={}; activeId=null; messages=[]; userContext=''; notionChatSessions={}; document.getElementById('app').style.display='none'; showAuth(); }
   });
-  sb.auth.getSession().then(function(res){
-    if(res.data&&res.data.session){currentUser=res.data.session.user;if(!booted){booted=true;startApp();}}
-    else{hideLoading();showAuth();}
-  }).catch(function(){hideLoading();showAuth('Connection error.');});
+  sb.auth.getSession().then(function(res) {
+    if (res.data && res.data.session) { currentUser=res.data.session.user; if (!booted) { booted=true; startApp(); } }
+    else { hideLoading(); showAuth(); }
+  }).catch(function(){ hideLoading(); showAuth('Connection error.'); });
 });
 
-function startApp(){
+function startApp() {
   hideLoading();
-  document.getElementById('auth-screen').style.display='none';
-  document.getElementById('app').style.display='flex';
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
   updateUserUI();
-  upsertUser().then(function(){return Promise.all([loadContext(),loadChats()]);}).catch(console.error);
+  upsertUser().then(function(){ return Promise.all([loadContext(), loadChats()]); }).catch(console.error);
   checkNotionStatus();
   resize(document.getElementById('inp'));
 }
-function hideLoading(){document.getElementById('loading').style.display='none';}
-function showAuth(msg){document.getElementById('auth-screen').style.display='flex';setMsg(msg||'',false);}
-function switchTab(btn){_activeTab=btn.dataset.tab;document.querySelectorAll('.auth-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===_activeTab);});document.getElementById('auth-btn').textContent=_activeTab==='signin'?'Sign in':'Create account';document.getElementById('auth-name-field').style.display=_activeTab==='signup'?'block':'none';setMsg('',false);}
-function setMsg(msg,ok){var el=document.getElementById('auth-msg');el.textContent=msg;el.className='auth-msg'+(msg?(ok?' ok':' err'):'');}
+function hideLoading(){ document.getElementById('loading').style.display='none'; }
+function showAuth(msg){ document.getElementById('auth-screen').style.display='flex'; setMsg(msg||'',false); }
+function switchTab(btn){ _activeTab=btn.dataset.tab; document.querySelectorAll('.auth-tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===_activeTab);}); document.getElementById('auth-btn').textContent=_activeTab==='signin'?'Sign in':'Create account'; document.getElementById('auth-name-field').style.display=_activeTab==='signup'?'block':'none'; setMsg('',false); }
+function setMsg(msg,ok){ var el=document.getElementById('auth-msg'); el.textContent=msg; el.className='auth-msg'+(msg?(ok?' ok':' err'):''); }
 
-async function doAuth(){
-  var email=document.getElementById('auth-email').value.trim(),pass=document.getElementById('auth-password').value,btn=document.getElementById('auth-btn');
+async function doAuth() {
+  var email=document.getElementById('auth-email').value.trim(), pass=document.getElementById('auth-password').value, btn=document.getElementById('auth-btn');
   setMsg('',false);
-  if(!email){setMsg('Email is required.',false);return;}
-  if(!pass||pass.length<6){setMsg('Password must be at least 6 characters.',false);return;}
-  btn.disabled=true;btn.textContent=_activeTab==='signin'?'Signing in…':'Creating account…';
-  try{
+  if (!email) { setMsg('Email is required.',false); return; }
+  if (!pass||pass.length<6) { setMsg('Password must be at least 6 characters.',false); return; }
+  btn.disabled=true; btn.textContent=_activeTab==='signin'?'Signing in…':'Creating account…';
+  try {
     var res;
-    if(_activeTab==='signin'){res=await sb.auth.signInWithPassword({email,password:pass});if(res.error)throw res.error;}
-    else{
+    if (_activeTab==='signin') { res=await sb.auth.signInWithPassword({email,password:pass}); if(res.error)throw res.error; }
+    else {
       var name=document.getElementById('auth-name').value.trim()||email.split('@')[0];
       res=await sb.auth.signUp({email,password:pass,options:{data:{display_name:name}}});
       if(res.error)throw res.error;
       if(res.data.user&&!res.data.session){setMsg('Check your email to confirm, then sign in.',true);_activeTab='signin';document.getElementById('auth-btn').textContent='Sign in';document.getElementById('auth-name-field').style.display='none';return;}
     }
-  }catch(e){setMsg(e.message||'Authentication failed.',false);}
-  finally{btn.disabled=false;btn.textContent=_activeTab==='signin'?'Sign in':'Create account';}
+  } catch(e) { setMsg(e.message||'Authentication failed.',false); }
+  finally { btn.disabled=false; btn.textContent=_activeTab==='signin'?'Sign in':'Create account'; }
 }
-async function doGoogle(){
-  var btn=document.getElementById('google-btn');btn.disabled=true;setMsg('',false);
-  try{var res=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+window.location.pathname,queryParams:{access_type:'offline',prompt:'consent'}}});if(res.error)throw res.error;}
-  catch(e){setMsg(e.message||'Google sign-in failed.',false);btn.disabled=false;}
+async function doGoogle() {
+  var btn=document.getElementById('google-btn'); btn.disabled=true; setMsg('',false);
+  try { var res=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin+window.location.pathname,queryParams:{access_type:'offline',prompt:'consent'}}}); if(res.error)throw res.error; }
+  catch(e) { setMsg(e.message||'Google sign-in failed.',false); btn.disabled=false; }
 }
-async function signOut(){await sb.auth.signOut();}
-function updateUserUI(){
-  if(!currentUser)return;
-  var m=currentUser.user_metadata||{},name=m.display_name||m.full_name||m.name||currentUser.email.split('@')[0];
+async function signOut(){ await sb.auth.signOut(); }
+function updateUserUI() {
+  if (!currentUser) return;
+  var m=currentUser.user_metadata||{}, name=m.display_name||m.full_name||m.name||currentUser.email.split('@')[0];
   document.getElementById('user-name').textContent=name;
   document.getElementById('user-email').textContent=currentUser.email||'';
   document.getElementById('user-av').textContent=(name[0]||'U').toUpperCase();
 }
-async function upsertUser(){
-  var m=currentUser.user_metadata||{},name=m.display_name||m.full_name||m.name||currentUser.email.split('@')[0];
+async function upsertUser() {
+  var m=currentUser.user_metadata||{}, name=m.display_name||m.full_name||m.name||currentUser.email.split('@')[0];
   await sb.from('users').upsert({id:currentUser.id,display_name:name,email:currentUser.email,updated_at:new Date().toISOString()},{onConflict:'id'});
 }
 
 /* ═══════════════════════════════════
    CONTEXT
 ═══════════════════════════════════ */
-function ctxKey(){return 'sai_ctx_'+currentUser.id;}
-async function loadContext(){
-  try{var l=localStorage.getItem(ctxKey());if(l){userContext=l;document.getElementById('ctx-text').value=l;}}catch(e){}
+function ctxKey(){ return 'sai_ctx_'+currentUser.id; }
+async function loadContext() {
+  try { var l=localStorage.getItem(ctxKey()); if(l){userContext=l;document.getElementById('ctx-text').value=l;} } catch(e){}
   var res=await sb.from('users').select('context').eq('id',currentUser.id).single();
   if(!res.error&&res.data&&res.data.context){userContext=res.data.context;document.getElementById('ctx-text').value=userContext;try{localStorage.setItem(ctxKey(),userContext);}catch(e){}}
 }
-async function saveContext(){
+async function saveContext() {
   userContext=document.getElementById('ctx-text').value.trim();
   try{localStorage.setItem(ctxKey(),userContext);}catch(e){}
   var res=await sb.from('users').update({context:userContext,updated_at:new Date().toISOString()}).eq('id',currentUser.id);
   if(res.error){toast('Context saved locally.');return;}
-  toast('Context saved');toggleCtx();
+  toast('Context saved'); toggleCtx();
 }
-function toggleCtx(){document.getElementById('ctx-panel').classList.toggle('open');}
+function toggleCtx(){ document.getElementById('ctx-panel').classList.toggle('open'); }
 
 /* ═══════════════════════════════════
    CHAT DB
 ═══════════════════════════════════ */
-async function loadChats(){
+async function loadChats() {
   var res=await sb.from('chats').select('id,title,updated_at').eq('user_id',currentUser.id).order('updated_at',{ascending:false});
   if(res.error){console.error(res.error.message);return;}
   chats={};(res.data||[]).forEach(function(c){chats[c.id]={id:c.id,title:c.title,ts:new Date(c.updated_at).getTime()};});
   renderSidebar();
 }
-async function createChat(title){
+async function createChat(title) {
   var res=await sb.from('chats').insert({user_id:currentUser.id,title:title||'New Chat'}).select().single();
   if(res.error)throw new Error(res.error.message);
-  var c=res.data;chats[c.id]={id:c.id,title:c.title,ts:new Date(c.updated_at).getTime()};renderSidebar();return c.id;
+  var c=res.data; chats[c.id]={id:c.id,title:c.title,ts:new Date(c.updated_at).getTime()}; renderSidebar(); return c.id;
 }
-async function updateChatTitle(chatId,title){if(!chats[chatId])return;chats[chatId].title=title;chats[chatId].ts=Date.now();renderSidebar();await sb.from('chats').update({title:title}).eq('id',chatId);}
-async function deleteChat(chatId){delete chats[chatId];if(activeId===chatId){activeId=null;messages=[];showWelcome();}renderSidebar();await sb.from('messages').delete().eq('chat_id',chatId);await sb.from('chats').delete().eq('id',chatId);}
-async function loadMessages(chatId){var res=await sb.from('messages').select('role,content,created_at').eq('chat_id',chatId).order('created_at',{ascending:true});if(res.error)throw new Error(res.error.message);messages=(res.data||[]).map(function(m){return{role:m.role,content:m.content};});return res.data||[];}
-async function saveMessage(chatId,role,content){var res=await sb.from('messages').insert({chat_id:chatId,user_id:currentUser.id,role:role,content:content});if(res.error){console.error('saveMessage:',res.error.message);return;}messages.push({role:role,content:content});await sb.from('chats').update({updated_at:new Date().toISOString()}).eq('id',chatId);if(chats[chatId])chats[chatId].ts=Date.now();}
+async function updateChatTitle(chatId,title){ if(!chats[chatId])return; chats[chatId].title=title; chats[chatId].ts=Date.now(); renderSidebar(); await sb.from('chats').update({title}).eq('id',chatId); }
+async function deleteChat(chatId) {
+  delete chats[chatId]; delete notionChatSessions[chatId];
+  if(activeId===chatId){activeId=null;messages=[];showWelcome();}
+  renderSidebar();
+  await sb.from('messages').delete().eq('chat_id',chatId);
+  await sb.from('chats').delete().eq('id',chatId);
+}
+async function loadMessages(chatId) {
+  var res=await sb.from('messages').select('role,content,created_at').eq('chat_id',chatId).order('created_at',{ascending:true});
+  if(res.error)throw new Error(res.error.message);
+  messages=(res.data||[]).map(function(m){return{role:m.role,content:m.content};});
+  return res.data||[];
+}
+async function saveMessage(chatId,role,content) {
+  var res=await sb.from('messages').insert({chat_id:chatId,user_id:currentUser.id,role,content});
+  if(res.error){console.error('saveMessage:',res.error.message);return;}
+  messages.push({role,content});
+  await sb.from('chats').update({updated_at:new Date().toISOString()}).eq('id',chatId);
+  if(chats[chatId])chats[chatId].ts=Date.now();
+}
 
 /* ═══════════════════════════════════
    SIDEBAR
 ═══════════════════════════════════ */
-function toggleSb(){var s=document.getElementById('sb');if(window.innerWidth<=768)s.classList.toggle('open');else{sbOpen=!sbOpen;sbOpen?s.classList.remove('collapsed'):s.classList.add('collapsed');}}
-function getChatIcon(title){var t=(title||'').toLowerCase();if(/code|function|api|debug|python|javascript/.test(t))return '</>';if(/math|equation|calcul|solve/.test(t))return '∑';if(/notion|page|database|tracker/.test(t))return '📝';if(/research|paper|study/.test(t))return '◈';return '·';}
-function renderSidebar(){
+function toggleSb(){ var s=document.getElementById('sb'); if(window.innerWidth<=768)s.classList.toggle('open'); else{sbOpen=!sbOpen;sbOpen?s.classList.remove('collapsed'):s.classList.add('collapsed');} }
+function getChatIcon(title){ var t=(title||'').toLowerCase(); if(/code|function|api|debug|python|javascript/.test(t))return '</>'; if(/math|equation|calcul|solve/.test(t))return '∑'; if(/notion|page|database|tracker/.test(t))return '📝'; if(/research|paper|study/.test(t))return '◈'; return '·'; }
+function renderSidebar() {
   var el=document.getElementById('clist');
   var list=Object.values(chats).sort(function(a,b){return b.ts-a.ts;});
   if(!list.length){el.innerHTML='<div style="padding:12px 8px;font-size:12px;color:var(--sb-tx3);">No chats yet</div>';return;}
@@ -702,154 +728,261 @@ function renderSidebar(){
     if(!g[lbl].length)return;
     html+='<div class="clabel">'+lbl+'</div>';
     g[lbl].forEach(function(c){
-      var act=c.id===activeId?' active':'',sid=c.id.replace(/['"]/g,''),icon=getChatIcon(c.title);
+      var act=c.id===activeId?' active':'', sid=c.id.replace(/['"]/g,''), icon=getChatIcon(c.title);
       html+='<div class="ci'+act+'" onclick="openChat(\''+sid+'\')"><span class="ci-icon">'+icon+'</span><span class="ci-title">'+escHtml(c.title)+'</span><button class="ci-del" onclick="event.stopPropagation();deleteChat(\''+sid+'\')">✕</button></div>';
     });
   });
   el.innerHTML=html;
 }
-function newChat(){activeId=null;messages=[];docFile=null;updateDocBar();showWelcome();renderSidebar();document.getElementById('inp').focus();}
-async function openChat(id){
-  activeId=id;docFile=null;updateDocBar();
+function newChat(){ activeId=null; messages=[]; docFile=null; updateDocBar(); showWelcome(); renderSidebar(); document.getElementById('inp').focus(); }
+async function openChat(id) {
+  activeId=id; docFile=null; updateDocBar();
   document.getElementById('welcome').style.display='none';
-  var mw=document.getElementById('msgs-wrap');mw.style.display='flex';mw.innerHTML='';
+  var mw=document.getElementById('msgs-wrap'); mw.style.display='flex'; mw.innerHTML='';
   renderSidebar();
-  try{var rows=await loadMessages(id);rows.forEach(function(m){addMsgRow(m.role,m.content,false);});scrollBottom();}
-  catch(e){toast('Could not load messages.');}
+  try { var rows=await loadMessages(id); rows.forEach(function(m){addMsgRow(m.role,m.content,false);}); scrollBottom(); }
+  catch(e){ toast('Could not load messages.'); }
   if(window.innerWidth<=768)document.getElementById('sb').classList.remove('open');
 }
-function showWelcome(){document.getElementById('welcome').style.display='flex';var mw=document.getElementById('msgs-wrap');mw.style.display='none';mw.innerHTML='';}
+function showWelcome(){ document.getElementById('welcome').style.display='flex'; var mw=document.getElementById('msgs-wrap'); mw.style.display='none'; mw.innerHTML=''; }
 
 /* ═══════════════════════════════════
    MESSAGE ROWS
 ═══════════════════════════════════ */
 function addMsgRow(role,content,animate){
   if(animate===undefined)animate=true;
-  var wrap=document.getElementById('msgs-wrap');wrap.style.display='flex';document.getElementById('welcome').style.display='none';
+  var wrap=document.getElementById('msgs-wrap'); wrap.style.display='flex'; document.getElementById('welcome').style.display='none';
   var isAI=role==='assistant';
-  var row=document.createElement('div');row.className='mr';if(!animate)row.style.animation='none';
+  var row=document.createElement('div'); row.className='mr'; if(!animate)row.style.animation='none';
   row.innerHTML='<div class="mav '+(isAI?'ai':'usr')+'">'+(isAI?'S':'U')+'</div><div class="mbody"><div class="mname">'+(isAI?'StreminiAI':'You')+'</div><div class="mc"></div>'+(isAI?'<div class="macts"><button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button></div>':'')+'</div>';
   wrap.appendChild(row);
-  var mc=row.querySelector('.mc');mc.innerHTML=renderMd(content);postRender(mc);
+  var mc=row.querySelector('.mc'); mc.innerHTML=renderMd(content); postRender(mc);
   return row;
 }
 function addStreamRow(){
-  var wrap=document.getElementById('msgs-wrap');wrap.style.display='flex';document.getElementById('welcome').style.display='none';
-  var row=document.createElement('div');row.className='mr';row.id='srow';
+  var wrap=document.getElementById('msgs-wrap'); wrap.style.display='flex'; document.getElementById('welcome').style.display='none';
+  var row=document.createElement('div'); row.className='mr'; row.id='srow';
   row.innerHTML='<div class="mav ai">S</div><div class="mbody"><div class="mname">StreminiAI</div><div class="mc" id="sc"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div></div>';
-  wrap.appendChild(row);scrollBottom();
+  wrap.appendChild(row); scrollBottom();
 }
-function updateStream(text){var el=document.getElementById('sc');if(el){el.innerHTML=renderMd(text);scrollBottom();}}
+function updateStream(text){ var el=document.getElementById('sc'); if(el){el.innerHTML=renderMd(text);scrollBottom();} }
 function finalizeStream(text){
-  var row=document.getElementById('srow');if(!row)return;row.id='';
-  var c=row.querySelector('.mc');if(c){c.innerHTML=renderMd(text);postRender(c);}
+  var row=document.getElementById('srow'); if(!row)return; row.id='';
+  var c=row.querySelector('.mc'); if(c){c.innerHTML=renderMd(text);postRender(c);}
   var body=row.querySelector('.mbody');
   if(body&&!body.querySelector('.macts')){var a=document.createElement('div');a.className='macts';a.innerHTML='<button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>';body.appendChild(a);}
 }
-function scrollBottom(){var a=document.getElementById('chat-area');a.scrollTop=a.scrollHeight;}
+function scrollBottom(){ var a=document.getElementById('chat-area'); a.scrollTop=a.scrollHeight; }
 function showDomainPill(domain){
-  var pill=document.getElementById('domain-pill');if(!pill)return;
+  var pill=document.getElementById('domain-pill'); if(!pill)return;
   var map={math:{l:'∑ Math',c:'#4a7cb0',bg:'rgba(74,124,176,0.10)',b:'rgba(74,124,176,0.22)'},code:{l:'⌨ Code',c:'#7a4ab0',bg:'rgba(122,74,176,0.10)',b:'rgba(122,74,176,0.22)'},research:{l:'◈ Research',c:'#c8864a',bg:'rgba(200,134,74,0.10)',b:'rgba(200,134,74,0.22)'},notion:{l:'📝 Notion',c:'#374151',bg:'rgba(55,65,81,0.08)',b:'rgba(55,65,81,0.20)'},finance:{l:'$ Finance',c:'#4a9c6a',bg:'rgba(74,156,106,0.10)',b:'rgba(74,156,106,0.22)'},data:{l:'📊 Data',c:'#4a7cb0',bg:'rgba(74,124,176,0.10)',b:'rgba(74,124,176,0.22)'},architect:{l:'🏗 Architect',c:'#c8864a',bg:'rgba(200,134,74,0.10)',b:'rgba(200,134,74,0.22)'},growth:{l:'⚡ Growth',c:'#c8864a',bg:'rgba(200,134,74,0.10)',b:'rgba(200,134,74,0.22)'},legal:{l:'⚖ Legal',c:'#b04a4a',bg:'rgba(176,74,74,0.10)',b:'rgba(176,74,74,0.22)'},concept:{l:'💡 Concept',c:'#4a9c6a',bg:'rgba(74,156,106,0.10)',b:'rgba(74,156,106,0.22)'}};
-  var cfg=map[domain];if(!cfg){pill.style.display='none';return;}
+  var cfg=map[domain]; if(!cfg){pill.style.display='none';return;}
   pill.style.cssText='display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:3px 10px;border-radius:99px;background:'+cfg.bg+';color:'+cfg.c+';border:1px solid '+cfg.b+';';
   pill.textContent=cfg.l;
 }
 
 /* ═══════════════════════════════════
-   SEND MESSAGE
+   SEND MESSAGE — FIXED NOTION ROUTING
 ═══════════════════════════════════ */
-async function sendMsg(){
-  if(busy||!currentUser)return;
-  var inp=document.getElementById('inp'),text=inp.value.trim();
-  if(!text)return;
+async function sendMsg() {
+  if (busy || !currentUser) return;
+  var inp=document.getElementById('inp'), text=inp.value.trim();
+  if (!text) return;
 
-  /* ── Notion ── */
-  if(notionState.connected&&isNotionQuery(text)){
-    inp.value='';resize(inp);
-    if(!activeId){try{activeId=await createChat(text.slice(0,52)+(text.length>52?'…':''));}catch(e){toast('Error: '+e.message);return;}}
-    addMsgRow('user',text);saveMessage(activeId,'user',text);
-    setBusy(true);addStreamRow();showDomainPill('notion');
-    try{
-      var result=await executeNotionRequest(text);
-      if(result.error){
-        var em='**Notion error:** '+result.error;
-        finalizeStream(em);saveMessage(activeId,'assistant',em);
-      }else{
-        var msg=result.message||'Done!';
-        if(result.tool_calls&&result.tool_calls.length){
-          var urls=result.tool_calls.filter(function(c){return c.success&&c.url;});
-          if(urls.length){msg+='\n\n';urls.forEach(function(c){msg+='→ [Open in Notion]('+c.url+')\n';});}
-          var failed=result.tool_calls.filter(function(c){return !c.success;});
-          if(failed.length){msg+='\n\n⚠️ Some actions had issues:\n';failed.forEach(function(c){msg+='- `'+c.tool+'`: '+(c.error||'failed')+'\n';});}
+  /* ── Notion branch ── */
+  if (notionState.connected && isNotionQuery(text)) {
+    inp.value=''; resize(inp);
+
+    // Create chat if needed
+    if (!activeId) {
+      try { activeId = await createChat(text.slice(0,52)+(text.length>52?'…':'')); }
+      catch(e) { toast('Error: '+e.message); return; }
+    }
+
+    // Mark this chat as a Notion session so follow-ups stay in Notion
+    notionChatSessions[activeId] = true;
+
+    addMsgRow('user', text);
+    saveMessage(activeId, 'user', text);
+    setBusy(true);
+    addStreamRow();
+    showDomainPill('notion');
+
+    try {
+      var result = await executeNotionRequest(text);
+
+      if (result.error) {
+        var errMsg;
+        if (/401|not connected|unauthorized/i.test(result.error)) {
+          errMsg = '**Notion connection error.** Please reconnect Notion from the sidebar and try again.';
+          notionChatSessions[activeId] = false; // reset on auth failure
+        } else {
+          errMsg = '**Notion error:** ' + result.error;
         }
-        finalizeStream(msg.trim());saveMessage(activeId,'assistant',msg.trim());
-        if(messages.filter(function(m){return m.role==='user';}).length===1)updateChatTitle(activeId,text.slice(0,52)+(text.length>52?'…':''));
+        finalizeStream(errMsg);
+        saveMessage(activeId, 'assistant', errMsg);
+      } else {
+        var msg = result.message || 'Done!';
+
+        // Append clickable open links
+        if (result.tool_calls && result.tool_calls.length) {
+          var openLinks = result.tool_calls.filter(function(c){ return c.success && c.url; });
+          if (openLinks.length) {
+            msg += '\n\n';
+            openLinks.forEach(function(c){ msg += '→ [Open in Notion]('+c.url+')\n'; });
+          }
+          var failed = result.tool_calls.filter(function(c){ return !c.success; });
+          if (failed.length) {
+            msg += '\n\n⚠️ Some actions had issues:\n';
+            failed.forEach(function(c){ msg += '- `'+c.tool+'`: '+(c.error||'failed')+'\n'; });
+          }
+        }
+
+        finalizeStream(msg.trim());
+        saveMessage(activeId, 'assistant', msg.trim());
+
+        // Auto-title the chat on first user message
+        if (messages.filter(function(m){ return m.role==='user'; }).length === 1) {
+          updateChatTitle(activeId, text.slice(0,52)+(text.length>52?'…':''));
+        }
       }
-    }catch(err){var e2='**Notion error:** '+escHtml(err.message);finalizeStream(e2);saveMessage(activeId,'assistant',e2);}
-    finally{setBusy(false);}
+    } catch(err) {
+      var em = '**Notion error:** ' + escHtml(err.message);
+      finalizeStream(em);
+      saveMessage(activeId, 'assistant', em);
+    } finally {
+      setBusy(false);
+    }
     return;
   }
 
-  /* ── Normal ── */
-  if(!activeId){try{activeId=await createChat(text.slice(0,52)+(text.length>52?'…':''));}catch(e){toast('Error: '+e.message);return;}}
-  inp.value='';resize(inp);
+  /* ── Normal AI branch ── */
+  if (!activeId) {
+    try { activeId = await createChat(text.slice(0,52)+(text.length>52?'…':'')); }
+    catch(e) { toast('Error: '+e.message); return; }
+  }
+  inp.value=''; resize(inp);
   var hist=messages.slice(-20).map(function(m){return{role:m.role,content:m.content};});
-  await saveMessage(activeId,'user',text);
-  if(messages.filter(function(m){return m.role==='user';}).length===1)updateChatTitle(activeId,text.slice(0,52)+(text.length>52?'…':''));
-  addMsgRow('user',text);setBusy(true);
-  var answer='',detDomain='general';addStreamRow();
-  try{
-    if(docFile){var da=await callDoc(text,docFile.text);answer=da||'No response.';finalizeStream(answer);await saveMessage(activeId,'assistant',answer);setBusy(false);return;}
-    answer=await callStream(text,hist,function(d){detDomain=d||'general';showDomainPill(detDomain);});
-    if(!answer||!answer.trim())answer='No response from model. Please try again.';
-    finalizeStream(answer);await saveMessage(activeId,'assistant',answer);
-  }catch(err){
+  await saveMessage(activeId, 'user', text);
+  if (messages.filter(function(m){return m.role==='user';}).length===1) updateChatTitle(activeId, text.slice(0,52)+(text.length>52?'…':''));
+  addMsgRow('user', text);
+  setBusy(true);
+  var answer='', detDomain='general'; addStreamRow();
+  try {
+    if (docFile) { var da=await callDoc(text,docFile.text); answer=da||'No response.'; finalizeStream(answer); await saveMessage(activeId,'assistant',answer); setBusy(false); return; }
+    answer = await callStream(text, hist, function(d){ detDomain=d||'general'; showDomainPill(detDomain); });
+    if (!answer||!answer.trim()) answer='No response from model. Please try again.';
+    finalizeStream(answer);
+    await saveMessage(activeId,'assistant',answer);
+  } catch(err) {
     var em2=err.message==='stopped'?'*(Generation stopped)*':'Error: '+escHtml(err.message);
-    finalizeStream(em2);if(err.message!=='stopped')await saveMessage(activeId,'assistant',em2);
-  }finally{setBusy(false);}
+    finalizeStream(em2); if(err.message!=='stopped')await saveMessage(activeId,'assistant',em2);
+  } finally { setBusy(false); }
 }
 
 /* ═══════════════════════════════════
    API CALLERS
 ═══════════════════════════════════ */
 async function callStream(message,history,onDomain){
-  var res;try{res=await fetch(API+'/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:message,history:history,userContext:userContext||''})});}catch(e){throw new Error('Network error: '+e.message);}
+  var res;
+  try { res=await fetch(API+'/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,history,userContext:userContext||''})}); }
+  catch(e){ throw new Error('Network error: '+e.message); }
   if(!res.ok){console.warn('Stream failed '+res.status+', fallback');return await callMessage(message,history);}
-  var reader=res.body.getReader();streamRdr=reader;
+  var reader=res.body.getReader(); streamRdr=reader;
   var dec=new TextDecoder(),buf='',full='';
-  try{
+  try {
     while(true){
       if(stopFlag){reader.cancel();throw new Error('stopped');}
-      var r=await reader.read();if(r.done)break;
+      var r=await reader.read(); if(r.done)break;
       buf+=dec.decode(r.value,{stream:true});
-      var lns=buf.split('\n');buf=lns.pop();
-      for(var j=0;j<lns.length;j++){var line=lns[j].trim();if(!line.startsWith('data:'))continue;var data=line.slice(5).trim();if(data==='[DONE]')return full;try{var p=JSON.parse(data);if(p.domain&&onDomain)onDomain(p.domain);if(p.token){full+=p.token;updateStream(full);}if(p.error)throw new Error(p.error);}catch(pe){}}
+      var lns=buf.split('\n'); buf=lns.pop();
+      for(var j=0;j<lns.length;j++){
+        var line=lns[j].trim(); if(!line.startsWith('data:'))continue;
+        var data=line.slice(5).trim(); if(data==='[DONE]')return full;
+        try{var p=JSON.parse(data);if(p.domain&&onDomain)onDomain(p.domain);if(p.token){full+=p.token;updateStream(full);}if(p.error)throw new Error(p.error);}catch(pe){}
+      }
     }
-  }finally{streamRdr=null;}
+  } finally { streamRdr=null; }
   if(!full.trim())return await callMessage(message,history);
   return full;
 }
-async function callMessage(message,history){updateStream('Thinking…');var res;try{res=await fetch(API+'/chat/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:message,history:history})});}catch(e){throw new Error('Network error: '+e.message);}if(!res.ok){var t=await res.text().catch(function(){return '';});throw new Error('API '+res.status+(t?': '+t:''));}var d=await res.json();if(d.error)throw new Error(d.error);return d.response||'';}
-async function callDoc(question,documentText){updateStream('Analyzing document…');var res;try{res=await fetch(API+'/chat/document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:question,documentText:documentText})});}catch(e){throw new Error('Network error: '+e.message);}if(!res.ok){var t=await res.text().catch(function(){return '';});throw new Error('API '+res.status+(t?': '+t:''));}var d=await res.json();if(d.error)throw new Error(d.error);return d.response||'No response.';}
+async function callMessage(message,history){
+  updateStream('Thinking…');
+  var res;
+  try{res=await fetch(API+'/chat/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,history})});}
+  catch(e){throw new Error('Network error: '+e.message);}
+  if(!res.ok){var t=await res.text().catch(function(){return '';});throw new Error('API '+res.status+(t?': '+t:''));}
+  var d=await res.json(); if(d.error)throw new Error(d.error); return d.response||'';
+}
+async function callDoc(question,documentText){
+  updateStream('Analyzing document…');
+  var res;
+  try{res=await fetch(API+'/chat/document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,documentText})});}
+  catch(e){throw new Error('Network error: '+e.message);}
+  if(!res.ok){var t=await res.text().catch(function(){return '';});throw new Error('API '+res.status+(t?': '+t:''));}
+  var d=await res.json(); if(d.error)throw new Error(d.error); return d.response||'No response.';
+}
 
 /* ═══════════════════════════════════
    FILE HANDLING
 ═══════════════════════════════════ */
-async function onFile(e){var file=e.target.files[0];if(!file)return;e.target.value='';var ext=file.name.split('.').pop().toLowerCase();if(ext==='pdf'){toast('Extracting PDF…');try{var t=await extractPDF(file);docFile={name:file.name,text:t};updateDocBar();toast('PDF ready — '+Math.round(t.length/1000)+'k chars');}catch(e){toast('PDF error: '+e.message);}}else if(ext==='docx'||ext==='doc'){toast('Extracting DOCX…');try{var t=await extractDOCX(file);docFile={name:file.name,text:t};updateDocBar();toast('DOCX ready');}catch(e){toast('DOCX error: '+e.message);}}else toast('Use PDF or DOCX only');}
-async function extractPDF(file){if(!window.pdfjsLib)throw new Error('PDF support unavailable.');var buf=await file.arrayBuffer();var pdf=await window.pdfjsLib.getDocument({data:buf}).promise;var text='';for(var p=1;p<=pdf.numPages;p++){var pg=await pdf.getPage(p);var ct=await pg.getTextContent();text+=ct.items.map(function(x){return x.str;}).join(' ')+'\n\n';}return text.trim();}
-async function extractDOCX(file){var u8=new Uint8Array(await file.arrayBuffer()),pos=0;while(pos<u8.length-4){if(u8[pos]===0x50&&u8[pos+1]===0x4B&&u8[pos+2]===0x03&&u8[pos+3]===0x04){var comp=u8[pos+8]|(u8[pos+9]<<8),csz=u8[pos+18]|(u8[pos+19]<<8)|(u8[pos+20]<<16)|(u8[pos+21]<<24);var fnl=u8[pos+26]|(u8[pos+27]<<8),exl=u8[pos+28]|(u8[pos+29]<<8);var fn=new TextDecoder().decode(u8.slice(pos+30,pos+30+fnl)),ds=pos+30+fnl+exl;if(fn==='word/document.xml'){var xml;if(comp===0){xml=u8.slice(ds,ds+csz);}else if(comp===8){var c=u8.slice(ds,ds+csz),ds2=new DecompressionStream('deflate-raw'),w=ds2.writable.getWriter(),r2=ds2.readable.getReader();w.write(c);w.close();var cks=[],rd;while(true){rd=await r2.read();if(rd.done)break;cks.push(rd.value);}var tot=cks.reduce(function(s,ch){return s+ch.length;},0);xml=new Uint8Array(tot);var off=0;cks.forEach(function(ch){xml.set(ch,off);off+=ch.length;});}if(xml)return new TextDecoder().decode(xml).replace(/<w:br[^>]*\/>/g,'\n').replace(/<w:p[ >][^>]*>/g,'\n').replace(/<[^>]+>/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/ {2,}/g,' ').trim();}pos=ds+csz;}else pos++;}throw new Error('Could not extract DOCX content');}
+async function onFile(e){
+  var file=e.target.files[0]; if(!file)return; e.target.value='';
+  var ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='pdf'){toast('Extracting PDF…');try{var t=await extractPDF(file);docFile={name:file.name,text:t};updateDocBar();toast('PDF ready — '+Math.round(t.length/1000)+'k chars');}catch(e){toast('PDF error: '+e.message);}}
+  else if(ext==='docx'||ext==='doc'){toast('Extracting DOCX…');try{var t=await extractDOCX(file);docFile={name:file.name,text:t};updateDocBar();toast('DOCX ready');}catch(e){toast('DOCX error: '+e.message);}}
+  else toast('Use PDF or DOCX only');
+}
+async function extractPDF(file){
+  if(!window.pdfjsLib)throw new Error('PDF support unavailable.');
+  var buf=await file.arrayBuffer(); var pdf=await window.pdfjsLib.getDocument({data:buf}).promise;
+  var text='';
+  for(var p=1;p<=pdf.numPages;p++){var pg=await pdf.getPage(p);var ct=await pg.getTextContent();text+=ct.items.map(function(x){return x.str;}).join(' ')+'\n\n';}
+  return text.trim();
+}
+async function extractDOCX(file){
+  var u8=new Uint8Array(await file.arrayBuffer()),pos=0;
+  while(pos<u8.length-4){
+    if(u8[pos]===0x50&&u8[pos+1]===0x4B&&u8[pos+2]===0x03&&u8[pos+3]===0x04){
+      var comp=u8[pos+8]|(u8[pos+9]<<8),csz=u8[pos+18]|(u8[pos+19]<<8)|(u8[pos+20]<<16)|(u8[pos+21]<<24);
+      var fnl=u8[pos+26]|(u8[pos+27]<<8),exl=u8[pos+28]|(u8[pos+29]<<8);
+      var fn=new TextDecoder().decode(u8.slice(pos+30,pos+30+fnl)),ds=pos+30+fnl+exl;
+      if(fn==='word/document.xml'){
+        var xml;
+        if(comp===0){xml=u8.slice(ds,ds+csz);}
+        else if(comp===8){var c=u8.slice(ds,ds+csz),ds2=new DecompressionStream('deflate-raw'),w=ds2.writable.getWriter(),r2=ds2.readable.getReader();w.write(c);w.close();var cks=[],rd;while(true){rd=await r2.read();if(rd.done)break;cks.push(rd.value);}var tot=cks.reduce(function(s,ch){return s+ch.length;},0);xml=new Uint8Array(tot);var off=0;cks.forEach(function(ch){xml.set(ch,off);off+=ch.length;});}
+        if(xml)return new TextDecoder().decode(xml).replace(/<w:br[^>]*\/>/g,'\n').replace(/<w:p[ >][^>]*>/g,'\n').replace(/<[^>]+>/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/ {2,}/g,' ').trim();
+      }
+      pos=ds+csz;
+    } else pos++;
+  }
+  throw new Error('Could not extract DOCX content');
+}
 
 /* ═══════════════════════════════════
    MARKDOWN RENDERER
 ═══════════════════════════════════ */
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function renderMath(tex,display){if(window.katex){try{return window.katex.renderToString(tex,{displayMode:display,throwOnError:false,output:'html'});}catch(e){}}return display?'<div class="math-display">\\['+escHtml(tex)+'\\]</div>':'<span>\\('+escHtml(tex)+'\\)</span>';}
-function inlineRender(s){if(!s)return '';s=s.replace(/\\\(([^)]+?)\\\)/g,function(_,t){return renderMath(t,false);});s=s.replace(/(?<!\$)\$(?!\$)([^$\n]+?)(?<!\$)\$(?!\$)/g,function(_,t){return renderMath(t,false);});s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');s=s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g,'<em>$1</em>');s=s.replace(/`([^`\n]+?)`/g,'<code>$1</code>');s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');return s;}
-function buildCodeBlock(lang,code){var id='cb_'+Math.random().toString(36).slice(2),h='';if(window.hljs){try{h=lang?hljs.highlight(code,{language:lang,ignoreIllegals:true}).value:hljs.highlightAuto(code).value;}catch(e){h=escHtml(code);}}else h=escHtml(code);return '<div class="code-block"><div class="code-block-hd"><span class="code-lang">'+escHtml(lang||'code')+'</span><button class="code-copy-btn" onclick="copyCode(this,\''+id+'\')">Copy</button></div><pre><code id="'+id+'" class="hljs'+(lang?' language-'+escHtml(lang):'')+'">'+h+'</code></pre></div>';}
+function inlineRender(s){
+  if(!s)return '';
+  s=s.replace(/\\\(([^)]+?)\\\)/g,function(_,t){return renderMath(t,false);});
+  s=s.replace(/(?<!\$)\$(?!\$)([^$\n]+?)(?<!\$)\$(?!\$)/g,function(_,t){return renderMath(t,false);});
+  s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g,'<em>$1</em>');
+  s=s.replace(/`([^`\n]+?)`/g,'<code>$1</code>');
+  s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return s;
+}
+function buildCodeBlock(lang,code){
+  var id='cb_'+Math.random().toString(36).slice(2),h='';
+  if(window.hljs){try{h=lang?hljs.highlight(code,{language:lang,ignoreIllegals:true}).value:hljs.highlightAuto(code).value;}catch(e){h=escHtml(code);}}
+  else h=escHtml(code);
+  return '<div class="code-block"><div class="code-block-hd"><span class="code-lang">'+escHtml(lang||'code')+'</span><button class="code-copy-btn" onclick="copyCode(this,\''+id+'\')">Copy</button></div><pre><code id="'+id+'" class="hljs'+(lang?' language-'+escHtml(lang):'')+'">'+h+'</code></pre></div>';
+}
 function copyCode(btn,id){var el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.innerText).then(function(){btn.textContent='✓ Copied';btn.classList.add('copied');setTimeout(function(){btn.textContent='Copy';btn.classList.remove('copied');},2000);});}
 function isTableDiv(l){return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(l||'');}
 function parseRow(l){var r=(l||'').trim();if(r.startsWith('|'))r=r.slice(1);if(r.endsWith('|'))r=r.slice(0,-1);return r.split('|').map(function(c){return c.trim();});}
-
 function renderMd(raw){
   if(!raw)return '';
   var blocks=[];
