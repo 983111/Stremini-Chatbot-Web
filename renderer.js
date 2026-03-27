@@ -71,6 +71,12 @@ function detectDiagramType(text) {
 function generateMermaidFromContent(text, type, userQuery) {
   /* Attempt to extract meaningful mermaid from structured content */
   const q = (userQuery||'').toLowerCase();
+  const sanitizeLabel = (raw, max = 40) => `"${String(raw||'')
+    .replace(/["`]/g, "'")
+    .replace(/[{}\[\]()]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max)}"`;
 
   if (type === 'flowchart') {
     const steps = [];
@@ -85,7 +91,8 @@ function generateMermaidFromContent(text, type, userQuery) {
       steps.forEach((s, i) => {
         const id = `S${i}`;
         const nextId = `S${i+1}`;
-        const shape = i === 0 ? `([${s}])` : i === steps.length-1 ? `([${s}])` : `[${s}]`;
+        const safe = sanitizeLabel(s, 36);
+        const shape = i === 0 ? `([${safe}])` : i === steps.length-1 ? `([${safe}])` : `[${safe}]`;
         code += `  ${id}${shape}\n`;
         if (i < steps.length-1) code += `  ${id} --> ${nextId}\n`;
       });
@@ -98,16 +105,18 @@ function generateMermaidFromContent(text, type, userQuery) {
     const messages = [];
     const lines = text.split('\n').filter(l => l.trim());
     lines.forEach(l => {
-      const m = l.match(/(\w+)\s*(sends?|calls?|returns?|requests?|responds?)\s+(?:to\s+)?(\w+)/i);
+      const m = l.match(/([A-Za-z][\w-]*)\s*(sends?|calls?|returns?|requests?|responds?)\s+(?:to\s+)?([A-Za-z][\w-]*)/i);
       if (m) messages.push({ from: m[1], action: m[2], to: m[3] });
     });
     if (messages.length >= 2) {
       const participants = [...new Set(messages.flatMap(m => [m.from, m.to]))].slice(0, 5);
       let code = 'sequenceDiagram\n';
-      participants.forEach(p => code += `  participant ${p}\n`);
+      participants.forEach(p => code += `  participant ${p.replace(/[^\w]/g,'_')}\n`);
       messages.slice(0, 8).forEach(m => {
         const arrow = /return|respond/i.test(m.action) ? '-->>' : '->>';
-        code += `  ${m.from}${arrow}${m.to}: ${m.action}\n`;
+        const from = m.from.replace(/[^\w]/g,'_');
+        const to = m.to.replace(/[^\w]/g,'_');
+        code += `  ${from}${arrow}${to}: ${m.action}\n`;
       });
       return code;
     }
@@ -121,8 +130,8 @@ function generateMermaidFromContent(text, type, userQuery) {
     while ((m = re.exec(text)) !== null) sections.push(m[1].trim().slice(0, 30));
     if (sections.length >= 2) {
       const topic = (userQuery||'Topic').replace(/\b(explain|what is|tell me about|describe)\b/gi,'').trim().slice(0, 25) || 'Main Topic';
-      let code = `mindmap\n  root((${topic}))\n`;
-      sections.slice(0, 6).forEach(s => code += `    ${s}\n`);
+      let code = `mindmap\n  root((${sanitizeLabel(topic, 25)}))\n`;
+      sections.slice(0, 6).forEach(s => code += `    ${sanitizeLabel(s, 30)}\n`);
       return code;
     }
   }
@@ -1068,7 +1077,7 @@ function buildCodeBlock(lang, code) {
     inner.textContent = code;
     wrap.appendChild(inner);
     requestAnimationFrame(() => {
-      try { if (window.mermaid) mermaid.run({ nodes:[inner] }); } catch(e) {}
+      try { if (window.mermaid) window.mermaid.run({ nodes:[inner] }); } catch(e) {}
     });
     return wrap;
   }
@@ -1228,7 +1237,7 @@ async function renderResearch(text, domain, userQuery) {
   const sections = parseResearchSections(text);
 
   // Check for auto-diagram opportunity
-  const diagType = detectDiagramType(userQuery||'');
+  const diagType = detectDiagramType(`${userQuery||''}\n${text.slice(0, 1200)}`);
   let diagramEl = null;
   if (diagType) {
     const mermaidCode = generateMermaidFromContent(text, diagType, userQuery);
@@ -1290,11 +1299,12 @@ async function renderSteps(text, domain, userQuery) {
   }
 
   // Auto flowchart for steps
-  if (steps.length >= 2 && window.mermaid) {
-    const stepTitles = steps.map(s => s.title.replace(/[{}\[\]]/g,'').slice(0,32));
+  if (steps.length >= 2) {
+    const stepTitles = steps.map(s => s.title.replace(/[{}\[\]()"`]/g,'').replace(/\s+/g,' ').trim().slice(0,32));
     let code = 'flowchart TD\n';
     stepTitles.forEach((t, i) => {
-      const cls = i === 0 ? `([${t}])` : i === steps.length-1 ? `([${t}])` : `[${t}]`;
+      const safe = `"${t}"`;
+      const cls = i === 0 ? `([${safe}])` : i === steps.length-1 ? `([${safe}])` : `[${safe}]`;
       code += `  S${i}${cls}\n`;
       if (i < stepTitles.length-1) code += `  S${i} --> S${i+1}\n`;
     });
