@@ -9,7 +9,39 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-<script>mermaid.initialize({ startOnLoad: false, theme: 'neutral' });</script>
+<script>
+(function initMermaid() {
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark'
+    || window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'loose',
+    theme: 'base',
+    themeVariables: {
+      darkMode: dark,
+      background:       dark ? '#1c1c1e' : '#ffffff',
+      primaryColor:     dark ? '#3a2060' : '#f0ebff',
+      primaryTextColor: dark ? '#e8e8ea' : '#1a0a3a',
+      primaryBorderColor: dark ? '#6b3fa0' : '#9b6ed4',
+      lineColor:        dark ? '#9b6ed4' : '#7c3aed',
+      secondaryColor:   dark ? '#1a2a40' : '#e8f4fd',
+      tertiaryColor:    dark ? '#1a3020' : '#e8f8f0',
+      edgeLabelBackground: dark ? '#1c1c1e' : '#ffffff',
+      clusterBkg:       dark ? '#252020' : '#fdf8ff',
+      titleColor:       dark ? '#e8e8ea' : '#0d0d0f',
+      fontFamily:       "'DM Sans', ui-sans-serif, sans-serif",
+      fontSize:         '13px',
+      nodeBorder:       dark ? '#6b3fa0' : '#9b6ed4',
+      mainBkg:          dark ? '#2a1a50' : '#f5f0ff',
+      nodeTextColor:    dark ? '#e0d8f8' : '#1a0a3a',
+    },
+  });
+
+  // Re-init when theme toggles
+  document.addEventListener('themechange', function () { initMermaid(); });
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
@@ -877,9 +909,47 @@ pre.mermaid { background:rgba(255,255,255,0.50); border:1px dashed var(--acc-bdr
 
 /* Mermaid wrapper */
 .mermaid-wrap {
-  background: #f7f7f8; border: 1px solid #e5e5ea;
-  border-radius: var(--radius-md); padding: 16px; margin: 10px 0;
+  background: var(--bg-main2);
+  border: 1px solid var(--bdr-card);
+  border-radius: var(--radius-lg);
+  padding: 20px 16px;
+  margin: 12px 0;
   overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+.mermaid-wrap svg {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+.mermaid-error {
+  width: 100%;
+  background: #1c1c1e;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.mermaid-error-label {
+  padding: 6px 14px;
+  background: #2c2c2e;
+  font-size: 11px;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font);
+}
+.mermaid-code {
+  margin: 0;
+  padding: 14px 18px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: #e8e8ea;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.65;
 }
 
 </style>
@@ -1119,8 +1189,51 @@ pre.mermaid { background:rgba(255,255,255,0.50); border:1px dashed var(--acc-bdr
 ═══════════════════════════════════ */
 function toggleTheme() {
   var h = document.documentElement;
-  h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
-  localStorage.setItem('sai-theme', h.getAttribute('data-theme'));
+  var next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  h.setAttribute('data-theme', next);
+  localStorage.setItem('sai-theme', next);
+
+  // Re-init mermaid with the new theme colours
+  var dark = next === 'dark';
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: 'loose',
+    theme: 'base',
+    themeVariables: {
+      darkMode: dark,
+      background:         dark ? '#1c1c1e' : '#ffffff',
+      primaryColor:       dark ? '#3a2060' : '#f0ebff',
+      primaryTextColor:   dark ? '#e8e8ea' : '#1a0a3a',
+      primaryBorderColor: dark ? '#6b3fa0' : '#9b6ed4',
+      lineColor:          dark ? '#9b6ed4' : '#7c3aed',
+      secondaryColor:     dark ? '#1a2a40' : '#e8f4fd',
+      tertiaryColor:      dark ? '#1a3020' : '#e8f8f0',
+      edgeLabelBackground:dark ? '#1c1c1e' : '#ffffff',
+      clusterBkg:         dark ? '#252020' : '#fdf8ff',
+      titleColor:         dark ? '#e8e8ea' : '#0d0d0f',
+      fontFamily:         "'DM Sans', ui-sans-serif, sans-serif",
+      fontSize:           '13px',
+      nodeBorder:         dark ? '#6b3fa0' : '#9b6ed4',
+      mainBkg:            dark ? '#2a1a50' : '#f5f0ff',
+      nodeTextColor:      dark ? '#e0d8f8' : '#1a0a3a',
+    },
+  });
+
+  document.dispatchEvent(new Event('themechange'));
+
+  // Re-render any visible mermaid diagrams
+  document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
+    var pre = wrap.querySelector('pre.mermaid') || wrap.nextElementSibling;
+    if (!pre || !pre.classList.contains('mermaid')) return;
+    var code = pre.textContent.trim();
+    if (!code) return;
+    var uid = 'mmd_' + Math.random().toString(36).slice(2, 9);
+    mermaid.render(uid, code).then(function(result) {
+      wrap.innerHTML = result.svg + '<pre class="mermaid" style="display:none" data-processed="true">' + escHtml(code) + '</pre>';
+      var svg = wrap.querySelector('svg');
+      if (svg) { svg.style.width = '100%'; svg.style.height = 'auto'; svg.removeAttribute('width'); }
+    }).catch(function() {});
+  });
 }
 (function() {
   var saved = localStorage.getItem('sai-theme');
@@ -1491,20 +1604,38 @@ function inlineRender(s) {
 
 /* Build a styled code block with copy button + highlight.js */
 function buildCodeBlock(lang, code) {
+  // ── Mermaid: render as diagram, not code ──────────────────
+  if (lang === 'mermaid') {
+    return '<div class="mermaid-wrap"><pre class="mermaid">' + escHtml(code.trim()) + '</pre></div>';
+  }
+
+  // ── Regular code block ────────────────────────────────────
   var id = 'cb_' + Math.random().toString(36).slice(2);
   var langLabel = lang || 'code';
   var highlighted = '';
   if (window.hljs) {
     try {
-      highlighted = lang ? hljs.highlight(code, { language: lang, ignoreIllegals: true }).value
-                         : hljs.highlightAuto(code).value;
+      highlighted = lang
+        ? hljs.highlight(code, { language: lang, ignoreIllegals: true }).value
+        : hljs.highlightAuto(code).value;
     } catch(e) { highlighted = escHtml(code); }
-  } else { highlighted = escHtml(code); }
+  } else {
+    highlighted = escHtml(code);
+  }
+
   return '<div class="code-block">'
-    + '<div class="code-block-hd"><span class="code-lang">' + escHtml(langLabel) + '</span>'
-    + '<button class="code-copy-btn" onclick="copyCode(this,\'' + id + '\')">'
-    + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy</button></div>'
-    + '<pre><code id="' + id + '" class="hljs' + (lang ? ' language-' + escHtml(lang) : '') + '">' + highlighted + '</code></pre></div>';
+    + '<div class="code-block-hd">'
+      + '<span class="code-lang">' + escHtml(langLabel) + '</span>'
+      + '<button class="code-copy-btn" onclick="copyCode(this,\'' + id + '\')">'
+        + '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">'
+          + '<rect x="9" y="9" width="13" height="13" rx="2"/>'
+          + '<path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>'
+        + '</svg> Copy'
+      + '</button>'
+    + '</div>'
+    + '<pre><code id="' + id + '" class="hljs' + (lang ? ' language-' + escHtml(lang) : '') + '">'
+      + highlighted
+    + '</code></pre></div>';
 }
 
 function copyCode(btn, id) {
@@ -1536,11 +1667,7 @@ function renderMd(raw) {
   raw = raw.replace(/```([\w-]*)\n?([\s\S]*?)```/g, function(_, lang, code) {
     var i = blocks.length;
     var l = (lang || '').toLowerCase();
-    if (l === 'mermaid') {
-      blocks.push('<div class="mermaid-wrap"><pre class="mermaid">' + escHtml(code.trim()) + '</pre></div>');
-    } else {
-      blocks.push(buildCodeBlock(l, code.trim()));
-    }
+    blocks.push(buildCodeBlock(l, code.trim()));
     return '\x02B' + i + '\x03';
   });
 
@@ -1631,29 +1758,70 @@ function renderMd(raw) {
 /* After rendering, run mermaid + hljs */
 function postRender(el) {
   if (!el) return;
-  /* Mermaid diagrams */
-  var merms = el.querySelectorAll('pre.mermaid:not([data-processed])');
+
+  // ── Mermaid diagrams ──────────────────────────────────────
+  var merms = el.querySelectorAll('pre.mermaid:not([data-processed="true"])');
   if (merms.length && window.mermaid) {
-    try {
-      merms.forEach(function(m) { m.setAttribute('data-processed','1'); });
-      mermaid.init(undefined, merms);
-    } catch(e) { console.warn('mermaid error', e); }
+    merms.forEach(function(pre) {
+      var code = pre.textContent.trim();
+      if (!code) return;
+
+      // Mark immediately to prevent double-processing
+      pre.setAttribute('data-processed', 'true');
+
+      var wrap = pre.closest('.mermaid-wrap') || null;
+      if (!wrap) {
+        // Create a clean wrapper
+        wrap = document.createElement('div');
+        wrap.className = 'mermaid-wrap';
+        pre.parentNode.insertBefore(wrap, pre);
+      }
+      pre.style.display = 'none';
+      if (!wrap.contains(pre)) wrap.appendChild(pre);
+
+      var uid = 'mmd_' + Math.random().toString(36).slice(2, 9);
+
+      mermaid.render(uid, code).then(function(result) {
+        wrap.innerHTML = result.svg;
+        wrap.appendChild(pre);
+
+        // Make the SVG responsive
+        var svg = wrap.querySelector('svg');
+        if (svg) {
+          svg.style.width  = '100%';
+          svg.style.maxWidth = '100%';
+          svg.style.height = 'auto';
+          svg.removeAttribute('width');
+        }
+      }).catch(function(err) {
+        // Show a styled fallback code block on error
+        wrap.innerHTML =
+          '<div class="mermaid-error">' +
+          '<div class="mermaid-error-label">Diagram</div>' +
+          '<pre class="mermaid-code">' + escHtml(code) + '</pre>' +
+          '</div>';
+        wrap.appendChild(pre);
+        console.warn('Mermaid render error:', err);
+      });
+    });
   }
-  /* hljs on raw code */
+
+  // ── Highlight.js on raw <code> blocks ────────────────────
   el.querySelectorAll('pre code:not(.hljs)').forEach(function(block) {
     try { hljs.highlightElement(block); } catch(e) {}
   });
-  /* KaTeX auto-render for any leftover \[ \] or $...$ that slipped through */
+
+  // ── KaTeX math ───────────────────────────────────────────
   if (window.katex && window.renderMathInElement) {
     try {
       renderMathInElement(el, {
         delimiters: [
-          {left:'$$',right:'$$',display:true},
-          {left:'\\[',right:'\\]',display:true},
-          {left:'$',right:'$',display:false},
-          {left:'\\(',right:'\\)',display:false}
+          { left: '$$',   right: '$$',   display: true  },
+          { left: '\\[',  right: '\\]',  display: true  },
+          { left: '$',    right: '$',    display: false },
+          { left: '\\(',  right: '\\)',  display: false }
         ],
-        throwOnError: false
+        throwOnError: false,
       });
     } catch(e) {}
   }
