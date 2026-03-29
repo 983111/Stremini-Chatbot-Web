@@ -1,967 +1,908 @@
-/* ═══════════════════════════════════════════════════════════════
-   STREMINI AI — CRYSTALLINE RENDERER v6.0
-   Stunning, editorial-grade outputs. Auto-diagrams, rich cards,
-   animated reveals, beautiful typography, structured intelligence.
-═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════
+   STREMINI — BEAUTIFUL RENDERER v7.0
+   Claude-level output quality: stunning diagrams, LaTeX math, rich
+   code blocks, animated cards, elegant typography.
 
-/* ─── FONT INJECTION ─── */
-(function injectFonts() {
-  if (document.getElementById('cr-fonts')) return;
-  const link = document.createElement('link');
-  link.id = 'cr-fonts';
-  link.rel = 'stylesheet';
-  link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=JetBrains+Mono:wght@400;500&display=swap';
-  document.head.appendChild(link);
-})();
+   DROP-IN REPLACEMENT for renderer.js — paste into your index.html
+   <script> block or load as a separate file BEFORE the main app script.
 
-/* ─── DOMAIN CONFIG ─── */
-const DOMAIN_CONFIG = {
-  math:        { label:'Mathematics',       accent:'#3b5bdb', accentBg:'#edf2ff', accentBdr:'#bac8ff', icon:'∑',   gradient:'linear-gradient(135deg,#edf2ff,#dbe4ff)' },
-  code:        { label:'Code',              accent:'#7048e8', accentBg:'#f3f0ff', accentBdr:'#d0bfff', icon:'</>',  gradient:'linear-gradient(135deg,#f3f0ff,#e5dbff)' },
-  research:    { label:'Research',          accent:'#c76b1a', accentBg:'#fff8f0', accentBdr:'#ffd8a8', icon:'◈',    gradient:'linear-gradient(135deg,#fff8f0,#ffe8cc)' },
-  data:        { label:'Data Intelligence', accent:'#0c7abf', accentBg:'#e8f4fd', accentBdr:'#a5d8ff', icon:'◉',   gradient:'linear-gradient(135deg,#e8f4fd,#c5e7fa)' },
-  finance:     { label:'Financial',         accent:'#1a7f4b', accentBg:'#ebfbf0', accentBdr:'#8ce99a', icon:'$',    gradient:'linear-gradient(135deg,#ebfbf0,#c3fae8)' },
-  architect:   { label:'Architecture',      accent:'#c2410c', accentBg:'#fff4ed', accentBdr:'#ffc078', icon:'⬡',   gradient:'linear-gradient(135deg,#fff4ed,#ffe0b2)' },
-  competitive: { label:'Intel Report',      accent:'#6d28d9', accentBg:'#f5f3ff', accentBdr:'#c4b5fd', icon:'◎',   gradient:'linear-gradient(135deg,#f5f3ff,#ede9fe)' },
-  growth:      { label:'Growth Strategy',   accent:'#b45309', accentBg:'#fffbeb', accentBdr:'#fde68a', icon:'↑',   gradient:'linear-gradient(135deg,#fffbeb,#fef3c7)' },
-  legal:       { label:'Legal Analysis',    accent:'#be123c', accentBg:'#fff1f2', accentBdr:'#fda4af', icon:'⚖',   gradient:'linear-gradient(135deg,#fff1f2,#ffe4e6)' },
-  concept:     { label:'Concept',           accent:'#0d9488', accentBg:'#f0fdfa', accentBdr:'#5eead4', icon:'◈',   gradient:'linear-gradient(135deg,#f0fdfa,#ccfbf1)' },
-  general:     { label:'StreminiAI',        accent:'#374151', accentBg:'#f9fafb', accentBdr:'#d1d5db', icon:'S',   gradient:'linear-gradient(135deg,#f9fafb,#f3f4f6)' },
-};
+   CDN dependencies (already in your index.html):
+     • mermaid@10          → diagrams
+     • katex@0.16.9        → math rendering
+     • katex auto-render   → inline math
+     • highlight.js 11.9   → code syntax
+   No new CDN deps needed.
+═══════════════════════════════════════════════════════════════════════ */
 
-/* ─── MERMAID DIAGRAM AUTO-GENERATION ─── */
-const DIAGRAM_TRIGGERS = {
-  flowchart: [
-    /\b(flow|flowchart|workflow|process flow|decision tree|control flow)\b/i,
-    /\b(steps to|how to|pipeline|sequence of)\b/i,
-  ],
-  architecture: [
-    /\b(system design|architecture|microservice|tech stack|infrastructure|deployment)\b/i,
-    /\b(backend|frontend|database|api|server|client)\b/i,
-  ],
-  sequence: [
-    /\b(sequence diagram|interaction|request.*(response|flow)|api call|http|authentication flow)\b/i,
-    /\b(user.*clicks|user.*sends|service.*returns|component.*calls)\b/i,
-  ],
-  class: [
-    /\b(class diagram|oop|inheritance|interface|extends|implements|uml)\b/i,
-  ],
-  er: [
-    /\b(entity.*relation|database schema|erd|db design|table.*relation)\b/i,
-  ],
-  mindmap: [
-    /\b(mindmap|concept map|brain.*map|knowledge.*map|topic.*map)\b/i,
-  ],
-  pie: [
-    /\b(pie chart|percentage breakdown|distribution|proportion)\b/i,
-  ],
-  gantt: [
-    /\b(gantt|timeline|roadmap|schedule|sprint|project plan)\b/i,
-  ],
-};
-
-function detectDiagramType(text) {
-  const lower = (text||'').toLowerCase();
-  for (const [type, patterns] of Object.entries(DIAGRAM_TRIGGERS)) {
-    if (patterns.some(p => p.test(lower))) return type;
-  }
-  return null;
-}
-
-function generateMermaidFromContent(text, type, userQuery) {
-  /* Attempt to extract meaningful mermaid from structured content */
-  const q = (userQuery||'').toLowerCase();
-  const sanitizeLabel = (raw, max = 40) => `"${String(raw||'')
-    .replace(/["`]/g, "'")
-    .replace(/[{}\[\]()]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, max)}"`;
-
-  if (type === 'flowchart') {
-    const steps = [];
-    const stepRe = /^(?:Step\s*(\d+)|(\d+)[.)]\s+)\s*[\*\*]*([^\n*]+)[\*\*]*/gm;
-    let m;
-    while ((m = stepRe.exec(text)) !== null) {
-      const label = (m[3]||'').trim().replace(/[:\-–]+$/, '').slice(0, 35);
-      if (label) steps.push(label);
-    }
-    if (steps.length >= 2) {
-      let code = 'flowchart TD\n';
-      steps.forEach((s, i) => {
-        const id = `S${i}`;
-        const nextId = `S${i+1}`;
-        const safe = sanitizeLabel(s, 36);
-        const shape = i === 0 ? `([${safe}])` : i === steps.length-1 ? `([${safe}])` : `[${safe}]`;
-        code += `  ${id}${shape}\n`;
-        if (i < steps.length-1) code += `  ${id} --> ${nextId}\n`;
-      });
-      return code;
-    }
-  }
-
-  if (type === 'sequence') {
-    const actors = [];
-    const messages = [];
-    const lines = text.split('\n').filter(l => l.trim());
-    lines.forEach(l => {
-      const m = l.match(/([A-Za-z][\w-]*)\s*(sends?|calls?|returns?|requests?|responds?)\s+(?:to\s+)?([A-Za-z][\w-]*)/i);
-      if (m) messages.push({ from: m[1], action: m[2], to: m[3] });
-    });
-    if (messages.length >= 2) {
-      const participants = [...new Set(messages.flatMap(m => [m.from, m.to]))].slice(0, 5);
-      let code = 'sequenceDiagram\n';
-      participants.forEach(p => code += `  participant ${p.replace(/[^\w]/g,'_')}\n`);
-      messages.slice(0, 8).forEach(m => {
-        const arrow = /return|respond/i.test(m.action) ? '-->>' : '->>';
-        const from = m.from.replace(/[^\w]/g,'_');
-        const to = m.to.replace(/[^\w]/g,'_');
-        code += `  ${from}${arrow}${to}: ${m.action}\n`;
-      });
-      return code;
-    }
-  }
-
-  /* Mindmap for concept/research */
-  if (type === 'mindmap') {
-    const sections = [];
-    const re = /^#{2,3}\s+(.+)$/gm;
-    let m;
-    while ((m = re.exec(text)) !== null) sections.push(m[1].trim().slice(0, 30));
-    if (sections.length >= 2) {
-      const topic = (userQuery||'Topic').replace(/\b(explain|what is|tell me about|describe)\b/gi,'').trim().slice(0, 25) || 'Main Topic';
-      let code = `mindmap\n  root((${sanitizeLabel(topic, 25)}))\n`;
-      sections.slice(0, 6).forEach(s => code += `    ${sanitizeLabel(s, 30)}\n`);
-      return code;
-    }
-  }
-
-  return null;
-}
-
-/* ─── CSS INJECTION ─── */
-function injectStyles() {
-  if (document.getElementById('cr-v6-styles')) return;
+/* ─── 0. FONT & GLOBAL STYLE INJECTION ──────────────────────────────── */
+(function injectGlobalStyles() {
+  if (document.getElementById('br7-global')) return;
   const s = document.createElement('style');
-  s.id = 'cr-v6-styles';
+  s.id = 'br7-global';
   s.textContent = `
-/* ══ ANIMATIONS ══ */
-@keyframes cr-fadeUp   {from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-@keyframes cr-fadeIn   {from{opacity:0}to{opacity:1}}
-@keyframes cr-slideIn  {from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
-@keyframes cr-fillBar  {from{width:0}to{width:var(--w)}}
-@keyframes cr-blink    {0%,100%{opacity:1}50%{opacity:0}}
-@keyframes cr-pulse    {0%,100%{box-shadow:0 0 0 0 var(--ping-color,rgba(59,91,219,0.3))}70%{box-shadow:0 0 0 8px transparent}}
-@keyframes cr-spin     {to{transform:rotate(360deg)}}
-@keyframes cr-shimmer  {0%{background-position:-200% 0}100%{background-position:200% 0}}
+/* ── ANIMATIONS ── */
+@keyframes br7-fadeUp   { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:none } }
+@keyframes br7-fadeIn   { from { opacity:0 } to { opacity:1 } }
+@keyframes br7-slideR   { from { opacity:0; transform:translateX(-10px) } to { opacity:1; transform:none } }
+@keyframes br7-pop      { 0%{transform:scale(.94)} 60%{transform:scale(1.02)} 100%{transform:scale(1)} }
+@keyframes br7-shimmer  { 0%{background-position:-400% 0} 100%{background-position:400% 0} }
+@keyframes br7-spin     { to { transform: rotate(360deg) } }
+@keyframes br7-pulse    { 0%,100%{opacity:1} 50%{opacity:.5} }
+@keyframes br7-blink    { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes br7-drawLine { from{stroke-dashoffset:1000} to{stroke-dashoffset:0} }
+@keyframes br7-barFill  { from{width:0} to{width:var(--w,0%)} }
 
-/* ══ ROOT ══ */
-.cr-root{
-  font-family:'DM Sans',ui-sans-serif,sans-serif;
-  font-size:14px;line-height:1.72;color:#111827;
-  --cr-bg:#fff;--cr-bg2:#f9fafb;--cr-bg3:#f3f4f6;
-  --cr-bdr:#e5e7eb;--cr-bdr2:#d1d5db;
-  --cr-tx:#0f172a;--cr-tx2:#374151;--cr-tx3:#6b7280;--cr-tx4:#9ca3af;
-  --cr-acc:#374151;--cr-acc-bg:#f9fafb;--cr-acc-bdr:#e5e7eb;
-  --cr-serif:'Playfair Display',Georgia,serif;
-  --cr-mono:'JetBrains Mono',ui-monospace,monospace;
-  --cr-r:12px;--cr-r-sm:7px;--cr-r-lg:16px;
-  --cr-sh:0 1px 4px rgba(0,0,0,.05),0 6px 24px rgba(0,0,0,.07);
-  --cr-sh-lg:0 4px 32px rgba(0,0,0,.09),0 1px 6px rgba(0,0,0,.05);
+/* ── ROOT CARD ── */
+.br7 {
+  font-family: 'DM Sans', ui-sans-serif, sans-serif;
+  font-size: 14px;
+  line-height: 1.72;
+  color: var(--tx, #0d0d0f);
+  --br7-acc:    #e8622a;
+  --br7-acc2:   #ff7a40;
+  --br7-bg:     #ffffff;
+  --br7-bg2:    #f7f7f8;
+  --br7-bg3:    #f0f0f5;
+  --br7-bdr:    #e5e5ea;
+  --br7-bdr2:   #d1d1d6;
+  --br7-tx:     #0d0d0f;
+  --br7-tx2:    #48484a;
+  --br7-tx3:    #8e8e93;
+  --br7-tx4:    #aeaeb2;
+  --br7-green:  #34c759;
+  --br7-red:    #ff3b30;
+  --br7-blue:   #007aff;
+  --br7-purple: #af52de;
+  --br7-serif:  'Lora', Georgia, serif;
+  --br7-mono:   'JetBrains Mono', ui-monospace, monospace;
+  --br7-r:      12px;
+  --br7-r-sm:   7px;
+  --br7-r-lg:   18px;
+  --br7-sh:     0 1px 4px rgba(0,0,0,.06), 0 8px 28px rgba(0,0,0,.08);
+  --br7-sh-lg:  0 4px 40px rgba(0,0,0,.10), 0 1px 8px rgba(0,0,0,.06);
 }
-.cr-root *{box-sizing:border-box;-webkit-font-smoothing:antialiased;}
+.br7 * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
 
-/* ══ CARD ══ */
-.cr-card{
-  background:#fff;
-  border:1.5px solid var(--cr-bdr);
-  border-radius:18px;
-  overflow:hidden;
-  box-shadow:var(--cr-sh-lg);
-  margin:2px 0 10px;
-  animation:cr-fadeUp .35s cubic-bezier(.16,1,.3,1) both;
-  position:relative;
+/* ── OUTER WRAPPER CARD ── */
+.br7-card {
+  background: #fff;
+  border: 1.5px solid var(--br7-bdr);
+  border-radius: var(--br7-r-lg);
+  overflow: hidden;
+  box-shadow: var(--br7-sh-lg);
+  margin: 4px 0 12px;
+  animation: br7-fadeUp .38s cubic-bezier(.16,1,.3,1) both;
+  position: relative;
 }
-.cr-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--cr-acc),color-mix(in srgb,var(--cr-acc) 60%,transparent));
-}
-
-/* ══ CARD HEADER ══ */
-.cr-hd{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:14px 20px;border-bottom:1.5px solid var(--cr-bdr);
-  background:linear-gradient(180deg,var(--cr-bg2),var(--cr-bg));
-  gap:12px;
-}
-.cr-hd-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
-.cr-hd-actions{display:flex;align-items:center;gap:7px;flex-shrink:0;}
-
-.cr-domain-orb{
-  width:32px;height:32px;border-radius:10px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:13px;font-weight:700;
-  box-shadow:0 2px 8px rgba(0,0,0,.10);
-}
-.cr-domain-tag{
-  font-family:'DM Sans',sans-serif;
-  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  padding:4px 11px;border-radius:99px;white-space:nowrap;
-}
-.cr-hd-title{
-  font-family:var(--cr-serif);
-  font-size:14.5px;font-weight:400;font-style:italic;
-  color:var(--cr-tx2);flex:1;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+.br7-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--br7-acc), var(--br7-acc2), var(--br7-acc));
+  background-size: 200% 100%;
+  animation: br7-shimmer 3s linear infinite;
 }
 
-/* ══ ACTION BUTTONS ══ */
-.cr-btn{
-  display:inline-flex;align-items:center;gap:5px;
-  background:none;border:1.5px solid var(--cr-bdr2);cursor:pointer;
-  font-size:11px;font-weight:600;color:var(--cr-tx3);
-  font-family:'DM Sans',sans-serif;
-  padding:5px 12px;border-radius:7px;
-  transition:all .18s;white-space:nowrap;
+/* ── CARD HEADER ── */
+.br7-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1.5px solid var(--br7-bdr);
+  background: linear-gradient(180deg, var(--br7-bg2) 0%, var(--br7-bg) 100%);
+  gap: 12px;
 }
-.cr-btn:hover{background:var(--cr-bg3);color:var(--cr-tx);border-color:var(--cr-bdr2);transform:translateY(-1px);}
-.cr-btn.cr-copied{background:#ecfdf5;color:#059669;border-color:#6ee7b7;}
-.cr-btn-icon{width:26px;height:26px;border-radius:7px;border:1.5px solid var(--cr-bdr2);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--cr-tx3);transition:all .15s;}
-.cr-btn-icon:hover{background:var(--cr-bg3);color:var(--cr-tx);border-color:var(--cr-bdr2);}
+.br7-hd-left  { display:flex; align-items:center; gap:10px; flex:1; min-width:0; }
+.br7-hd-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
 
-/* ══ SUMMARY BAR ══ */
-.cr-summary{
-  padding:13px 22px;
-  border-bottom:1.5px solid var(--cr-bdr);
-  font-family:var(--cr-serif);font-style:italic;
-  font-size:15px;line-height:1.75;color:var(--cr-tx2);
-  background:var(--cr-bg2);
-  position:relative;
+.br7-type-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 13px; border-radius: 99px;
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: .07em; text-transform: uppercase;
+  border: 1.5px solid; white-space: nowrap;
+  animation: br7-pop .3s ease both;
 }
-.cr-summary::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
-  background:var(--cr-acc);
+.br7-hd-title {
+  font-family: var(--br7-serif);
+  font-size: 14px; font-weight: 400; font-style: italic;
+  color: var(--br7-tx2); flex: 1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* ══ SECTION ACCORDIONS ══ */
-.cr-section{border-bottom:1px solid var(--cr-bdr);}
-.cr-section:last-child{border-bottom:none;}
-.cr-section-hd{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 20px;cursor:pointer;
-  background:#fff;transition:background .15s;user-select:none;
+/* ── BUTTONS ── */
+.br7-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: none; border: 1.5px solid var(--br7-bdr2); cursor: pointer;
+  font-size: 11px; font-weight: 600; color: var(--br7-tx3);
+  font-family: 'DM Sans', sans-serif;
+  padding: 5px 11px; border-radius: 7px;
+  transition: all .18s; white-space: nowrap;
 }
-.cr-section-hd:hover{background:var(--cr-bg2);}
-.cr-section-marker{
-  width:3px;height:18px;border-radius:2px;flex-shrink:0;
-  transition:height .2s;
-}
-.cr-section-hd:hover .cr-section-marker{height:22px;}
-.cr-section-label{
-  font-size:11px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.08em;color:var(--cr-tx2);flex:1;
-}
-.cr-section-chevron{color:var(--cr-tx4);transition:transform .22s;flex-shrink:0;}
-.cr-section-chevron.open{transform:rotate(180deg);}
-.cr-section-body{padding:18px 22px 20px;background:#fff;animation:cr-fadeIn .2s ease both;}
-.cr-section-body.collapsed{display:none;}
+.br7-btn:hover { background: var(--br7-bg3); color: var(--br7-tx); border-color: var(--br7-bdr2); transform: translateY(-1px); }
+.br7-btn.copied { background: #ecfdf5; color: #059669; border-color: #6ee7b7; }
 
-/* ══ DOWNLOAD BAR ══ */
-.cr-dl-row{
-  display:flex;gap:8px;flex-wrap:wrap;
-  padding:12px 20px;border-top:1.5px solid var(--cr-bdr);
-  background:var(--cr-bg2);
+/* ── SUMMARY STRIP ── */
+.br7-summary {
+  padding: 13px 22px; border-bottom: 1.5px solid var(--br7-bdr);
+  font-family: var(--br7-serif); font-style: italic;
+  font-size: 14.5px; line-height: 1.8; color: var(--br7-tx2);
+  background: var(--br7-bg2); position: relative;
 }
-.cr-dl-btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:7px 14px;border:none;border-radius:8px;
-  font-family:'DM Sans',sans-serif;font-size:11.5px;
-  font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.01em;
-}
-.cr-dl-dark{background:#111827;color:#fff;}
-.cr-dl-dark:hover{background:#1f2937;transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.2);}
-.cr-dl-ghost{background:#fff;color:var(--cr-tx2);border:1.5px solid var(--cr-bdr2);}
-.cr-dl-ghost:hover{background:var(--cr-bg3);transform:translateY(-1px);}
-
-/* ══ DIAGRAM CARD ══ */
-.cr-diagram-card{
-  border:1.5px solid var(--cr-bdr);border-radius:14px;
-  overflow:hidden;margin:12px 0;
-  box-shadow:0 2px 12px rgba(0,0,0,.06);
-  animation:cr-fadeUp .4s cubic-bezier(.16,1,.3,1) .1s both;
-}
-.cr-diagram-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 16px;background:var(--cr-bg2);
-  border-bottom:1px solid var(--cr-bdr);
-}
-.cr-diagram-label{
-  display:flex;align-items:center;gap:8px;
-  font-size:10.5px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.07em;color:var(--cr-tx3);
-}
-.cr-diagram-label-dot{
-  width:7px;height:7px;border-radius:50%;
-  background:var(--cr-acc);
-}
-.cr-diagram-body{
-  background:#fff;padding:20px;
-  display:flex;justify-content:center;align-items:center;
-  min-height:80px;overflow-x:auto;
-}
-.cr-diagram-body svg{max-width:100%;height:auto;}
-.cr-diagram-fallback{
-  font-family:var(--cr-mono);font-size:12px;
-  color:var(--cr-tx2);white-space:pre;
-  background:var(--cr-bg2);padding:14px 18px;
-  border-radius:8px;overflow-x:auto;line-height:1.65;
-  border:1px solid var(--cr-bdr);
-}
-.cr-mermaid-wrap{
-  background:linear-gradient(135deg,#f8faff,#f3f0ff);
-  border:1px solid var(--cr-bdr);border-radius:12px;
-  padding:20px;margin:12px 0;overflow-x:auto;
-  display:flex;justify-content:center;
-}
-.cr-mermaid-wrap svg{max-width:100%;height:auto;}
-
-/* ══ PROSE ══ */
-.cr-prose{display:flex;flex-direction:column;gap:4px;}
-.cr-prose p{font-size:14px;line-height:1.82;color:var(--cr-tx);margin:0 0 8px;}
-.cr-prose p:last-child{margin-bottom:0;}
-.cr-prose ul,.cr-prose ol{padding-left:22px;margin:5px 0 10px;}
-.cr-prose li{font-size:13.5px;margin-bottom:6px;line-height:1.7;color:var(--cr-tx);}
-.cr-prose h2{
-  font-family:var(--cr-serif);font-style:italic;
-  font-size:19px;font-weight:400;color:var(--cr-tx);
-  margin:20px 0 10px;padding-bottom:8px;
-  border-bottom:2px solid var(--cr-bdr);
-  letter-spacing:-.02em;line-height:1.35;
-}
-.cr-prose h3{
-  font-size:13.5px;font-weight:700;color:var(--cr-tx);
-  margin:16px 0 7px;letter-spacing:-.01em;
-  display:flex;align-items:center;gap:9px;
-}
-.cr-prose h3::before{
-  content:'';display:inline-block;width:4px;height:15px;
-  border-radius:2px;background:var(--cr-acc);flex-shrink:0;
-}
-.cr-prose h4{
-  font-size:12px;font-weight:700;color:var(--cr-tx3);
-  margin:12px 0 5px;text-transform:uppercase;letter-spacing:.07em;
-}
-.cr-prose h2:first-child,.cr-prose h3:first-child,.cr-prose h4:first-child{margin-top:0;}
-.cr-prose hr{border:none;border-top:1.5px solid var(--cr-bdr);margin:16px 0;}
-.cr-prose blockquote{
-  border-left:3px solid var(--cr-acc);padding:12px 0 12px 18px;
-  color:var(--cr-tx2);font-family:var(--cr-serif);font-style:italic;
-  font-size:15px;line-height:1.75;margin:12px 0;
-  background:var(--cr-acc-bg);border-radius:0 8px 8px 0;
-}
-.cr-prose strong{font-weight:700;}
-.cr-prose em{font-style:italic;color:var(--cr-tx2);}
-.cr-prose a{color:var(--cr-acc);text-decoration-color:color-mix(in srgb,var(--cr-acc) 40%,transparent);text-underline-offset:3px;}
-.cr-prose code{
-  font-family:var(--cr-mono);font-size:12px;
-  background:var(--cr-bg3);border:1px solid var(--cr-bdr2);
-  border-radius:5px;padding:2px 7px;color:var(--cr-acc);
-  letter-spacing:.02em;
+.br7-summary::before {
+  content: ''; position: absolute; left:0; top:0; bottom:0; width: 3px;
+  background: var(--br7-acc);
 }
 
-/* ══ CALLOUTS ══ */
-.cr-callout{
-  display:flex;align-items:flex-start;gap:12px;
-  padding:13px 17px;border-radius:10px;
-  border-left:3px solid;font-size:13.5px;line-height:1.72;
-  margin:10px 0;animation:cr-slideIn .25s ease both;
+/* ── SECTION ACCORDIONS ── */
+.br7-section { border-bottom: 1px solid var(--br7-bdr); }
+.br7-section:last-child { border-bottom: none; }
+.br7-sec-hd {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 20px; cursor: pointer;
+  background: #fff; transition: background .15s; user-select: none;
 }
-.cr-callout.info{background:#eff6ff;border-color:#3b82f6;color:#1e3a8a;}
-.cr-callout.warn{background:#fffbeb;border-color:#f59e0b;color:#78350f;}
-.cr-callout.tip {background:#ecfdf5;border-color:#10b981;color:#064e3b;}
-.cr-callout.danger{background:#fef2f2;border-color:#ef4444;color:#7f1d1d;}
-.cr-callout-icon{flex-shrink:0;font-size:15px;margin-top:1px;}
+.br7-sec-hd:hover { background: var(--br7-bg2); }
+.br7-sec-bar { width: 3px; height: 18px; border-radius: 2px; flex-shrink: 0; background: var(--br7-acc); transition: height .2s; }
+.br7-sec-hd:hover .br7-sec-bar { height: 22px; }
+.br7-sec-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--br7-tx2); flex:1; }
+.br7-chevron { color: var(--br7-tx4); transition: transform .22s; flex-shrink:0; }
+.br7-chevron.open { transform: rotate(180deg); }
+.br7-sec-body { padding: 18px 22px 20px; background: #fff; animation: br7-fadeIn .2s ease both; }
+.br7-sec-body.collapsed { display: none; }
 
-/* ══ CODE BLOCKS ══ */
-.cr-code{
-  border-radius:12px;overflow:hidden;
-  border:1px solid #e5e7eb;margin:10px 0;
-  box-shadow:0 3px 12px rgba(0,0,0,.08);
+/* ── DOWNLOAD BAR ── */
+.br7-dl-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  padding: 11px 20px; border-top: 1.5px solid var(--br7-bdr);
+  background: var(--br7-bg2);
 }
-.cr-code-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 16px;background:#1c1917;
-  border-bottom:1px solid #292524;
+.br7-dl-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border: none; border-radius: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 11.5px;
+  font-weight: 600; cursor: pointer; transition: all .18s;
 }
-.cr-code-lang{
-  display:flex;align-items:center;gap:8px;
-  font-family:var(--cr-mono);font-size:10.5px;color:#a8a29e;
-  font-weight:500;text-transform:lowercase;letter-spacing:.04em;
-}
-.cr-code-dots{display:flex;gap:5px;}
-.cr-code-dot{width:9px;height:9px;border-radius:50%;}
-.cr-code-dot:nth-child(1){background:#ef4444;}
-.cr-code-dot:nth-child(2){background:#f59e0b;}
-.cr-code-dot:nth-child(3){background:#22c55e;}
-.cr-code-copy{
-  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);
-  color:#a8a29e;font-size:11px;font-family:'DM Sans',sans-serif;
-  font-weight:500;padding:4px 11px;border-radius:6px;cursor:pointer;
-  transition:all .15s;
-}
-.cr-code-copy:hover{background:rgba(255,255,255,.12);color:#e7e5e4;}
-.cr-code-copy.cr-copied{background:rgba(52,211,153,.12);color:#34d399;border-color:rgba(52,211,153,.25);}
-.cr-code-pre{margin:0;background:#1c1917;padding:18px 20px;overflow-x:auto;}
-.cr-code-pre code{
-  font-family:var(--cr-mono);font-size:12.5px;line-height:1.8;
-  color:#e7e5e4;background:none;border:none;padding:0;display:block;
-}
+.br7-dl-dark { background: #0d0d0f; color: #fff; }
+.br7-dl-dark:hover { background: #2d2a26; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+.br7-dl-ghost { background: #fff; color: var(--br7-tx2); border: 1.5px solid var(--br7-bdr2); }
+.br7-dl-ghost:hover { background: var(--br7-bg3); transform: translateY(-1px); }
 
-/* ══ MATH BLOCKS ══ */
-.cr-math-formula{
-  background:linear-gradient(135deg,#edf2ff,#dbe4ff);
-  border:1.5px solid #bac8ff;border-radius:12px;
-  padding:16px 20px;margin:10px 0;
-  font-family:var(--cr-mono);font-size:14px;color:#3b5bdb;
-  line-height:2;overflow-x:auto;white-space:pre-wrap;word-break:break-word;
+/* ════════════════════════════════════════════
+   CODE BLOCKS  — dark terminal look
+════════════════════════════════════════════ */
+.br7-code-wrap {
+  border-radius: var(--br7-r); overflow: hidden;
+  border: 1px solid #3a3a3c; margin: 10px 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,.20);
+  animation: br7-fadeUp .3s ease .06s both;
 }
-.cr-math-formula-lbl{
-  font-family:'DM Sans',sans-serif;
-  font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
-  color:#4c6ef5;margin-bottom:8px;opacity:.8;
+.br7-code-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 16px; background: #2c2c2e;
+  border-bottom: 1px solid #3a3a3c;
 }
-.cr-math-answer{
-  background:linear-gradient(135deg,#ebfbee,#d3f9d8);
-  border:2px solid #74c69d;border-radius:14px;
-  padding:18px 22px;margin:12px 0;
-  box-shadow:0 4px 16px rgba(26,127,79,.12);
+.br7-code-dots { display: flex; gap: 6px; }
+.br7-code-dot  { width: 11px; height: 11px; border-radius: 50%; }
+.br7-code-dot:nth-child(1) { background: #ff5f57; }
+.br7-code-dot:nth-child(2) { background: #ffbd2e; }
+.br7-code-dot:nth-child(3) { background: #28c840; }
+.br7-code-lang {
+  font-family: var(--br7-mono); font-size: 11px; font-weight: 500;
+  color: #8e8e93; text-transform: lowercase; letter-spacing: .04em;
 }
-.cr-math-answer-lbl{
-  font-family:'DM Sans',sans-serif;
-  font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.08em;color:#1a7f4b;margin-bottom:8px;
-  display:flex;align-items:center;gap:7px;
+.br7-code-copy {
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14);
+  color: #8e8e93; font-size: 11px; font-family: 'DM Sans', sans-serif;
+  font-weight: 600; padding: 4px 11px; border-radius: 6px; cursor: pointer;
+  transition: all .15s; display: flex; align-items: center; gap: 5px;
 }
-.cr-math-answer-lbl::before{content:'✓';font-size:13px;}
-.cr-math-answer-val{
-  font-family:var(--cr-mono);font-size:18px;font-weight:600;
-  color:#145a32;line-height:1.9;white-space:pre-wrap;
+.br7-code-copy:hover  { background: rgba(255,255,255,.13); color: #e8e8ea; }
+.br7-code-copy.copied { background: rgba(52,199,89,.15); color: #34c759; border-color: rgba(52,199,89,.3); }
+.br7-code-pre { margin:0; background: #1c1c1e; padding: 18px 20px; overflow-x: auto; }
+.br7-code-pre code {
+  font-family: var(--br7-mono); font-size: 13px; line-height: 1.75;
+  color: #e8e8ea; background: none; border: none; padding: 0; display: block;
 }
-.cr-math-verify{
-  background:#eff6ff;border:1px solid #bac8ff;
-  border-left:3px solid #4c6ef5;border-radius:0 10px 10px 0;
-  padding:12px 18px;font-size:13.5px;color:#1e3a8a;
-  line-height:1.7;margin:10px 0;
-}
+/* Line numbers hint */
+.br7-code-pre.has-nums { padding-left: 0; }
 
-/* ══ STEP TIMELINE ══ */
-.cr-steps{display:flex;flex-direction:column;gap:0;}
-.cr-step{display:flex;gap:0;align-items:stretch;animation:cr-fadeUp .3s ease both;}
-.cr-step:nth-child(1){animation-delay:.05s}
-.cr-step:nth-child(2){animation-delay:.10s}
-.cr-step:nth-child(3){animation-delay:.15s}
-.cr-step:nth-child(4){animation-delay:.20s}
-.cr-step:nth-child(5){animation-delay:.25s}
-.cr-step-rail{
-  display:flex;flex-direction:column;align-items:center;
-  width:52px;flex-shrink:0;padding-top:18px;
+/* ════════════════════════════════════════════
+   MATH / LaTeX  — KaTeX styled beautifully
+════════════════════════════════════════════ */
+.br7-math-block {
+  background: linear-gradient(135deg, #f0f4ff, #e8eeff);
+  border: 1.5px solid #c7d2fe; border-radius: 12px;
+  padding: 18px 22px; margin: 12px 0;
+  overflow-x: auto; text-align: center;
+  box-shadow: 0 2px 12px rgba(99,102,241,.10);
+  animation: br7-fadeUp .3s ease both;
 }
-.cr-step-num{
-  width:34px;height:34px;border-radius:50%;flex-shrink:0;
-  background:var(--cr-tx);color:#fff;
-  font-size:13px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 3px 10px rgba(0,0,0,.18);
-  font-family:'DM Sans',sans-serif;
-  border:2px solid var(--cr-bg);
-  position:relative;z-index:1;
-}
-.cr-step-line{
-  width:2px;flex:1;margin-top:8px;min-height:28px;
-  background:linear-gradient(to bottom,var(--cr-bdr2),var(--cr-bdr));
-}
-.cr-step:last-child .cr-step-line{display:none;}
-.cr-step-body{flex:1;padding:16px 20px 20px 0;}
-.cr-step-title{
-  font-size:14.5px;font-weight:700;color:var(--cr-tx);
-  margin-bottom:7px;letter-spacing:-.01em;line-height:1.35;
-}
-.cr-step-desc{font-size:13.5px;color:var(--cr-tx2);line-height:1.78;}
+.br7-math-block .katex { font-size: 1.25em; }
+.br7-math-block .katex-display { margin: 0; }
 
-/* ══ TABLE ══ */
-.cr-table-wrap{
-  overflow-x:auto;border-radius:12px;
-  border:1.5px solid var(--cr-bdr);margin:12px 0;
-  box-shadow:0 2px 8px rgba(0,0,0,.05);
+.br7-math-answer {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 2px solid #6ee7b7; border-radius: 14px;
+  padding: 18px 24px; margin: 14px 0;
+  box-shadow: 0 4px 20px rgba(16,185,129,.12);
+  animation: br7-pop .35s ease both;
 }
-.cr-table{width:100%;border-collapse:collapse;font-size:13px;}
-.cr-table thead th{
-  background:#1c1917;color:#f5f5f4;
-  padding:12px 16px;font-size:10.5px;font-weight:700;text-align:left;
-  letter-spacing:.06em;text-transform:uppercase;
+.br7-math-answer-lbl {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: #059669; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 7px;
 }
-.cr-table thead th:first-child{border-radius:0;}
-.cr-table tbody td{
-  padding:11px 16px;border-bottom:1px solid var(--cr-bdr);
-  vertical-align:top;color:var(--cr-tx);font-size:13.5px;
-  transition:background .12s;
-}
-.cr-table tbody tr:last-child td{border-bottom:none;}
-.cr-table tbody tr:nth-child(even) td{background:#f9fafb;}
-.cr-table tbody tr:hover td{background:var(--cr-acc-bg);}
-.cr-table tbody td:first-child{font-weight:600;color:var(--cr-tx2);}
+.br7-math-answer-lbl::before { content: '✓'; font-size: 14px; }
+.br7-math-answer .katex { font-size: 1.4em; color: #065f46; }
+.br7-math-answer .katex-display { margin: 0; }
 
-/* ══ BADGES ══ */
-.cr-badge{padding:3px 9px;border-radius:99px;font-size:10.5px;font-weight:700;white-space:nowrap;letter-spacing:.02em;}
-.cr-badge-red   {background:#fee2e2;color:#991b1b;}
-.cr-badge-amber {background:#fef3c7;color:#92400e;}
-.cr-badge-green {background:#d1fae5;color:#065f46;}
-.cr-badge-blue  {background:#dbeafe;color:#1e40af;}
+.br7-math-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 16px; margin: 8px 0;
+  background: linear-gradient(135deg, #faf5ff, #f3e8ff);
+  border: 1px solid #ddd6fe; border-radius: 10px;
+  animation: br7-slideR .25s ease both;
+}
+.br7-math-step-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  background: #7c3aed; color: #fff;
+  font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+.br7-math-step-body { flex: 1; }
+.br7-math-step-title { font-size: 12.5px; font-weight: 700; color: #4c1d95; margin-bottom: 5px; }
+.br7-math-step-expr { font-family: var(--br7-mono); font-size: 13px; color: #5b21b6; background: rgba(124,58,237,.08); border-radius: 7px; padding: 7px 10px; margin-top: 6px; overflow-x:auto; }
 
-/* ══ LIST CARDS ══ */
-.cr-list{display:flex;flex-direction:column;gap:9px;}
-.cr-list-item{
-  display:flex;gap:14px;align-items:flex-start;
-  padding:15px 18px;border:1.5px solid var(--cr-bdr);
-  border-radius:12px;background:#fff;
-  transition:all .2s cubic-bezier(.16,1,.3,1);
-  animation:cr-fadeUp .3s ease both;
-}
-.cr-list-item:nth-child(1){animation-delay:.04s}
-.cr-list-item:nth-child(2){animation-delay:.08s}
-.cr-list-item:nth-child(3){animation-delay:.12s}
-.cr-list-item:nth-child(4){animation-delay:.16s}
-.cr-list-item:nth-child(5){animation-delay:.20s}
-.cr-list-item:hover{
-  background:var(--cr-acc-bg);border-color:var(--cr-acc);
-  box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-2px);
-}
-.cr-list-num{
-  width:30px;height:30px;border-radius:9px;flex-shrink:0;
-  margin-top:2px;display:flex;align-items:center;justify-content:center;
-  font-size:12.5px;font-weight:700;font-family:'DM Sans',sans-serif;
-}
-.cr-list-title{
-  font-size:14.5px;font-weight:700;color:var(--cr-tx);
-  line-height:1.35;margin-bottom:4px;letter-spacing:-.01em;
-}
-.cr-list-sub{font-size:13px;color:var(--cr-tx2);line-height:1.7;}
+.br7-math-inline { font-style: italic; color: #4338ca; }
 
-/* ══ RESEARCH SECTIONS ══ */
-.cr-rsec{padding:20px 22px;border-bottom:1px solid var(--cr-bdr);}
-.cr-rsec:last-child{border-bottom:none;}
-.cr-rsec-hd{
-  display:flex;align-items:center;gap:11px;
-  font-size:15px;font-weight:700;color:var(--cr-tx);
-  margin-bottom:12px;letter-spacing:-.01em;
+/* ════════════════════════════════════════════
+   DIAGRAMS  — Mermaid with beautiful wrapper
+════════════════════════════════════════════ */
+.br7-diagram-card {
+  border: 1.5px solid var(--br7-bdr); border-radius: 14px;
+  overflow: hidden; margin: 14px 0;
+  box-shadow: 0 2px 16px rgba(0,0,0,.07);
+  animation: br7-fadeUp .4s ease .1s both;
 }
-.cr-rsec-hd-bar{width:4px;height:20px;border-radius:2px;background:var(--cr-acc);flex-shrink:0;}
-
-/* ══ METRIC STRIP ══ */
-.cr-metrics{
-  display:flex;gap:0;border:1.5px solid var(--cr-bdr);
-  border-radius:14px;overflow:hidden;margin:12px 0;
-  box-shadow:0 2px 8px rgba(0,0,0,.05);
+.br7-diagram-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 18px; background: var(--br7-bg2);
+  border-bottom: 1px solid var(--br7-bdr);
 }
-.cr-metric{
-  flex:1;padding:16px 18px;border-right:1px solid var(--cr-bdr);
-  display:flex;flex-direction:column;gap:4px;
-  transition:background .15s;
+.br7-diagram-lbl {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--br7-tx3);
 }
-.cr-metric:hover{background:var(--cr-bg2);}
-.cr-metric:last-child{border-right:none;}
-.cr-metric-val{
-  font-family:var(--cr-serif);font-size:24px;font-weight:400;
-  color:var(--cr-tx);line-height:1.2;letter-spacing:-.02em;
+.br7-diagram-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--br7-acc);
+  animation: br7-pulse 2s ease infinite;
 }
-.cr-metric-lbl{
-  font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.08em;color:var(--cr-tx4);
+.br7-diagram-body {
+  background: #fafafa;
+  padding: 22px 18px;
+  display: flex; justify-content: center; align-items: center;
+  overflow-x: auto; min-height: 80px;
+  /* subtle grid background for diagrams */
+  background-image: radial-gradient(circle, #e5e5ea 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-color: #fafafa;
 }
-.cr-metric-delta{font-size:12px;font-weight:600;margin-top:2px;}
-.cr-metric-delta.pos{color:#16a34a;}
-.cr-metric-delta.neg{color:#dc2626;}
-
-/* ══ KEY-VALUE GRID ══ */
-.cr-kv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:10px 0;}
-.cr-kv-item{
-  border:1.5px solid var(--cr-bdr);border-radius:11px;
-  padding:12px 14px;background:#fff;
-  display:flex;flex-direction:column;gap:4px;
-  transition:all .18s;
+.br7-diagram-body svg {
+  max-width: 100%; height: auto;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.08));
 }
-.cr-kv-item:hover{border-color:var(--cr-acc);background:var(--cr-acc-bg);transform:translateY(-1px);}
-.cr-kv-key{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--cr-tx4);}
-.cr-kv-val{font-size:14px;font-weight:600;color:var(--cr-tx);line-height:1.4;}
-
-/* ══ VERDICT / SUMMARY BOX ══ */
-.cr-verdict{
-  display:flex;align-items:flex-start;gap:14px;
-  border:2px solid var(--cr-bdr2);border-radius:12px;
-  padding:16px 20px;margin-top:14px;background:var(--cr-bg2);
+.br7-diagram-fallback {
+  font-family: var(--br7-mono); font-size: 12px; color: var(--br7-tx2);
+  white-space: pre; overflow-x: auto; padding: 16px 18px;
+  background: #1c1c1e; color: #e8e8ea; border-radius: 8px; line-height: 1.65;
 }
-.cr-verdict-glyph{
-  font-family:var(--cr-serif);font-style:italic;font-size:22px;
-  color:var(--cr-acc);flex-shrink:0;margin-top:2px;width:28px;text-align:center;
-}
-.cr-verdict strong{
-  display:block;font-size:9.5px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.08em;color:var(--cr-acc);margin-bottom:5px;
-}
-.cr-verdict p{font-size:13.5px;color:var(--cr-tx);line-height:1.72;margin:0;}
-
-/* ══ DIAGNOSIS ══ */
-.cr-diag{display:flex;flex-direction:column;gap:9px;}
-.cr-diag-item{border-radius:12px;overflow:hidden;border:1.5px solid;}
-.cr-diag-item.sev-critical{border-color:#fecaca;}
-.cr-diag-item.sev-high    {border-color:#fdba74;}
-.cr-diag-item.sev-medium  {border-color:#fde68a;}
-.cr-diag-item.sev-low     {border-color:#86efac;}
-.cr-diag-item.sev-info    {border-color:var(--cr-bdr);}
-.cr-diag-hd{
-  display:flex;align-items:center;gap:9px;
-  padding:11px 16px;font-size:13.5px;font-weight:700;
-}
-.sev-critical .cr-diag-hd{background:#fee2e2;color:#7f1d1d;}
-.sev-high     .cr-diag-hd{background:#fff7ed;color:#9a3412;}
-.sev-medium   .cr-diag-hd{background:#fefce8;color:#713f12;}
-.sev-low      .cr-diag-hd{background:#f0fdf4;color:#14532d;}
-.sev-info     .cr-diag-hd{background:#f9fafb;color:var(--cr-tx2);}
-.cr-diag-sev-tag{
-  font-size:9.5px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.05em;padding:2px 9px;border-radius:99px;margin-left:auto;
-}
-.sev-critical .cr-diag-sev-tag{background:#fecaca;color:#7f1d1d;}
-.sev-high     .cr-diag-sev-tag{background:#fed7aa;color:#7c2d12;}
-.sev-medium   .cr-diag-sev-tag{background:#fef08a;color:#713f12;}
-.sev-low      .cr-diag-sev-tag{background:#bbf7d0;color:#14532d;}
-.sev-info     .cr-diag-sev-tag{background:var(--cr-bg3);color:var(--cr-tx3);}
-.cr-diag-bd{
-  padding:12px 16px;font-size:13.5px;color:var(--cr-tx2);
-  line-height:1.75;border-top:1px solid rgba(0,0,0,.05);
+.br7-diagram-err {
+  padding: 14px 18px; font-size: 13px; color: var(--br7-tx3);
+  display: flex; align-items: center; gap: 8px;
 }
 
-/* ══ COMPARE COLUMNS ══ */
-.cr-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:12px 0;}
-@media(max-width:540px){.cr-compare{grid-template-columns:1fr;}}
-.cr-cmp-col{border:1.5px solid var(--cr-bdr);border-radius:14px;overflow:hidden;}
-.cr-cmp-col.col-a .cr-cmp-col-hd{background:#1c1917;color:#f5f5f4;}
-.cr-cmp-col.col-b .cr-cmp-col-hd{background:#fffbeb;color:#92400e;border-bottom:1.5px solid #fde68a;}
-.cr-cmp-col-hd{padding:14px 18px;font-size:14px;font-weight:700;letter-spacing:-.01em;}
-.cr-cmp-attrs{padding:14px 18px;display:flex;flex-direction:column;gap:0;}
-.cr-cmp-attr{padding:10px 0;border-bottom:1px solid var(--cr-bdr);}
-.cr-cmp-attr:last-child{border-bottom:none;}
-.cr-cmp-attr-lbl{
-  font-size:9.5px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.07em;color:var(--cr-tx4);margin-bottom:3px;
-}
-.cr-cmp-attr-val{font-size:14px;color:var(--cr-tx);line-height:1.6;}
+/* ════════════════════════════════════════════
+   STEP TIMELINE
+════════════════════════════════════════════ */
+.br7-steps { display: flex; flex-direction: column; }
+.br7-step { display: flex; gap: 0; align-items: stretch; }
+.br7-step { animation: br7-fadeUp .3s ease both; }
+.br7-step:nth-child(1){animation-delay:.04s}
+.br7-step:nth-child(2){animation-delay:.09s}
+.br7-step:nth-child(3){animation-delay:.14s}
+.br7-step:nth-child(4){animation-delay:.19s}
+.br7-step:nth-child(5){animation-delay:.24s}
+.br7-step:nth-child(n+6){animation-delay:.28s}
 
-/* ══ STREAMING CURSOR ══ */
-.cr-streaming{opacity:.95;}
-.cr-cursor::after{
-  content:'▋';animation:cr-blink .65s step-end infinite;
-  margin-left:2px;color:var(--cr-acc);
+.br7-step-rail { display:flex; flex-direction:column; align-items:center; width:52px; flex-shrink:0; padding-top:16px; }
+.br7-step-num {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink:0;
+  background: var(--br7-acc); color: #fff;
+  font-size: 14px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(232,98,42,.35);
+  border: 2.5px solid #fff; position: relative; z-index:1;
+}
+.br7-step-line {
+  width: 2px; flex:1; min-height: 32px; margin-top: 6px;
+  background: linear-gradient(to bottom, var(--br7-bdr2), var(--br7-bdr));
+}
+.br7-step:last-child .br7-step-line { display:none; }
+.br7-step-body { flex:1; padding: 14px 18px 20px 0; }
+.br7-step-title { font-size: 14.5px; font-weight: 700; color: var(--br7-tx); margin-bottom: 7px; letter-spacing: -.01em; line-height: 1.35; }
+.br7-step-desc  { font-size: 13.5px; color: var(--br7-tx2); line-height: 1.78; }
+
+/* ════════════════════════════════════════════
+   NUMBERED LIST CARDS
+════════════════════════════════════════════ */
+.br7-list { display:flex; flex-direction:column; gap:10px; }
+.br7-list-item {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 18px; border: 1.5px solid var(--br7-bdr);
+  border-radius: 12px; background: #fff;
+  transition: all .22s cubic-bezier(.16,1,.3,1);
+  animation: br7-fadeUp .3s ease both;
+}
+.br7-list-item:hover {
+  border-color: var(--br7-acc); background: #fff8f5;
+  box-shadow: 0 6px 24px rgba(232,98,42,.10); transform: translateY(-2px);
+}
+.br7-list-num {
+  width: 32px; height: 32px; border-radius: 10px; flex-shrink:0;
+  background: linear-gradient(135deg, #fff1eb, #ffe0d0);
+  color: var(--br7-acc); border: 1.5px solid #ffd0b8;
+  font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 2px;
+}
+.br7-list-title { font-size: 14.5px; font-weight: 700; color: var(--br7-tx); margin-bottom: 4px; letter-spacing: -.01em; }
+.br7-list-sub   { font-size: 13px; color: var(--br7-tx2); line-height: 1.72; }
+
+/* ════════════════════════════════════════════
+   COMPARISON TABLE  — dark header
+════════════════════════════════════════════ */
+.br7-table-wrap {
+  overflow-x: auto; border-radius: 12px;
+  border: 1.5px solid var(--br7-bdr); margin: 12px 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  animation: br7-fadeIn .3s ease both;
+}
+.br7-table { width:100%; border-collapse:collapse; font-size: 13.5px; }
+.br7-table thead th {
+  background: #1c1c1e; color: #f5f5f7;
+  padding: 12px 16px; text-align: left;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+.br7-table tbody td {
+  padding: 11px 16px; border-bottom: 1px solid var(--br7-bdr);
+  vertical-align: top; color: var(--br7-tx); transition: background .12s;
+}
+.br7-table tbody tr:last-child td { border-bottom: none; }
+.br7-table tbody tr:nth-child(even) td { background: #f9f9fb; }
+.br7-table tbody tr:hover td { background: #fff1eb; }
+.br7-table tbody td:first-child { font-weight: 600; color: var(--br7-tx2); }
+
+/* ════════════════════════════════════════════
+   PROSE  — beautiful, editorial
+════════════════════════════════════════════ */
+.br7-prose { display:flex; flex-direction:column; gap:0; }
+.br7-prose p   { font-size:14px; line-height:1.84; color:var(--br7-tx); margin:0 0 10px; }
+.br7-prose p:last-child { margin-bottom:0; }
+.br7-prose ul,.br7-prose ol { padding-left:24px; margin: 6px 0 12px; }
+.br7-prose li  { font-size:13.5px; margin-bottom:6px; line-height:1.72; color:var(--br7-tx); }
+.br7-prose h2  {
+  font-family: var(--br7-serif); font-style:italic;
+  font-size: 20px; font-weight:400; color: var(--br7-tx);
+  margin: 22px 0 10px; padding-bottom: 8px;
+  border-bottom: 2px solid var(--br7-bdr);
+  letter-spacing: -.02em; line-height:1.3;
+}
+.br7-prose h3  {
+  font-size: 13.5px; font-weight: 700; color: var(--br7-tx);
+  margin: 18px 0 7px; display: flex; align-items: center; gap: 9px;
+}
+.br7-prose h3::before {
+  content: ''; display: inline-block; width: 4px; height: 15px;
+  border-radius: 2px; background: var(--br7-acc); flex-shrink:0;
+}
+.br7-prose h4  { font-size:12px; font-weight:700; color:var(--br7-tx3); margin:14px 0 5px; text-transform:uppercase; letter-spacing:.07em; }
+.br7-prose h2:first-child,.br7-prose h3:first-child,.br7-prose h4:first-child { margin-top:0; }
+.br7-prose hr  { border:none; border-top:1.5px solid var(--br7-bdr); margin:16px 0; }
+.br7-prose blockquote {
+  border-left: 3px solid var(--br7-acc); padding: 11px 0 11px 18px;
+  color: var(--br7-tx2); font-family: var(--br7-serif); font-style:italic;
+  font-size: 15px; line-height: 1.78; margin: 12px 0;
+  background: #fff8f5; border-radius: 0 9px 9px 0;
+}
+.br7-prose strong { font-weight:700; }
+.br7-prose em     { font-style:italic; color:var(--br7-tx2); }
+.br7-prose a      { color: var(--br7-acc); text-underline-offset:3px; }
+.br7-prose code   {
+  font-family: var(--br7-mono); font-size: 12.5px;
+  background: #f4f4f6; border: 1px solid #e5e5ea;
+  border-radius: 5px; padding: 2px 7px; color: #c0410c; letter-spacing:.02em;
 }
 
-/* ══ CHAT SIMPLE ══ */
-.cr-chat{
-  font-size:14px;line-height:1.82;color:var(--cr-tx);
+/* ════════════════════════════════════════════
+   CALLOUTS
+════════════════════════════════════════════ */
+.br7-callout {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 17px; border-radius: 11px;
+  border-left: 3px solid; font-size: 13.5px; line-height: 1.72;
+  margin: 10px 0; animation: br7-slideR .25s ease both;
+}
+.br7-callout-icon { flex-shrink:0; font-size: 16px; margin-top: 1px; }
+.br7-callout.info   { background: #eff6ff; border-color: #3b82f6; color: #1e3a8a; }
+.br7-callout.warn   { background: #fffbeb; border-color: #f59e0b; color: #78350f; }
+.br7-callout.tip    { background: #ecfdf5; border-color: #10b981; color: #064e3b; }
+.br7-callout.danger { background: #fef2f2; border-color: #ef4444; color: #7f1d1d; }
+
+/* ════════════════════════════════════════════
+   KEY-VALUE GRID
+════════════════════════════════════════════ */
+.br7-kv-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin:10px 0; }
+.br7-kv-item {
+  border: 1.5px solid var(--br7-bdr); border-radius: 11px;
+  padding: 12px 14px; background: #fff;
+  display: flex; flex-direction:column; gap:4px;
+  transition: all .18s;
+}
+.br7-kv-item:hover { border-color: var(--br7-acc); background: #fff8f5; transform: translateY(-1px); }
+.br7-kv-key { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--br7-tx4); }
+.br7-kv-val { font-size:14px; font-weight:600; color:var(--br7-tx); line-height:1.4; }
+
+/* ════════════════════════════════════════════
+   VERDICT / SUMMARY BOX
+════════════════════════════════════════════ */
+.br7-verdict {
+  display: flex; align-items: flex-start; gap: 14px;
+  border: 2px solid var(--br7-bdr2); border-radius: 12px;
+  padding: 16px 20px; margin-top: 14px; background: var(--br7-bg2);
+}
+.br7-verdict-icon { font-size: 22px; flex-shrink:0; }
+.br7-verdict-label { font-size: 9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.09em; color:var(--br7-acc); margin-bottom:5px; }
+.br7-verdict-text  { font-size: 13.5px; color: var(--br7-tx); line-height: 1.72; }
+
+/* ════════════════════════════════════════════
+   CURSOR (streaming)
+════════════════════════════════════════════ */
+.br7-cursor::after {
+  content: '▋'; animation: br7-blink .65s step-end infinite;
+  margin-left: 2px; color: var(--br7-acc);
 }
 
-/* ══ ARCHITECTURE DIAGRAM ══ */
-.cr-arch{border:1.5px solid var(--cr-bdr);border-radius:14px;overflow:hidden;margin:12px 0;}
-.cr-arch-layer{border-bottom:1px solid var(--cr-bdr);}
-.cr-arch-layer:last-child{border-bottom:none;}
-.cr-arch-layer-hd{
-  padding:9px 16px;background:var(--cr-bg2);
-  font-size:10px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.07em;color:var(--cr-tx3);border-bottom:1px solid var(--cr-bdr);
-}
-.cr-arch-components{display:flex;flex-wrap:wrap;gap:7px;padding:12px 16px;}
-.cr-arch-comp{
-  padding:5px 13px;background:#fff;border:1.5px solid var(--cr-bdr2);
-  border-radius:99px;font-size:12.5px;color:var(--cr-tx);font-weight:500;
-  transition:all .18s;cursor:default;
-}
-.cr-arch-comp:hover{background:var(--cr-acc-bg);border-color:var(--cr-acc);transform:translateY(-1px);}
-
-/* ══ HEALTH STRIP ══ */
-.cr-health{
-  display:flex;align-items:center;gap:16px;
-  padding:16px 22px;background:var(--cr-bg2);border-bottom:1.5px solid var(--cr-bdr);
-}
-.cr-health-score{
-  font-family:var(--cr-serif);font-size:36px;font-weight:400;
-  line-height:1;flex-shrink:0;letter-spacing:-.03em;
-}
-.cr-health-lbl{font-size:12.5px;font-weight:700;margin-bottom:5px;}
-.cr-health-bar{height:6px;background:var(--cr-bg3);border-radius:3px;overflow:hidden;flex:1;}
-.cr-health-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.16,1,.3,1);width:0;}
-.health-critical{color:#dc2626;}.fill-critical{background:linear-gradient(90deg,#dc2626,#f87171);}
-.health-risk    {color:#f97316;}.fill-risk    {background:linear-gradient(90deg,#f97316,#fb923c);}
-.health-ok      {color:#f59e0b;}.fill-ok      {background:linear-gradient(90deg,#f59e0b,#fbbf24);}
-.health-good    {color:#22c55e;}.fill-good    {background:linear-gradient(90deg,#22c55e,#4ade80);}
-.health-excellent{color:#06b6d4;}.fill-excellent{background:linear-gradient(90deg,#06b6d4,#22d3ee);}
-
-/* ══ INSIGHT ITEMS ══ */
-.cr-insights{display:flex;flex-direction:column;gap:8px;}
-.cr-insight{
-  display:flex;gap:13px;padding:13px 16px;
-  border:1.5px solid var(--cr-bdr);border-radius:12px;
-  background:#fff;transition:all .18s;
-}
-.cr-insight:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);transform:translateY(-1px);}
-.cr-insight.pos{border-left:3px solid #22c55e;}
-.cr-insight.neg{border-left:3px solid #ef4444;}
-.cr-insight.neu{border-left:3px solid var(--cr-bdr2);}
-.cr-insight-dot{
-  width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:5px;
-}
-.pos .cr-insight-dot{background:#22c55e;}
-.neg .cr-insight-dot{background:#ef4444;}
-.neu .cr-insight-dot{background:var(--cr-bdr2);}
-.cr-insight-title{font-size:13.5px;font-weight:700;margin-bottom:4px;color:var(--cr-tx);}
-.cr-insight-body{font-size:13px;color:var(--cr-tx2);line-height:1.65;}
-
-/* ══ INLINE CHIP ══ */
-.cr-chip{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 12px;border-radius:99px;
-  font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
-  margin-bottom:12px;
-}
-
-/* ══ TAG PILLS ══ */
-.cr-tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;}
-.cr-tag{
-  padding:3px 11px;border-radius:99px;font-size:11px;font-weight:500;
-  background:var(--cr-bg3);color:var(--cr-tx2);border:1px solid var(--cr-bdr);
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+@media (max-width: 520px) {
+  .br7-kv-grid { grid-template-columns: 1fr 1fr; }
 }
 `;
   document.head.appendChild(s);
-}
+})();
 
-/* ─── UTILITIES ─── */
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+/* ─── 1. UTILITIES ───────────────────────────────────────────────────── */
+const BR7 = {
 
-function inlineMd(s) {
-  s = esc(s);
-  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/\*([^*\n]{1,140})\*/g, '<em>$1</em>');
-  s = s.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
-  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-  return s;
-}
+  esc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  },
 
-function mkEl(tag, cls, html) {
-  const el = document.createElement(tag);
-  if (cls) el.className = cls;
-  if (html !== undefined) el.innerHTML = html;
-  return el;
-}
+  el(tag, cls, html) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  },
 
-function copyToClipboard(text, btn) {
-  const orig = btn.innerHTML;
-  const ok = () => {
-    btn.classList.add('cr-copied');
-    btn.innerHTML = '✓ Copied!';
-    setTimeout(() => { btn.classList.remove('cr-copied'); btn.innerHTML = orig; }, 2200);
-  };
-  if (navigator.clipboard) navigator.clipboard.writeText(text).then(ok).catch(() => { fbCopy(text); ok(); });
-  else { fbCopy(text); ok(); }
-}
-
-function fbCopy(t) {
-  const ta = document.createElement('textarea');
-  ta.value = t; ta.style.cssText = 'position:fixed;top:-9999px';
-  document.body.appendChild(ta); ta.select();
-  try { document.execCommand('copy'); } catch(e) {}
-  document.body.removeChild(ta);
-}
-
-function healthClass(n) {
-  if (n <= 35) return 'critical';
-  if (n <= 55) return 'risk';
-  if (n <= 72) return 'ok';
-  if (n <= 88) return 'good';
-  return 'excellent';
-}
-
-/* ─── CARD SHELL BUILDER ─── */
-function buildCardShell(domain, titleText) {
-  const cfg = DOMAIN_CONFIG[domain] || DOMAIN_CONFIG.general;
-  const id = 'cr_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-
-  const card = mkEl('div', 'cr-card');
-  card.style.setProperty('--cr-acc', cfg.accent);
-  card.style.setProperty('--cr-acc-bg', cfg.accentBg);
-  card.style.setProperty('--cr-acc-bdr', cfg.accentBdr);
-
-  const hd = mkEl('div', 'cr-hd');
-  const left = mkEl('div', 'cr-hd-left');
-
-  const orb = mkEl('div', 'cr-domain-orb');
-  orb.textContent = cfg.icon;
-  orb.style.cssText = `background:${cfg.gradient};color:${cfg.accent};border:1.5px solid ${cfg.accentBdr};`;
-
-  const tag = mkEl('div', 'cr-domain-tag');
-  tag.style.cssText = `background:${cfg.accentBg};color:${cfg.accent};border:1px solid ${cfg.accentBdr};`;
-  tag.textContent = cfg.label;
-
-  left.appendChild(orb);
-  left.appendChild(tag);
-
-  if (titleText) {
-    const title = mkEl('div', 'cr-hd-title');
-    title.textContent = titleText;
-    left.appendChild(title);
-  }
-
-  const actions = mkEl('div', 'cr-hd-actions');
-  const copyBtn = mkEl('button', 'cr-btn');
-  copyBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy`;
-  copyBtn.dataset.targetId = id;
-  copyBtn.onclick = () => {
-    const el = document.getElementById(id);
-    copyToClipboard(el ? el.innerText : '', copyBtn);
-  };
-  actions.appendChild(copyBtn);
-
-  hd.appendChild(left);
-  hd.appendChild(actions);
-  card.appendChild(hd);
-
-  return { card, id, cfg };
-}
-
-function buildDownloadRow(id, domain) {
-  const row = mkEl('div', 'cr-dl-row');
-
-  const dlTxt = mkEl('button', 'cr-dl-btn cr-dl-dark');
-  dlTxt.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download`;
-  dlTxt.onclick = () => {
-    const el = document.getElementById(id);
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([el ? el.innerText : ''], { type:'text/plain' }));
-    a.download = `stremini-${domain||'response'}-${Date.now()}.txt`;
-    a.click();
-  };
-
-  const dlMd = mkEl('button', 'cr-dl-btn cr-dl-ghost');
-  dlMd.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Markdown`;
-  dlMd.onclick = () => {
-    const el = document.getElementById(id);
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([el ? el.innerText : ''], { type:'text/markdown' }));
-    a.download = `stremini-${domain||'response'}-${Date.now()}.md`;
-    a.click();
-  };
-
-  row.appendChild(dlTxt);
-  row.appendChild(dlMd);
-  return row;
-}
-
-/* ─── DIAGRAM BUILDER ─── */
-async function buildDiagramCard(mermaidCode, label, accent) {
-  const card = mkEl('div', 'cr-diagram-card');
-  if (accent) card.style.setProperty('--cr-acc', accent);
-
-  const header = mkEl('div', 'cr-diagram-header');
-  const lbl = mkEl('div', 'cr-diagram-label');
-  const dot = mkEl('span', 'cr-diagram-label-dot');
-  const labelText = mkEl('span', '', label || 'Diagram');
-  lbl.appendChild(dot);
-  lbl.appendChild(labelText);
-
-  const copyBtn = mkEl('button', 'cr-btn');
-  copyBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy code`;
-  copyBtn.onclick = () => copyToClipboard(mermaidCode, copyBtn);
-
-  header.appendChild(lbl);
-  header.appendChild(copyBtn);
-  card.appendChild(header);
-
-  const body = mkEl('div', 'cr-diagram-body');
-
-  if (window.mermaid) {
-    try {
-      const uid = 'mmd_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
-      const cleanCode = mermaidCode.trim();
-      const result = await window.mermaid.render(uid, cleanCode);
-      body.innerHTML = result.svg || result;
-    } catch(e) {
-      const fb = mkEl('div', 'cr-diagram-fallback');
-      fb.textContent = mermaidCode;
-      body.appendChild(fb);
+  /* Render KaTeX or fallback */
+  katex(tex, display = false) {
+    if (window.katex) {
+      try { return window.katex.renderToString(tex, { displayMode: display, throwOnError: false }); }
+      catch(e) {}
     }
-  } else {
-    const fb = mkEl('div', 'cr-diagram-fallback');
-    fb.textContent = mermaidCode;
-    body.appendChild(fb);
-  }
+    return display
+      ? `<div style="font-family:monospace;color:#3730a3;padding:10px">\\[${this.esc(tex)}\\]</div>`
+      : `<span style="font-family:monospace;color:#4338ca">\\(${this.esc(tex)}\\)</span>`;
+  },
 
-  card.appendChild(body);
-  return card;
+  /* Inline markdown → HTML with math support */
+  inline(s) {
+    if (!s) return '';
+    s = this.esc(s);
+    // Inline math \(...\) and $...$
+    s = s.replace(/\\\((.+?)\\\)/g, (_, t) => this.katex(t, false));
+    s = s.replace(/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/g, (_, t) => this.katex(t, false));
+    // Markdown
+    s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    s = s.replace(/\*([^*\n]{1,160})\*/g, '<em>$1</em>');
+    s = s.replace(/`([^`\n]+?)`/g, '<code>$1</code>');
+    s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    return s;
+  },
+
+  copy(text, btn) {
+    const orig = btn.innerHTML;
+    const ok = () => {
+      btn.classList.add('copied'); btn.textContent = '✓ Copied';
+      setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 2200);
+    };
+    navigator.clipboard ? navigator.clipboard.writeText(text).then(ok).catch(ok)
+                        : (this._fbCopy(text), ok());
+  },
+
+  _fbCopy(t) {
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.style.cssText = 'position:fixed;top:-9999px';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+  },
+
+  /* ── Code block DOM ── */
+  codeBlock(lang, code) {
+    /* Special: mermaid → diagram card */
+    if (lang === 'mermaid') return this.mermaidCard(code, 'Diagram');
+
+    const wrap = this.el('div', 'br7-code-wrap');
+    const bar  = this.el('div', 'br7-code-bar');
+
+    // Dots
+    const dots = this.el('div', 'br7-code-dots');
+    dots.innerHTML = '<span class="br7-code-dot"></span><span class="br7-code-dot"></span><span class="br7-code-dot"></span>';
+
+    const langEl = this.el('div', 'br7-code-lang', this.esc(lang || 'code'));
+
+    const barLeft = this.el('div', '');
+    barLeft.style.cssText = 'display:flex;align-items:center;gap:12px;';
+    barLeft.appendChild(dots); barLeft.appendChild(langEl);
+
+    const copyBtn = this.el('button', 'br7-code-copy', '📋 Copy');
+    copyBtn.onclick = () => this.copy(code, copyBtn);
+
+    bar.appendChild(barLeft); bar.appendChild(copyBtn);
+
+    const pre = this.el('pre', 'br7-code-pre');
+    const codeEl = this.el('code');
+    if (lang) codeEl.className = `language-${lang}`;
+    codeEl.textContent = code;
+    try { if (window.hljs) window.hljs.highlightElement(codeEl); } catch(e) {}
+    pre.appendChild(codeEl);
+
+    wrap.appendChild(bar); wrap.appendChild(pre);
+    return wrap;
+  },
+
+  /* ── Mermaid diagram card ── */
+  mermaidCard(code, label, accent) {
+    const card = this.el('div', 'br7-diagram-card');
+    const hd   = this.el('div', 'br7-diagram-hd');
+    const lbl  = this.el('div', 'br7-diagram-lbl');
+    const dot  = this.el('span', 'br7-diagram-dot');
+    if (accent) dot.style.background = accent;
+    lbl.appendChild(dot);
+    lbl.appendChild(document.createTextNode(label || 'Diagram'));
+
+    const copyBtn = this.el('button', 'br7-btn', '📋 Code');
+    copyBtn.onclick = () => this.copy(code, copyBtn);
+    hd.appendChild(lbl); hd.appendChild(copyBtn);
+    card.appendChild(hd);
+
+    const body = this.el('div', 'br7-diagram-body');
+
+    if (window.mermaid) {
+      const uid = 'mmd_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+      window.mermaid.render(uid, code.trim()).then(r => {
+        body.style.backgroundImage = 'radial-gradient(circle, #e5e5ea 1px, transparent 1px)';
+        body.innerHTML = r.svg || r;
+        const svg = body.querySelector('svg');
+        if (svg) { svg.style.cssText = 'max-width:100%;height:auto;'; svg.removeAttribute('width'); }
+      }).catch(() => {
+        body.innerHTML = '';
+        const fb = this.el('div', 'br7-diagram-fallback', this.esc(code));
+        body.appendChild(fb);
+      });
+    } else {
+      body.appendChild(this.el('div', 'br7-diagram-fallback', this.esc(code)));
+    }
+    card.appendChild(body);
+    return card;
+  },
+
+  /* ── Display math block ── */
+  mathBlock(tex) {
+    const d = this.el('div', 'br7-math-block');
+    d.innerHTML = this.katex(tex, true);
+    return d;
+  },
+
+  /* ── Callout ── */
+  callout(type, icon, text) {
+    const d = this.el('div', `br7-callout ${type}`);
+    d.innerHTML = `<span class="br7-callout-icon">${icon}</span><span>${this.inline(text)}</span>`;
+    return d;
+  },
+
+  /* ── Parse fenced code blocks from markdown text ── */
+  parseSegments(text) {
+    const segs = []; let last = 0;
+    const re = /```([\w-]*)\n?([\s\S]*?)```/g; let m;
+    while ((m = re.exec(text)) !== null) {
+      if (m.index > last) segs.push({ type:'prose', content: text.slice(last, m.index) });
+      segs.push({ type:'code', lang:(m[1]||'').toLowerCase(), content: m[2].trim() });
+      last = re.lastIndex;
+    }
+    if (last < text.length) segs.push({ type:'prose', content: text.slice(last) });
+    return segs;
+  },
+
+  /* ── Detect if line is a table ── */
+  isTableSep(line) {
+    return /^\s*\|?[\s:|-]+\|[\s:|-]+\|?[\s:|-]*$/.test(line||'');
+  },
+
+  parseTable(text) {
+    const lines = text.split('\n');
+    for (let i = 0; i < lines.length - 1; i++) {
+      if (lines[i].includes('|') && this.isTableSep(lines[i+1])) {
+        const parseRow = l => l.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+        const headers = parseRow(lines[i]);
+        let end = i + 2;
+        while (end < lines.length && lines[end].includes('|') && lines[end].trim()) end++;
+        const rows = lines.slice(i+2, end).filter(l => !/^\s*\|?[\s:|-]+\|/.test(l)).map(parseRow);
+        if (headers.length && rows.length) return { headers, rows, start:i, end };
+      }
+    }
+    return null;
+  },
+
+  tableDOM(tbl) {
+    const wrap = this.el('div', 'br7-table-wrap');
+    const t = this.el('table', 'br7-table');
+    const thead = this.el('thead');
+    const hr = this.el('tr');
+    tbl.headers.forEach(h => { const th = this.el('th'); th.innerHTML = this.inline(h); hr.appendChild(th); });
+    thead.appendChild(hr); t.appendChild(thead);
+    const tbody = this.el('tbody');
+    tbl.rows.forEach(row => {
+      const tr = this.el('tr');
+      tbl.headers.forEach((_, ci) => {
+        const td = this.el('td'); td.innerHTML = this.inline(row[ci]||''); tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody); wrap.appendChild(t);
+    return wrap;
+  },
+
+  /* ── Full prose renderer — handles all markdown patterns ── */
+  proseDOM(text, accentColor) {
+    const div = this.el('div', 'br7-prose');
+    if (accentColor) div.style.setProperty('--br7-acc', accentColor);
+    const lines = text.split('\n');
+    let i = 0;
+    let curList = null, listTag = '';
+    const flush = () => { curList = null; listTag = ''; };
+    const push = el => { flush(); div.appendChild(el); };
+
+    while (i < lines.length) {
+      const raw = lines[i], t = raw.trim(); i++;
+      if (!t) { flush(); continue; }
+
+      /* Display math $$...$$ */
+      if (t.startsWith('$$') && !t.endsWith('$$')) {
+        const mLines = [t.slice(2)];
+        while (i < lines.length && !lines[i].trim().endsWith('$$')) { mLines.push(lines[i]); i++; }
+        if (i < lines.length) { const last = lines[i].trim(); mLines.push(last.slice(0,-2)); i++; }
+        push(this.mathBlock(mLines.join('\n').trim()));
+        continue;
+      }
+      if (t === '$$' || (t.startsWith('$$') && t.endsWith('$$') && t.length > 4)) {
+        const tex = t === '$$' ? '' : t.slice(2,-2).trim();
+        push(this.mathBlock(tex)); continue;
+      }
+      /* Display math \[...\] */
+      if (t === '\\[') {
+        const mLines = [];
+        while (i < lines.length && lines[i].trim() !== '\\]') { mLines.push(lines[i]); i++; }
+        i++; push(this.mathBlock(mLines.join('\n').trim())); continue;
+      }
+
+      /* Callouts */
+      if (/^⚠️\s*|^warning:\s*/i.test(t)) { push(this.callout('warn','⚠️', t.replace(/^⚠️\s*|^warning:\s*/i,''))); continue; }
+      if (/^💡\s*|^tip:\s*/i.test(t))     { push(this.callout('tip','💡', t.replace(/^💡\s*|^tip:\s*/i,''))); continue; }
+      if (/^ℹ️\s*|^note:\s*/i.test(t))    { push(this.callout('info','ℹ️', t.replace(/^ℹ️\s*|^note:\s*/i,''))); continue; }
+      if (/^🚨\s*|^danger:\s*/i.test(t))  { push(this.callout('danger','🚨', t.replace(/^🚨\s*|^danger:\s*/i,''))); continue; }
+
+      /* Blockquote */
+      if (/^> /.test(t)) { const bq = this.el('blockquote'); bq.innerHTML = this.inline(t.slice(2)); push(bq); continue; }
+
+      /* HR */
+      if (/^---+$/.test(t)) { push(this.el('hr')); continue; }
+
+      /* Headings */
+      const hm = t.match(/^(#{1,4})\s+(.+)$/);
+      if (hm) {
+        const tag = ['h2','h2','h3','h4'][hm[1].length-1]||'h4';
+        const h = this.el(tag); h.innerHTML = this.inline(hm[2]); push(h); continue;
+      }
+
+      /* Tables */
+      if (t.includes('|') && i < lines.length && this.isTableSep(lines[i])) {
+        const parseRow = l => l.trim().replace(/^\||\|$/g,'').split('|').map(c=>c.trim());
+        const headers = parseRow(t); i++;
+        const rows = [];
+        while (i < lines.length && lines[i].includes('|') && lines[i].trim()) {
+          if (!this.isTableSep(lines[i])) rows.push(parseRow(lines[i]));
+          i++;
+        }
+        if (rows.length) push(this.tableDOM({ headers, rows }));
+        continue;
+      }
+
+      /* Unordered list */
+      if (/^[-*•]\s/.test(t)) {
+        if (listTag !== 'UL') { flush(); curList = this.el('ul'); listTag='UL'; div.appendChild(curList); }
+        const li = this.el('li'); li.innerHTML = this.inline(t.replace(/^[-*•]\s+/,'')); curList.appendChild(li); continue;
+      }
+
+      /* Ordered list */
+      if (/^\d+[.)]\s/.test(t)) {
+        if (listTag !== 'OL') { flush(); curList = this.el('ol'); listTag='OL'; div.appendChild(curList); }
+        const li = this.el('li'); li.innerHTML = this.inline(t.replace(/^\d+[.)]\s+/,'')); curList.appendChild(li); continue;
+      }
+
+      flush();
+      /* Paragraph — collect lines */
+      const paras = [t];
+      while (i < lines.length) {
+        const nt = lines[i].trim();
+        if (!nt || /^(#{1,4}\s|[-*•]\s|\d+[.)]\s|---+$|> |\$\$|\\\[)/.test(nt)) break;
+        if (nt.includes('|') && i+1 < lines.length && this.isTableSep(lines[i+1])) break;
+        paras.push(nt); i++;
+      }
+      const p = this.el('p'); p.innerHTML = this.inline(paras.join(' ')); div.appendChild(p);
+    }
+    return div;
+  },
+
+  /* ── Card shell ── */
+  cardShell(label, color, bgColor, borderColor, icon, title) {
+    const card = this.el('div', 'br7-card br7');
+    if (color) card.style.setProperty('--br7-acc', color);
+
+    const hd = this.el('div', 'br7-hd');
+    const left = this.el('div', 'br7-hd-left');
+
+    const badge = this.el('div', 'br7-type-badge');
+    badge.style.cssText = `background:${bgColor||'#fff1eb'};color:${color||'#e8622a'};border-color:${borderColor||'#ffd0b8'};`;
+    badge.innerHTML = `<span>${icon||'◈'}</span> ${this.esc(label||'Response')}`;
+
+    left.appendChild(badge);
+
+    if (title) {
+      const t = this.el('div', 'br7-hd-title'); t.textContent = title; left.appendChild(t);
+    }
+
+    const right = this.el('div', 'br7-hd-right');
+    const pid = 'br7_' + Date.now();
+    const copyBtn = this.el('button', 'br7-btn');
+    copyBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy`;
+    copyBtn.onclick = () => {
+      const el = document.getElementById(pid);
+      this.copy(el ? el.innerText : '', copyBtn);
+    };
+    right.appendChild(copyBtn);
+
+    hd.appendChild(left); hd.appendChild(right);
+    card.appendChild(hd);
+
+    return { card, pid };
+  },
+
+  dlRow(pid, label) {
+    const row = this.el('div', 'br7-dl-row');
+    const dlTxt = this.el('button', 'br7-dl-btn br7-dl-dark');
+    dlTxt.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download .txt`;
+    dlTxt.onclick = () => {
+      const el = document.getElementById(pid);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([el ? el.innerText : ''], { type:'text/plain' }));
+      a.download = `stremini-${label||'response'}-${Date.now()}.txt`;
+      a.click();
+    };
+    const dlMd = this.el('button', 'br7-dl-btn br7-dl-ghost');
+    dlMd.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Markdown`;
+    dlMd.onclick = () => {
+      const el = document.getElementById(pid);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([el ? el.innerText : ''], { type:'text/markdown' }));
+      a.download = `stremini-${label||'response'}-${Date.now()}.md`;
+      a.click();
+    };
+    row.appendChild(dlTxt); row.appendChild(dlMd);
+    return row;
+  },
+};
+
+/* ─── 2. DOMAIN CONFIG ───────────────────────────────────────────────── */
+const DOMAIN_CFG = {
+  math:        { label:'Math Solution',     icon:'∑',   color:'#4338ca', bg:'#eef2ff', bdr:'#c7d2fe' },
+  code:        { label:'Code',              icon:'</>',  color:'#7c3aed', bg:'#f5f3ff', bdr:'#ddd6fe' },
+  research:    { label:'Research',          icon:'◈',    color:'#c26a1a', bg:'#fff7ed', bdr:'#fed7aa' },
+  data:        { label:'Data Intelligence', icon:'◉',    color:'#0369a1', bg:'#e0f2fe', bdr:'#bae6fd' },
+  finance:     { label:'Financial',         icon:'$',    color:'#15803d', bg:'#dcfce7', bdr:'#86efac' },
+  architect:   { label:'Architecture',      icon:'⬡',    color:'#c2410c', bg:'#ffedd5', bdr:'#fdba74' },
+  competitive: { label:'Intel Report',      icon:'◎',    color:'#6d28d9', bg:'#f5f3ff', bdr:'#c4b5fd' },
+  growth:      { label:'Growth Strategy',   icon:'↑',    color:'#b45309', bg:'#fef3c7', bdr:'#fde68a' },
+  legal:       { label:'Legal',             icon:'⚖',    color:'#be123c', bg:'#ffe4e6', bdr:'#fda4af' },
+  concept:     { label:'Concept',           icon:'💡',   color:'#0d9488', bg:'#ccfbf1', bdr:'#5eead4' },
+  general:     { label:'StreminiAI',        icon:'S',    color:'#e8622a', bg:'#fff1eb', bdr:'#ffd0b8' },
+};
+
+/* ─── 3. OUTPUT TYPE DETECTOR ────────────────────────────────────────── */
+function detectType(query, text) {
+  const q = (query||'').toLowerCase();
+  const t = text||'';
+  const fences = (t.match(/```/g)||[]).length;
+  if (fences >= 2 && !/```mermaid/i.test(t)) {
+    const langs = t.match(/```(\w+)/g)||[];
+    if (langs.some(l => /mermaid/.test(l))) {} else return 'code';
+  }
+  const isMathQ = /\b(solve|calculate|compute|prove|integral|derivative|equation|formula|simplify|differentiate|integrate|theorem|lemma|algebra|calculus|matrix|eigenvalue|probability|statistics|permutation|binomial|limit|series|trigonometry|logarithm)\b/.test(q);
+  if (isMathQ || /\$\$.+?\$\$|\\\[.+?\\\]/s.test(t)) return 'math';
+  if (/\b(vs\.?|versus|compare|which is better|pros and cons|difference between)\b/i.test(q)) return 'comparison';
+  if (/\|[\s-]+\|/.test(t)) return 'table';
+  if (/\b(how to|step.?by.?step|tutorial|guide|setup|install|configure|deploy)\b/.test(q)) return 'steps';
+  const stepLines = (t.match(/^(Step\s*\d+|\d+[.)]\s+\*\*)/gm)||[]).length;
+  if (stepLines >= 2) return 'steps';
+  if (/\b(diagnose|debug|troubleshoot|not working|root cause)\b/.test(q)) return 'diagnosis';
+  if (/\b(list|top \d+|best \d+|recommend|suggest|give me examples)\b/.test(q) || (t.match(/^\d+\.\s+\*\*/gm)||[]).length >= 3) return 'list';
+  const h2count = (t.match(/^## /gm)||[]).length;
+  if (h2count >= 2 || t.length > 700) return 'research';
+  return 'chat';
 }
 
-/* ─── PARSERS ─── */
-function parseCodeBlocks(text) {
-  const segs = []; let lastIndex = 0;
-  const re = /```([\w-]*)\n?([\s\S]*?)```/g; let m;
-  while ((m = re.exec(text)) !== null) {
-    if (m.index > lastIndex) segs.push({ type:'prose', content:text.slice(lastIndex, m.index) });
-    segs.push({ type:'code', lang:(m[1]||'').toLowerCase(), content:m[2].trim() });
-    lastIndex = re.lastIndex;
-  }
-  if (lastIndex < text.length) segs.push({ type:'prose', content:text.slice(lastIndex) });
-  return segs;
-}
-
-function parseTable(text) {
+/* ─── 4. SECTION SPLITTER ────────────────────────────────────────────── */
+function splitSections(text) {
   const lines = text.split('\n');
-  let start = -1;
-  for (let i = 0; i < lines.length - 1; i++) {
-    if (lines[i].includes('|') && /^[\s|:-]+$/.test(lines[i+1]?.trim()||'')) {
-      start = i; break;
+  const sections = [];
+  let cur = { title: null, lines: [] };
+  for (const raw of lines) {
+    const t = raw.trim();
+    const hm = t.match(/^(#{2,3})\s+(.+)$/);
+    if (hm) {
+      if (cur.lines.join('').trim() || cur.title) sections.push(cur);
+      cur = { title: hm[2].trim(), lines: [] };
+    } else {
+      cur.lines.push(raw);
     }
   }
-  if (start === -1) return null;
-  let end = start + 2;
-  while (end < lines.length && lines[end]?.includes('|') && lines[end]?.trim()) end++;
-  const parseRow = l => l.trim().replace(/^\||\|$/g,'').split('|').map(c => c.trim());
-  const headers = parseRow(lines[start]);
-  const rows = lines.slice(start+2, end).filter(l => !/^[\s|:-]+$/.test(l)).map(parseRow);
-  if (!headers.length || !rows.length) return null;
-  return { headers, rows, startLine:start, endLine:end };
+  if (cur.lines.join('').trim() || cur.title) sections.push(cur);
+  return sections;
 }
 
+/* ─── 5. STEP PARSER ─────────────────────────────────────────────────── */
 function parseSteps(text) {
   const steps = [];
-  const re2 = /^(\d+)[.)]\s+(?:\*\*([^*\n]+)\*\*[\s\-–:]*(.+)?|([^\n]+))([\s\S]*?)(?=^\d+[.)]\s|\Z)/gm;
+  const re = /^(?:Step\s*(\d+)\s*[—–:\-]+\s*(.+)|(\d+)[.)]\s+(?:\*\*([^*]+)\*\*[:\s\-–]*(.+)?|(.+)))([\s\S]*?)(?=^(?:Step\s*\d+|(?:\d+)[.)]\s)|$)/gm;
   let m;
-  while ((m = re2.exec(text)) !== null) {
-    const title = (m[2]||m[4]||'').trim();
-    const inline = (m[3]||'').trim();
-    const rest = (m[5]||'').replace(/^\n+/,'').trim();
-    if (title) steps.push({ num:m[1], title, body:(inline+(inline&&rest?' ':'')+rest).trim() });
+  while ((m = re.exec(text)) !== null) {
+    const num   = m[1]||m[3]||'?';
+    const title = (m[2]||m[4]||m[6]||'').trim();
+    const extra = (m[5]||'').trim();
+    const rest  = (m[7]||'').trim();
+    if (title) steps.push({ num, title, body: (extra + (extra&&rest?' ':'')+rest).trim() });
   }
-  if (steps.length >= 2) return steps;
-
-  const steps2 = [];
-  const re3 = /step\s+(\d+)\s*[—–:\-]+\s*([^\n]+)([\s\S]*?)(?=step\s+\d+\s*[—–:\-]|$)/gi;
-  while ((m = re3.exec(text)) !== null) {
-    steps2.push({ num:m[1], title:m[2].trim(), body:(m[3]||'').trim() });
-  }
-  return steps2.length >= 2 ? steps2 : [];
+  return steps.length >= 2 ? steps : [];
 }
 
+/* ─── 6. LIST PARSER ─────────────────────────────────────────────────── */
 function parseListItems(text) {
-  const items = []; const lines = text.split('\n'); let i = 0;
+  const items = []; let i = 0;
+  const lines = text.split('\n');
   while (i < lines.length) {
     const l = lines[i].trim();
     const nm = l.match(/^(\d+)[.)]\s+(?:\*\*([^*]+)\*\*[:\s\-–]+(.+)|(.+))$/);
@@ -969,588 +910,466 @@ function parseListItems(text) {
       const title = (nm[2]||nm[4]||'').trim();
       let sub = (nm[3]||'').trim(); i++;
       while (i < lines.length && /^\s{2,}/.test(lines[i]) && !/^\d+[.)]\s/.test(lines[i].trim())) {
-        sub += (sub ? ' ':'') + lines[i].trim().replace(/^[-–]\s*/,''); i++;
+        sub += (sub?' ':'') + lines[i].trim().replace(/^[-–•]\s*/,''); i++;
       }
-      if (title) items.push({ num:nm[1], title, sub, ordered:true }); continue;
+      if (title) items.push({ num:nm[1], title, sub }); continue;
     }
-    const bm = l.match(/^[-*•]\s+(?:\*\*([^*]+)\*\*[:\s\-–]+(.+)|([^:]+):\s+(.+)|(.+))$/);
+    const bm = l.match(/^[-*•]\s+(?:\*\*([^*]+)\*\*[:\s\-–]+(.+)|([^:]+):\s*(.+)|(.+))$/);
     if (bm) {
       const title = (bm[1]||bm[3]||bm[5]||'').trim();
-      const sub = (bm[2]||bm[4]||'').trim(); i++;
-      if (title) items.push({ title, sub, ordered:false }); continue;
+      const sub   = (bm[2]||bm[4]||'').trim(); i++;
+      if (title) items.push({ title, sub }); continue;
     }
     i++;
   }
   return items;
 }
 
-function parseResearchSections(text) {
-  const sections = [];
-  const re = /^(#{2,3})\s+(.+)$/gm;
-  const headings = []; let m;
-  while ((m = re.exec(text)) !== null) headings.push({ index:m.index, end:re.lastIndex, title:m[2].trim() });
-  if (!headings.length) {
-    text.split(/\n{2,}/).filter(p => p.trim()).forEach(p => sections.push({ title:null, body:p.trim() }));
-    return sections;
-  }
-  if (headings[0].index > 0) {
-    const pre = text.slice(0, headings[0].index).trim();
-    if (pre) sections.push({ title:null, body:pre });
-  }
-  headings.forEach((h, i) => {
-    const bodyEnd = i+1 < headings.length ? headings[i+1].index : text.length;
-    sections.push({ title:h.title, body:text.slice(h.end, bodyEnd).trim() });
-  });
-  return sections;
-}
+/* ─── 7. AUTO MERMAID GENERATOR ──────────────────────────────────────── */
+function autoMermaid(text, query) {
+  const q = (query||'').toLowerCase();
+  const sanitize = s => '"' + String(s||'').replace(/["`{}\[\]]/g,"'").trim().slice(0,38) + '"';
 
-/* ─── PROSE BUILDER ─── */
-function buildProseBlock(text, accentColor) {
-  const div = mkEl('div', 'cr-prose');
-  if (accentColor) div.style.setProperty('--cr-acc', accentColor);
-  const lines = text.split('\n');
-  let i = 0, currentList = null, listTag = '';
-
-  const flush = () => { currentList = null; listTag = ''; };
-  const append = el => { flush(); div.appendChild(el); };
-
-  while (i < lines.length) {
-    const l = lines[i].trim(); i++;
-    if (!l) { flush(); continue; }
-
-    // Callouts
-    if (/^⚠️|^warning:/i.test(l)) {
-      const co = mkEl('div','cr-callout warn');
-      co.innerHTML = '<span class="cr-callout-icon">⚠️</span><span>' + inlineMd(l.replace(/^⚠️?\s*warning:?\s*/i,'')) + '</span>';
-      append(co); continue;
-    }
-    if (/^💡|^tip:/i.test(l)) {
-      const co = mkEl('div','cr-callout tip');
-      co.innerHTML = '<span class="cr-callout-icon">💡</span><span>' + inlineMd(l.replace(/^💡\s*tip:?\s*/i,'')) + '</span>';
-      append(co); continue;
-    }
-    if (/^ℹ️|^info:|^note:/i.test(l)) {
-      const co = mkEl('div','cr-callout info');
-      co.innerHTML = '<span class="cr-callout-icon">ℹ️</span><span>' + inlineMd(l.replace(/^ℹ️?\s*(?:info|note):?\s*/i,'')) + '</span>';
-      append(co); continue;
-    }
-    if (/^🚨|^danger:|^critical:/i.test(l)) {
-      const co = mkEl('div','cr-callout danger');
-      co.innerHTML = '<span class="cr-callout-icon">🚨</span><span>' + inlineMd(l.replace(/^🚨\s*(?:danger|critical):?\s*/i,'')) + '</span>';
-      append(co); continue;
-    }
-    if (/^> /.test(l)) { const bq = mkEl('blockquote'); bq.innerHTML = inlineMd(l.slice(2)); append(bq); continue; }
-    if (/^---+$/.test(l)) { append(mkEl('hr')); continue; }
-
-    const hm = l.match(/^(#{1,4})\s+(.+)$/);
-    if (hm) {
-      const tag = ['h2','h2','h3','h4'][hm[1].length-1]||'h4';
-      const h = mkEl(tag); h.innerHTML = inlineMd(hm[2]); append(h); continue;
-    }
-
-    if (/^[-*•]\s/.test(l)) {
-      if (listTag !== 'UL') { flush(); currentList = mkEl('ul'); listTag='UL'; div.appendChild(currentList); }
-      const li = mkEl('li'); li.innerHTML = inlineMd(l.replace(/^[-*•]\s+/,'')); currentList.appendChild(li); continue;
-    }
-    if (/^\d+[.)]\s/.test(l)) {
-      if (listTag !== 'OL') { flush(); currentList = mkEl('ol'); listTag='OL'; div.appendChild(currentList); }
-      const li = mkEl('li'); li.innerHTML = inlineMd(l.replace(/^\d+[.)]\s+/,'')); currentList.appendChild(li); continue;
-    }
-
-    flush();
-    const paraLines = [l];
-    while (i < lines.length) {
-      const nt = lines[i].trim();
-      if (!nt || /^(#{1,4}\s|[-*•]\s|\d+[.)]\s|---+$|> )/.test(nt)) break;
-      paraLines.push(nt); i++;
-    }
-    const p = mkEl('p'); p.innerHTML = inlineMd(paraLines.join(' ')); div.appendChild(p);
-  }
-  return div;
-}
-
-/* ─── CODE BLOCK BUILDER ─── */
-function buildCodeBlock(lang, code) {
-  if (lang === 'mermaid') {
-    const wrap = mkEl('div', 'cr-mermaid-wrap');
-    const inner = mkEl('div', 'mermaid');
-    inner.textContent = code;
-    wrap.appendChild(inner);
-    requestAnimationFrame(() => {
-      try { if (window.mermaid) window.mermaid.run({ nodes:[inner] }); } catch(e) {}
+  /* Steps → flowchart */
+  const steps = parseSteps(text);
+  if (steps.length >= 3) {
+    let code = 'flowchart TD\n';
+    steps.forEach((s,i) => {
+      const safe = sanitize(s.title);
+      const shape = i===0||i===steps.length-1 ? `([${safe}])` : `[${safe}]`;
+      code += `  S${i}${shape}\n`;
+      if (i < steps.length-1) code += `  S${i} --> S${i+1}\n`;
     });
-    return wrap;
+    return { code, label:'Process Flow' };
   }
 
-  const wrap = mkEl('div', 'cr-code');
-  const bar = mkEl('div', 'cr-code-bar');
-  const dots = mkEl('div', 'cr-code-dots');
-  dots.innerHTML = '<span class="cr-code-dot"></span><span class="cr-code-dot"></span><span class="cr-code-dot"></span>';
-  const langEl = mkEl('div', 'cr-code-lang');
-  langEl.innerHTML = `<span style="opacity:.5">~/</span>${esc(lang || 'code')}`;
-  const langWrap = mkEl('div', '');
-  langWrap.style.cssText = 'display:flex;align-items:center;gap:12px;';
-  langWrap.appendChild(dots);
-  langWrap.appendChild(langEl);
-
-  const copyBtn = mkEl('button', 'cr-code-copy', 'Copy');
-  copyBtn.onclick = () => copyToClipboard(code, copyBtn);
-  bar.appendChild(langWrap);
-  bar.appendChild(copyBtn);
-
-  const pre = mkEl('pre', 'cr-code-pre');
-  const codeEl = mkEl('code');
-  if (lang && lang !== 'plaintext') codeEl.className = `language-${lang}`;
-  codeEl.textContent = code;
-  try { if (window.hljs) window.hljs.highlightElement(codeEl); } catch(e) {}
-  pre.appendChild(codeEl);
-  wrap.appendChild(bar);
-  wrap.appendChild(pre);
-  return wrap;
-}
-
-/* ─── TABLE DOM BUILDER ─── */
-function buildTableDOM(tbl) {
-  const tw = mkEl('div', 'cr-table-wrap');
-  const table = mkEl('table', 'cr-table');
-  const thead = mkEl('thead'); const hr = mkEl('tr');
-  tbl.headers.forEach(h => { const th = mkEl('th'); th.innerHTML = inlineMd(h); hr.appendChild(th); });
-  thead.appendChild(hr); table.appendChild(thead);
-  const tbody = mkEl('tbody');
-  tbl.rows.forEach(row => {
-    const tr = mkEl('tr');
-    tbl.headers.forEach((_, ci) => {
-      const td = mkEl('td'); const val = row[ci]||'';
-      if (/🔴|CRITICAL|HIGH RISK/i.test(val)) td.innerHTML = `<span class="cr-badge cr-badge-red">${inlineMd(val)}</span>`;
-      else if (/🟡|MEDIUM|WARNING/i.test(val)) td.innerHTML = `<span class="cr-badge cr-badge-amber">${inlineMd(val)}</span>`;
-      else if (/🟢|LOW|GOOD|OK/i.test(val)) td.innerHTML = `<span class="cr-badge cr-badge-green">${inlineMd(val)}</span>`;
-      else td.innerHTML = inlineMd(val);
-      tr.appendChild(td);
-    });
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody); tw.appendChild(table);
-  return tw;
-}
-
-/* ─── OUTPUT TYPE DETECTION ─── */
-function detectOutputType(userQuery, responseText) {
-  const q = (userQuery||'').toLowerCase();
-  const r = responseText||'';
-  if (/```[\w]*\n/.test(r) && (r.match(/```/g)||[]).length >= 2) return 'code';
-  if (/\$\$[\s\S]+?\$\$|\\\([\s\S]+?\\\)/.test(r)) return 'math';
-  const isMathQ = /\b(solve|calculate|compute|prove|integral|derivative|equation|formula|simplify|factor|differentiate|integrate|theorem|lemma|algebra|calculus|matrix|eigenvalue|probability|statistics|permutation|binomial|limit|series|trigonometry|logarithm)\b/.test(q);
-  if (isMathQ) return 'math';
-  if (/\b(vs\.?|versus|compare|comparison|difference between|which is better|pros and cons)\b/i.test(q)) return 'comparison';
-  if ((r.match(/\|\s*[-:]+\s*\|/g)||[]).length > 0) return 'table';
-  if (/\b(how to|how do i|guide|walk me through|tutorial|setup|install|configure|deploy|step by step|steps to)\b/.test(q)) return 'steps';
-  if (/^Step\s+\d+/im.test(r) && (r.match(/^Step\s+\d+/gim)||[]).length >= 2) return 'steps';
-  if (/^\d+\.\s+\*\*/m.test(r) && (r.match(/^\d+\./gm)||[]).length >= 3) return 'steps';
-  if (/\b(diagnose|debug|troubleshoot|root cause|not working|why is|what's wrong)\b/.test(q)) return 'diagnosis';
-  if (/\b(list|give me|top \d+|best \d+|recommend|suggest|examples of|name \d+)\b/.test(q)) return 'list';
-  if ((r.match(/^[-*•]\s/gm)||[]).length >= 4) return 'list';
-  if ((r.match(/^#{2,3}\s/gm)||[]).length >= 2) return 'research';
-  if (r.length > 600) return 'research';
-  return 'chat';
-}
-
-/* ─── DOMAIN RENDERERS ─── */
-
-async function renderCode(text, domain) {
-  const { card, id, cfg } = buildCardShell(domain||'code', 'Code Response');
-  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '20px';
-  const segs = parseCodeBlocks(text);
-  for (const s of segs) {
-    if (s.type === 'code') bd.appendChild(buildCodeBlock(s.lang, s.content));
-    else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
+  /* Headings → mindmap */
+  const h2s = [...text.matchAll(/^## (.+)$/gm)].map(m => m[1].trim()).slice(0,6);
+  if (h2s.length >= 3 && /\b(explain|concept|overview|what is|how does)\b/.test(q)) {
+    const topic = query.replace(/\b(explain|what is|how does|tell me about)\b/gi,'').trim().slice(0,28) || 'Overview';
+    let code = `mindmap\n  root((${sanitize(topic)}))\n`;
+    h2s.forEach(h => { code += `    ${sanitize(h)}\n`; });
+    return { code, label:'Concept Map' };
   }
-  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'code'));
-  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
+
+  /* Architecture keywords → layered diagram */
+  if (/\b(architect|system design|pipeline|infrastructure|backend|microservice)\b/.test(q)) {
+    const comps = [...text.matchAll(/\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)?)\s*(?:Service|Layer|Module|DB|Cache|Queue|API|Gateway)\b/g)]
+      .map(m => m[0].trim()).filter((v,i,a)=>a.indexOf(v)===i).slice(0,6);
+    if (comps.length >= 3) {
+      let code = 'flowchart TB\n  Client([Client])\n';
+      comps.forEach((c,i) => { code += `  N${i}[${sanitize(c)}]\n`; });
+      comps.forEach((_,i) => { if (i===0) code += `  Client --> N0\n`; else code += `  N${i-1} --> N${i}\n`; });
+      return { code, label:'System Architecture' };
+    }
+  }
+
+  return null;
 }
 
-async function renderMathOutput(text) {
-  const { card, id, cfg } = buildCardShell('math', 'Math Solution');
-  const sections = parseResearchSections(text);
-  const body = mkEl('div', ''); body.id = id;
+/* ─── 8. RENDERERS ───────────────────────────────────────────────────── */
+
+/* MATH */
+async function renderMath(text, domain) {
+  const cfg = DOMAIN_CFG.math;
+  const { card, pid } = BR7.cardShell(cfg.label, cfg.color, cfg.bg, cfg.bdr, cfg.icon, '');
+
+  const body = BR7.el('div', ''); body.id = pid;
+  const sections = splitSections(text);
 
   for (const sec of sections) {
-    const isAnswer = /^(answer|final\s*answer|the\s*answer)\s*$/i.test(sec.title||'');
-    const isVerify = /^(verification|verify|check)\s*$/i.test(sec.title||'');
-    const secEl = mkEl('div', 'cr-section');
+    const secText = sec.lines.join('\n');
+    const isAnswer  = /^(answer|final\s*answer|the\s*answer)$/i.test(sec.title||'');
+    const isVerify  = /^(verification?|verify|check)$/i.test(sec.title||'');
+    const isSolution= /^(solution|solve|proof|derivation)$/i.test(sec.title||'');
+
+    const secEl = BR7.el('div', 'br7-section');
 
     if (sec.title) {
-      const hd = mkEl('div', 'cr-section-hd');
-      const marker = mkEl('span', 'cr-section-marker');
-      marker.style.background = isAnswer ? '#16a34a' : isVerify ? '#2563eb' : cfg.accent;
-      const lbl = mkEl('span', 'cr-section-label'); lbl.textContent = sec.title;
-      const chev = mkEl('span', 'cr-section-chevron open');
-      chev.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
-      hd.appendChild(marker); hd.appendChild(lbl); hd.appendChild(chev);
-      const secBody = mkEl('div', 'cr-section-body');
-      buildMathBody(sec.body, secBody, isAnswer, isVerify, cfg.accent);
-      secEl.appendChild(hd); secEl.appendChild(secBody);
-      hd.onclick = () => { const open = secBody.classList.toggle('collapsed'); chev.classList.toggle('open', !open); };
+      const hd  = BR7.el('div', 'br7-sec-hd');
+      const bar = BR7.el('span', 'br7-sec-bar');
+      bar.style.background = isAnswer ? '#059669' : isVerify ? '#2563eb' : cfg.color;
+      const lbl = BR7.el('span', 'br7-sec-label', sec.title);
+      const chev = BR7.el('span', 'br7-chevron open');
+      chev.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
+      hd.appendChild(bar); hd.appendChild(lbl); hd.appendChild(chev);
+      const bd = BR7.el('div', 'br7-sec-body');
+      buildMathBody(secText, bd, isAnswer, isVerify, cfg.color);
+      secEl.appendChild(hd); secEl.appendChild(bd);
+      hd.onclick = () => { const open = bd.classList.toggle('collapsed'); chev.classList.toggle('open', !open); };
     } else {
-      const secBody = mkEl('div', 'cr-section-body');
-      buildMathBody(sec.body, secBody, false, false, cfg.accent);
-      secEl.appendChild(secBody);
+      const bd = BR7.el('div', 'br7-sec-body');
+      buildMathBody(secText, bd, false, false, cfg.color);
+      secEl.appendChild(bd);
     }
     body.appendChild(secEl);
   }
-  card.appendChild(body); card.appendChild(buildDownloadRow(id, 'math'));
-  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
+
+  card.appendChild(body); card.appendChild(BR7.dlRow(pid, 'math'));
+  const root = BR7.el('div', 'br7'); root.appendChild(card); return root;
 }
 
 function buildMathBody(text, container, isAnswer, isVerify, accent) {
-  const isMathLine = t => /[=+\-*/^]/.test(t) && t.length < 200;
+  const isMath = t => /[=+\-*/^]/.test(t) && t.length < 240;
   const lines = text.split('\n'); let i = 0;
   while (i < lines.length) {
-    const l = lines[i].trim(); i++;
-    if (!l) continue;
-    if (isAnswer && isMathLine(l)) {
-      const af = [l];
-      while (i < lines.length && isMathLine(lines[i].trim())) { af.push(lines[i].trim()); i++; }
-      const box = mkEl('div', 'cr-math-answer');
-      box.appendChild(mkEl('div', 'cr-math-answer-lbl', 'Final Answer'));
-      box.appendChild(mkEl('div', 'cr-math-answer-val', af.join('\n')));
+    const t = lines[i].trim(); i++;
+    if (!t) continue;
+
+    /* Display math $$...$$ */
+    if (t.startsWith('$$')) {
+      const tex = t === '$$' ? '' : t.slice(2, t.endsWith('$$') ? -2 : undefined).trim();
+      const mLines = tex ? [tex] : [];
+      if (!tex) { while (i < lines.length && !lines[i].trim().endsWith('$$')) { mLines.push(lines[i]); i++; } if(i<lines.length){const last=lines[i].trim();mLines.push(last.slice(0,-2));i++;} }
+      const box = BR7.el('div', 'br7-math-block');
+      box.innerHTML = BR7.katex(mLines.join('\n').trim(), true);
       container.appendChild(box); continue;
     }
-    if (isVerify) {
-      const v = mkEl('div', 'cr-math-verify');
-      v.innerHTML = '<strong>✓ Verification: </strong>' + inlineMd(l);
-      container.appendChild(v); continue;
-    }
-    if (isMathLine(l)) {
-      const mf = [l];
-      while (i < lines.length && isMathLine(lines[i].trim())) { mf.push(lines[i].trim()); i++; }
-      const box = mkEl('div', 'cr-math-formula');
-      box.appendChild(mkEl('div', 'cr-math-formula-lbl', 'Formula'));
-      const fEl = document.createElement('div'); fEl.textContent = mf.join('\n'); box.appendChild(fEl);
+
+    /* \[ display math */
+    if (t === '\\[') {
+      const mLines = [];
+      while (i < lines.length && lines[i].trim() !== '\\]') { mLines.push(lines[i]); i++; }
+      i++;
+      const box = BR7.el('div', 'br7-math-block');
+      box.innerHTML = BR7.katex(mLines.join('\n').trim(), true);
       container.appendChild(box); continue;
     }
-    container.appendChild(buildProseBlock(l, accent));
+
+    /* Final answer box */
+    if (isAnswer && isMath(t)) {
+      const aLines = [t];
+      while (i < lines.length && isMath(lines[i].trim())) { aLines.push(lines[i].trim()); i++; }
+      const box = BR7.el('div', 'br7-math-answer');
+      const lbl = BR7.el('div', 'br7-math-answer-lbl', 'Final Answer');
+      const val = BR7.el('div', '');
+      val.innerHTML = BR7.katex(aLines.join(' \\ ').trim(), true);
+      box.appendChild(lbl); box.appendChild(val);
+      container.appendChild(box); continue;
+    }
+
+    /* Math step */
+    if (/^(Step|step)\s*\d+/.test(t) || /^\d+[.)]\s/.test(t)) {
+      const sm = t.match(/^(?:Step\s*(\d+)\s*[—–:\-]+\s*(.+)|(\d+)[.)]\s+(.+))$/i);
+      const num = sm ? (sm[1]||sm[3]||'?') : '?';
+      const title = sm ? (sm[2]||sm[4]||t).trim() : t;
+      const exprLines = [];
+      while (i < lines.length && lines[i].trim() && !/^Step\s*\d+/i.test(lines[i].trim()) && !/^\d+[.)]\s/.test(lines[i].trim())) {
+        exprLines.push(lines[i].trim()); i++;
+      }
+      const step = BR7.el('div', 'br7-math-step');
+      const numEl = BR7.el('div', 'br7-math-step-num', num);
+      const bdy = BR7.el('div', 'br7-math-step-body');
+      bdy.appendChild(BR7.el('div', 'br7-math-step-title', BR7.inline(title)));
+      if (exprLines.length) {
+        const expr = BR7.el('div', 'br7-math-step-expr');
+        expr.innerHTML = BR7.katex(exprLines.join('\n'), exprLines.length > 1);
+        bdy.appendChild(expr);
+      }
+      step.appendChild(numEl); step.appendChild(bdy);
+      container.appendChild(step); continue;
+    }
+
+    /* Inline math or prose */
+    if (isMath(t)) {
+      const box = BR7.el('div', 'br7-math-block');
+      box.innerHTML = BR7.katex(t, true);
+      container.appendChild(box); continue;
+    }
+
+    /* Prose */
+    const para = BR7.el('p'); para.style.cssText = 'font-size:14px;line-height:1.82;color:var(--br7-tx);margin:0 0 8px';
+    para.innerHTML = BR7.inline(t);
+    container.appendChild(para);
   }
 }
 
-async function renderResearch(text, domain, userQuery) {
-  const { card, id, cfg } = buildCardShell(domain||'research', '');
-  const sections = parseResearchSections(text);
-
-  // Check for auto-diagram opportunity
-  const diagType = detectDiagramType(`${userQuery||''}\n${text.slice(0, 1200)}`);
-  let diagramEl = null;
-  if (diagType) {
-    const mermaidCode = generateMermaidFromContent(text, diagType, userQuery);
-    if (mermaidCode) {
-      const labelMap = { flowchart:'Flow Diagram', architecture:'System Architecture', sequence:'Sequence Diagram', mindmap:'Mind Map', class:'Class Diagram', er:'ER Diagram', pie:'Distribution Chart', gantt:'Timeline' };
-      diagramEl = await buildDiagramCard(mermaidCode, labelMap[diagType]||'Diagram', cfg.accent);
-    }
-  }
-
-  const body = mkEl('div', ''); body.id = id;
-
-  if (diagramEl) {
-    const dWrap = mkEl('div', ''); dWrap.style.cssText = 'padding:16px 20px 4px;';
-    dWrap.appendChild(diagramEl);
-    body.appendChild(dWrap);
-  }
-
-  sections.forEach(sec => {
-    const rsec = mkEl('div', 'cr-rsec');
-    if (sec.title) {
-      const hd = mkEl('div', 'cr-rsec-hd');
-      const bar = mkEl('span', 'cr-rsec-hd-bar'); bar.style.background = cfg.accent;
-      const lbl = document.createElement('span'); lbl.innerHTML = inlineMd(sec.title);
-      hd.appendChild(bar); hd.appendChild(lbl); rsec.appendChild(hd);
-    }
-    const tbl = parseTable(sec.body);
-    if (tbl) {
-      const lines = sec.body.split('\n');
-      const pre = lines.slice(0, tbl.startLine).join('\n').trim();
-      const post = lines.slice(tbl.endLine).join('\n').trim();
-      if (pre) rsec.appendChild(buildProseBlock(pre, cfg.accent));
-      rsec.appendChild(buildTableDOM(tbl));
-      if (post) rsec.appendChild(buildProseBlock(post, cfg.accent));
-    } else {
-      parseCodeBlocks(sec.body).forEach(s => {
-        if (s.type === 'code') rsec.appendChild(buildCodeBlock(s.lang, s.content));
-        else if (s.content.trim()) rsec.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
-      });
-    }
-    body.appendChild(rsec);
+/* CODE */
+async function renderCode(text, domain) {
+  const cfg = DOMAIN_CFG[domain]||DOMAIN_CFG.code;
+  const { card, pid } = BR7.cardShell(cfg.label, cfg.color, cfg.bg, cfg.bdr, cfg.icon, '');
+  const body = BR7.el('div', ''); body.id = pid; body.style.padding = '20px';
+  BR7.parseSegments(text).forEach(s => {
+    if (s.type === 'code') body.appendChild(BR7.codeBlock(s.lang, s.content));
+    else if (s.content.trim()) body.appendChild(BR7.proseDOM(s.content.trim(), cfg.color));
   });
-
-  card.appendChild(body); card.appendChild(buildDownloadRow(id, domain||'research'));
-  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
+  card.appendChild(body); card.appendChild(BR7.dlRow(pid, 'code'));
+  const root = BR7.el('div', 'br7'); root.appendChild(card); return root;
 }
 
-async function renderSteps(text, domain, userQuery) {
-  const { card, id, cfg } = buildCardShell(domain||'general', 'Step-by-Step Guide');
+/* STEPS */
+async function renderSteps(text, domain, query) {
+  const cfg = DOMAIN_CFG[domain]||DOMAIN_CFG.general;
+  const { card, pid } = BR7.cardShell(`${cfg.label} — Guide`, cfg.color, cfg.bg, cfg.bdr, '📋', '');
+
+  /* Intro */
+  const firstStep = text.search(/^(Step\s*\d+|\d+[.)]\s)/m);
+  if (firstStep > 0) {
+    const intro = text.slice(0, firstStep).trim();
+    if (intro) { const s = BR7.el('div', 'br7-summary'); s.innerHTML = BR7.inline(intro); card.appendChild(s); }
+  }
+
+  /* Auto flowchart */
+  const diag = autoMermaid(text, query);
+  if (diag) {
+    const dWrap = BR7.el('div', ''); dWrap.style.padding = '16px 20px 4px';
+    dWrap.appendChild(BR7.mermaidCard(diag.code, diag.label, cfg.color));
+    card.appendChild(dWrap);
+  }
+
+  const body = BR7.el('div', ''); body.id = pid; body.style.padding = '18px 20px 22px';
   const steps = parseSteps(text);
 
-  // Intro summary
-  const firstStepIdx = text.search(/step\s*1|\n1[\.)]\s/i);
-  if (firstStepIdx > 0) {
-    const intro = text.slice(0, firstStepIdx).trim();
-    if (intro) {
-      const sum = mkEl('div', 'cr-summary'); sum.innerHTML = inlineMd(intro);
-      card.appendChild(sum);
-    }
-  }
-
-  // Auto flowchart for steps
   if (steps.length >= 2) {
-    const stepTitles = steps.map(s => s.title.replace(/[{}\[\]()"`]/g,'').replace(/\s+/g,' ').trim().slice(0,32));
-    let code = 'flowchart TD\n';
-    stepTitles.forEach((t, i) => {
-      const safe = `"${t}"`;
-      const cls = i === 0 ? `([${safe}])` : i === steps.length-1 ? `([${safe}])` : `[${safe}]`;
-      code += `  S${i}${cls}\n`;
-      if (i < stepTitles.length-1) code += `  S${i} --> S${i+1}\n`;
-    });
-    try {
-      const dCard = await buildDiagramCard(code, 'Process Flow', cfg.accent);
-      const dWrap = mkEl('div', ''); dWrap.style.cssText = 'padding:14px 20px 4px;';
-      dWrap.appendChild(dCard);
-      card.appendChild(dWrap);
-    } catch(e) {}
-  }
-
-  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '18px 20px 22px';
-  if (steps.length >= 2) {
-    const wrap = mkEl('div', 'cr-steps');
+    const wrap = BR7.el('div', 'br7-steps');
     steps.forEach(step => {
-      const item = mkEl('div', 'cr-step');
-      const rail = mkEl('div', 'cr-step-rail');
-      const num = mkEl('div', 'cr-step-num'); num.textContent = step.num;
-      num.style.background = cfg.accent;
-      rail.appendChild(num); rail.appendChild(mkEl('div', 'cr-step-line'));
-      const body = mkEl('div', 'cr-step-body');
-      body.appendChild(mkEl('div', 'cr-step-title', inlineMd(step.title)));
+      const item = BR7.el('div', 'br7-step');
+      const rail = BR7.el('div', 'br7-step-rail');
+      const num  = BR7.el('div', 'br7-step-num', step.num);
+      num.style.background = cfg.color;
+      num.style.boxShadow  = `0 4px 14px ${cfg.color}55`;
+      rail.appendChild(num); rail.appendChild(BR7.el('div', 'br7-step-line'));
+      const bdy = BR7.el('div', 'br7-step-body');
+      bdy.appendChild(BR7.el('div', 'br7-step-title', BR7.inline(step.title)));
       if (step.body) {
         if (/```/.test(step.body)) {
-          parseCodeBlocks(step.body).forEach(s => {
-            if (s.type === 'code') body.appendChild(buildCodeBlock(s.lang, s.content));
-            else if (s.content.trim()) body.appendChild(mkEl('div', 'cr-step-desc', inlineMd(s.content.trim())));
+          BR7.parseSegments(step.body).forEach(s => {
+            if (s.type==='code') bdy.appendChild(BR7.codeBlock(s.lang, s.content));
+            else if (s.content.trim()) bdy.appendChild(BR7.el('div', 'br7-step-desc', BR7.inline(s.content.trim())));
           });
         } else {
-          body.appendChild(mkEl('div', 'cr-step-desc', inlineMd(step.body.replace(/\n/g,' '))));
+          bdy.appendChild(BR7.el('div', 'br7-step-desc', BR7.inline(step.body.replace(/\n/g,' '))));
         }
       }
-      item.appendChild(rail); item.appendChild(body); wrap.appendChild(item);
+      item.appendChild(rail); item.appendChild(bdy); wrap.appendChild(item);
     });
-    bd.appendChild(wrap);
+    body.appendChild(wrap);
   } else {
-    parseCodeBlocks(text).forEach(s => {
-      if (s.type === 'code') bd.appendChild(buildCodeBlock(s.lang, s.content));
-      else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
+    BR7.parseSegments(text).forEach(s => {
+      if (s.type==='code') body.appendChild(BR7.codeBlock(s.lang, s.content));
+      else if (s.content.trim()) body.appendChild(BR7.proseDOM(s.content.trim(), cfg.color));
     });
   }
-  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
-  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
+
+  card.appendChild(body); card.appendChild(BR7.dlRow(pid, 'guide'));
+  const root = BR7.el('div', 'br7'); root.appendChild(card); return root;
 }
 
+/* LIST */
 async function renderList(text, domain) {
+  const cfg = DOMAIN_CFG[domain]||DOMAIN_CFG.general;
   const items = parseListItems(text);
-  const { card, id, cfg } = buildCardShell(domain||'general', `${items.length || ''} Results`.trim());
+  const { card, pid } = BR7.cardShell(cfg.label, cfg.color, cfg.bg, cfg.bdr, cfg.icon, '');
 
-  const firstItem = text.search(/^(\d+[.)]\s|[-*•]\s)/m);
-  if (firstItem > 0) {
-    const intro = text.slice(0, firstItem).trim();
-    if (intro) { const sum = mkEl('div', 'cr-summary'); sum.innerHTML = inlineMd(intro); card.appendChild(sum); }
+  const firstBullet = text.search(/^(\d+[.)]\s|[-*•]\s)/m);
+  if (firstBullet > 0) {
+    const intro = text.slice(0, firstBullet).trim();
+    if (intro) { const s = BR7.el('div', 'br7-summary'); s.innerHTML = BR7.inline(intro); card.appendChild(s); }
   }
 
-  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '16px 20px 20px';
+  const body = BR7.el('div', ''); body.id = pid; body.style.padding = '16px 20px 20px';
+
   if (items.length >= 2) {
-    const wrap = mkEl('div', 'cr-list');
+    const wrap = BR7.el('div', 'br7-list');
     items.forEach((item, idx) => {
-      const el = mkEl('div', 'cr-list-item');
-      const bullet = mkEl('div', item.ordered ? 'cr-list-num' : 'cr-list-num');
-      bullet.textContent = item.ordered ? (item.num||String(idx+1)) : '·';
-      bullet.style.cssText = `background:${cfg.accentBg};color:${cfg.accent};border:1.5px solid ${cfg.accentBdr};`;
-      const content = mkEl('div', '');
-      if (item.title) content.appendChild(mkEl('div', 'cr-list-title', inlineMd(item.title)));
-      if (item.sub) content.appendChild(mkEl('div', 'cr-list-sub', inlineMd(item.sub)));
-      el.appendChild(bullet); el.appendChild(content); wrap.appendChild(el);
+      const el  = BR7.el('div', 'br7-list-item');
+      const num = BR7.el('div', 'br7-list-num', item.num || String(idx+1));
+      num.style.cssText = `background:${cfg.bg};color:${cfg.color};border-color:${cfg.bdr};`;
+      const content = BR7.el('div', '');
+      if (item.title) content.appendChild(BR7.el('div', 'br7-list-title', BR7.inline(item.title)));
+      if (item.sub)   content.appendChild(BR7.el('div', 'br7-list-sub',   BR7.inline(item.sub)));
+      el.appendChild(num); el.appendChild(content); wrap.appendChild(el);
     });
-    bd.appendChild(wrap);
+    body.appendChild(wrap);
   } else {
-    bd.appendChild(buildProseBlock(text, cfg.accent));
+    body.appendChild(BR7.proseDOM(text, cfg.color));
   }
-  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
-  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
+
+  card.appendChild(body); card.appendChild(BR7.dlRow(pid, 'list'));
+  const root = BR7.el('div', 'br7'); root.appendChild(card); return root;
 }
 
-async function renderComparison(text, domain) {
-  const { card, id, cfg } = buildCardShell(domain||'general', 'Comparison');
+/* RESEARCH / GENERIC LONG FORM */
+async function renderResearch(text, domain, query) {
+  const cfg = DOMAIN_CFG[domain]||DOMAIN_CFG.general;
+  const { card, pid } = BR7.cardShell(cfg.label, cfg.color, cfg.bg, cfg.bdr, cfg.icon, '');
 
-  if (text.includes('|') && text.match(/\|\s*[-:]+\s*\|/)) {
-    const tbl = parseTable(text);
-    if (tbl) {
-      const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '18px 20px';
-      const lines = text.split('\n');
-      const pre = lines.slice(0, tbl.startLine).join('\n').trim();
-      if (pre) { const sum = mkEl('div', 'cr-summary'); sum.innerHTML = inlineMd(pre); card.appendChild(sum); }
-      bd.appendChild(buildTableDOM(tbl));
-      const post = lines.slice(tbl.endLine).join('\n').trim();
-      if (post) {
-        const v = mkEl('div', 'cr-verdict');
-        v.innerHTML = `<div class="cr-verdict-glyph" style="color:${cfg.accent}">—</div><div><strong style="color:${cfg.accent}">Verdict</strong><p>${inlineMd(post.replace(/^#{1,4}\s+[^\n]+\n?/gm,'').trim())}</p></div>`;
-        bd.appendChild(v);
-      }
-      card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
-      const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
-    }
+  /* Auto diagram */
+  const diag = autoMermaid(text, query);
+  if (diag) {
+    const dWrap = BR7.el('div', ''); dWrap.style.padding = '16px 20px 4px';
+    dWrap.appendChild(BR7.mermaidCard(diag.code, diag.label, cfg.color));
+    card.appendChild(dWrap);
   }
-  return renderResearch(text, domain, '');
-}
 
-async function renderTable(text, domain) {
-  const { card, id, cfg } = buildCardShell(domain||'general', 'Data Table');
-  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '18px 20px';
-  const tbl = parseTable(text);
-  if (tbl) {
-    const lines = text.split('\n');
-    const pre = lines.slice(0, tbl.startLine).join('\n').trim();
-    if (pre) bd.appendChild(buildProseBlock(pre, cfg.accent));
-    bd.appendChild(buildTableDOM(tbl));
-    const post = lines.slice(tbl.endLine).join('\n').trim();
-    if (post) bd.appendChild(buildProseBlock(post, cfg.accent));
-  } else {
-    bd.appendChild(buildProseBlock(text, cfg.accent));
-  }
-  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
-  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
-}
+  const body = BR7.el('div', ''); body.id = pid;
+  const sections = splitSections(text);
 
-async function renderDiagnosis(text, domain) {
-  const { card, id, cfg } = buildCardShell(domain||'general', 'Diagnosis');
-  const sections = parseResearchSections(text);
-  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '18px 20px';
-  const sevMap = {
-    'critical':'critical','error':'critical','fatal':'critical',
-    'high':'high','major':'high','broken':'high','risk':'high',
-    'medium':'medium','warning':'medium','issue':'medium','problem':'medium',
-    'low':'low','minor':'low','tip':'low',
-    'info':'info','note':'info'
-  };
-  const diag = mkEl('div', 'cr-diag');
-  let hasFindings = false;
   sections.forEach(sec => {
-    if (!sec.title) { bd.appendChild(buildProseBlock(sec.body, cfg.accent)); return; }
-    hasFindings = true;
-    const titleLow = sec.title.toLowerCase();
-    let sev = 'info';
-    for (const [k,v] of Object.entries(sevMap)) { if (titleLow.includes(k)) { sev = v; break; } }
-    const item = mkEl('div', `cr-diag-item sev-${sev}`);
-    const hd = mkEl('div', 'cr-diag-hd'); hd.innerHTML = inlineMd(sec.title);
-    const tag = mkEl('span', 'cr-diag-sev-tag'); tag.textContent = sev.toUpperCase(); hd.appendChild(tag);
-    item.appendChild(hd);
-    if (sec.body) { const fb = mkEl('div', 'cr-diag-bd'); fb.appendChild(buildProseBlock(sec.body, cfg.accent)); item.appendChild(fb); }
-    diag.appendChild(item);
+    const secEl = BR7.el('div', 'br7-section');
+
+    if (sec.title) {
+      const hd  = BR7.el('div', 'br7-sec-hd');
+      const bar = BR7.el('span', 'br7-sec-bar');
+      bar.style.background = cfg.color;
+      const lbl  = BR7.el('span', 'br7-sec-label', sec.title);
+      const chev = BR7.el('span', 'br7-chevron open');
+      chev.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>`;
+      hd.appendChild(bar); hd.appendChild(lbl); hd.appendChild(chev);
+      const bd = BR7.el('div', 'br7-sec-body');
+      const secText = sec.lines.join('\n');
+      BR7.parseSegments(secText).forEach(s => {
+        if (s.type==='code') bd.appendChild(BR7.codeBlock(s.lang, s.content));
+        else if (s.content.trim()) bd.appendChild(BR7.proseDOM(s.content.trim(), cfg.color));
+      });
+      secEl.appendChild(hd); secEl.appendChild(bd);
+      hd.onclick = () => { const open = bd.classList.toggle('collapsed'); chev.classList.toggle('open', !open); };
+    } else {
+      const bd = BR7.el('div', 'br7-sec-body');
+      const secText = sec.lines.join('\n');
+      BR7.parseSegments(secText).forEach(s => {
+        if (s.type==='code') bd.appendChild(BR7.codeBlock(s.lang, s.content));
+        else if (s.content.trim()) bd.appendChild(BR7.proseDOM(s.content.trim(), cfg.color));
+      });
+      secEl.appendChild(bd);
+    }
+    body.appendChild(secEl);
   });
-  if (hasFindings) bd.appendChild(diag); else bd.appendChild(buildProseBlock(text, cfg.accent));
-  card.appendChild(bd); card.appendChild(buildDownloadRow(id, domain||'general'));
-  const root = mkEl('div', 'cr-root'); root.appendChild(card); return root;
+
+  card.appendChild(body); card.appendChild(BR7.dlRow(pid, domain||'report'));
+  const root = BR7.el('div', 'br7'); root.appendChild(card); return root;
 }
 
-async function renderChat(text, domain) {
-  const cfg = DOMAIN_CONFIG[domain] || DOMAIN_CONFIG.general;
-  const root = mkEl('div', 'cr-root');
-  root.style.setProperty('--cr-acc', cfg.accent);
+/* COMPARISON */
+async function renderComparison(text, domain) {
+  const cfg = DOMAIN_CFG[domain]||DOMAIN_CFG.general;
+  const { card, pid } = BR7.cardShell('Comparison', cfg.color, cfg.bg, cfg.bdr, '⚖', '');
 
-  if (text.length < 180) {
-    const wrap = mkEl('div', 'cr-chat');
-    parseCodeBlocks(text).forEach(s => {
-      if (s.type === 'code') wrap.appendChild(buildCodeBlock(s.lang, s.content));
-      else if (s.content.trim()) wrap.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
+  const body = BR7.el('div', ''); body.id = pid; body.style.padding = '18px 20px';
+  const tbl  = BR7.parseTable(text);
+
+  if (tbl) {
+    const allLines = text.split('\n');
+    const pre  = allLines.slice(0, tbl.start).join('\n').trim();
+    const post = allLines.slice(tbl.end).join('\n').trim();
+    if (pre) { const s = BR7.el('div', 'br7-summary'); s.innerHTML = BR7.inline(pre); card.appendChild(s); }
+    body.appendChild(BR7.tableDOM(tbl));
+    if (post) {
+      const v = BR7.el('div', 'br7-verdict');
+      v.innerHTML = `<span class="br7-verdict-icon">—</span><div><div class="br7-verdict-label" style="color:${cfg.color}">Verdict</div><div class="br7-verdict-text">${BR7.inline(post.replace(/^#+\s*/gm,'').trim())}</div></div>`;
+      body.appendChild(v);
+    }
+  } else {
+    BR7.parseSegments(text).forEach(s => {
+      if (s.type==='code') body.appendChild(BR7.codeBlock(s.lang, s.content));
+      else if (s.content.trim()) body.appendChild(BR7.proseDOM(s.content.trim(), cfg.color));
     });
-    root.appendChild(wrap); return root;
   }
 
-  const { card, id } = buildCardShell(domain||'general', '');
-  const bd = mkEl('div', ''); bd.id = id; bd.style.padding = '20px 22px';
-  parseCodeBlocks(text).forEach(s => {
-    if (s.type === 'code') bd.appendChild(buildCodeBlock(s.lang, s.content));
-    else if (s.content.trim()) bd.appendChild(buildProseBlock(s.content.trim(), cfg.accent));
-  });
-  card.appendChild(bd);
-  root.appendChild(card); return root;
+  card.appendChild(body); card.appendChild(BR7.dlRow(pid, 'comparison'));
+  const root = BR7.el('div', 'br7'); root.appendChild(card); return root;
 }
 
-/* ─── MAIN RENDER ENTRY ─── */
-async function renderOutput(userQuery, responseText, container, domain, isStreaming) {
-  injectStyles();
+/* CHAT (short, no card) */
+async function renderChat(text, domain) {
+  const cfg = DOMAIN_CFG[domain]||DOMAIN_CFG.general;
+  const root = BR7.el('div', 'br7');
+  root.style.setProperty('--br7-acc', cfg.color);
 
+  if (text.length < 200 && !/```/.test(text)) {
+    /* Short: just styled prose, no card */
+    const wrap = BR7.el('div', '');
+    wrap.appendChild(BR7.proseDOM(text, cfg.color));
+    root.appendChild(wrap);
+    return root;
+  }
+
+  /* Medium: card without heavy section splits */
+  const { card, pid } = BR7.cardShell(cfg.label, cfg.color, cfg.bg, cfg.bdr, cfg.icon, '');
+  const body = BR7.el('div', ''); body.id = pid; body.style.padding = '18px 22px';
+  BR7.parseSegments(text).forEach(s => {
+    if (s.type==='code') body.appendChild(BR7.codeBlock(s.lang, s.content));
+    else if (s.content.trim()) body.appendChild(BR7.proseDOM(s.content.trim(), cfg.color));
+  });
+  card.appendChild(body);
+  root.appendChild(card);
+  return root;
+}
+
+/* ─── 9. MAIN ENTRY POINTS ───────────────────────────────────────────── */
+
+/**
+ * renderOutput(userQuery, responseText, container, domain, isStreaming)
+ * Drop-in replacement for window.StreminiRenderer.render(...)
+ */
+async function renderOutput(userQuery, responseText, container, domain, isStreaming) {
+  /* Streaming: fast prose preview with cursor */
   if (isStreaming) {
-    const root = mkEl('div', 'cr-root cr-streaming');
-    const cfg = DOMAIN_CONFIG[domain||'general']||DOMAIN_CONFIG.general;
-    root.style.setProperty('--cr-acc', cfg.accent);
-    const wrap = mkEl('div', 'cr-chat cr-cursor');
-    parseCodeBlocks(responseText).forEach(s => {
-      if (s.type === 'code') wrap.appendChild(buildCodeBlock(s.lang, s.content));
-      else if (s.content.trim()) { const p = mkEl('p'); p.innerHTML = inlineMd(s.content.trim()); wrap.appendChild(p); }
+    const cfg = DOMAIN_CFG[domain]||DOMAIN_CFG.general;
+    const root = BR7.el('div', 'br7 br7-cursor');
+    root.style.setProperty('--br7-acc', cfg.color);
+    const wrap = BR7.el('div', '');
+    BR7.parseSegments(responseText).forEach(s => {
+      if (s.type==='code') wrap.appendChild(BR7.codeBlock(s.lang, s.content));
+      else if (s.content.trim()) wrap.appendChild(BR7.proseDOM(s.content.trim(), cfg.color));
     });
     root.appendChild(wrap);
     if (container) { container.innerHTML = ''; container.appendChild(root); }
     return root;
   }
 
-  const outType = detectOutputType(userQuery, responseText);
   const dom = domain || 'general';
-
+  const type = detectType(userQuery, responseText);
   let el;
+
   try {
-    // Domain-specific overrides
-    switch (dom) {
-      case 'math':
-        el = await renderMathOutput(responseText); break;
-      case 'code':
-        el = await renderCode(responseText, dom); break;
-      default: {
-        switch (outType) {
-          case 'code':       el = await renderCode(responseText, dom); break;
-          case 'math':       el = await renderMathOutput(responseText); break;
-          case 'steps':      el = await renderSteps(responseText, dom, userQuery); break;
-          case 'comparison': el = await renderComparison(responseText, dom); break;
-          case 'table':      el = await renderTable(responseText, dom); break;
-          case 'list':       el = await renderList(responseText, dom); break;
-          case 'research':   el = await renderResearch(responseText, dom, userQuery); break;
-          case 'diagnosis':  el = await renderDiagnosis(responseText, dom); break;
-          default:           el = await renderChat(responseText, dom); break;
-        }
-      }
+    switch(type) {
+      case 'math':       el = await renderMath(responseText, dom); break;
+      case 'code':       el = await renderCode(responseText, dom); break;
+      case 'steps':      el = await renderSteps(responseText, dom, userQuery); break;
+      case 'comparison': el = await renderComparison(responseText, dom); break;
+      case 'table':      el = await renderComparison(responseText, dom); break;
+      case 'list':       el = await renderList(responseText, dom); break;
+      case 'research':   el = await renderResearch(responseText, dom, userQuery); break;
+      case 'diagnosis':  el = await renderResearch(responseText, dom, userQuery); break;
+      default:           el = await renderChat(responseText, dom); break;
     }
   } catch(err) {
-    console.warn('Renderer error:', err);
+    console.warn('[BR7] Render error:', err);
     el = await renderChat(responseText, dom);
   }
 
   if (container) { container.innerHTML = ''; container.appendChild(el); }
 
-  // Animate health bars after render
-  requestAnimationFrame(() => {
-    container?.querySelectorAll('.cr-health-fill').forEach(bar => {
-      const w = bar.style.getPropertyValue('--w') || bar.dataset.w || '0%';
-      bar.style.width = w;
-    });
-  });
+  /* KaTeX post-pass */
+  if (window.renderMathInElement) {
+    try {
+      renderMathInElement(container || el, {
+        delimiters: [
+          { left:'$$',  right:'$$',  display:true  },
+          { left:'\\[', right:'\\]', display:true  },
+          { left:'$',   right:'$',   display:false },
+          { left:'\\(', right:'\\)', display:false },
+        ],
+        throwOnError: false,
+      });
+    } catch(e) {}
+  }
 
   return el;
 }
 
-/* ─── STREAMING HELPERS ─── */
+/* Streaming helpers — compatible with index.html */
 function updateStream(text, container) {
-  if (!container) return;
-  injectStyles();
-  const root = mkEl('div', 'cr-root cr-streaming');
-  const wrap = mkEl('div', 'cr-chat cr-cursor');
-  parseCodeBlocks(text).forEach(s => {
-    if (s.type === 'code') wrap.appendChild(buildCodeBlock(s.lang, s.content));
-    else if (s.content.trim()) { const p = mkEl('p'); p.innerHTML = inlineMd(s.content.trim()); wrap.appendChild(p); }
+  const cfg = DOMAIN_CFG.general;
+  const root = BR7.el('div', 'br7 br7-cursor');
+  const wrap = BR7.el('div', '');
+  BR7.parseSegments(text).forEach(s => {
+    if (s.type==='code') wrap.appendChild(BR7.codeBlock(s.lang, s.content));
+    else if (s.content.trim()) wrap.appendChild(BR7.proseDOM(s.content.trim(), cfg.color));
   });
   root.appendChild(wrap);
-  container.innerHTML = ''; container.appendChild(root);
+  if (container) { container.innerHTML = ''; container.appendChild(root); }
 }
 
 async function finalizeStream(userQuery, fullText, container, domain) {
@@ -1558,25 +1377,87 @@ async function finalizeStream(userQuery, fullText, container, domain) {
   await renderOutput(userQuery, fullText, container, domain||'general', false);
 }
 
-/* ─── STANDALONE DIAGRAM RENDERER ─── */
-async function renderDiagram(mermaidCode, label, container, accent) {
-  injectStyles();
-  const card = await buildDiagramCard(mermaidCode, label, accent||'#374151');
-  if (container) { container.innerHTML = ''; container.appendChild(card); }
-  return card;
-}
-
-/* ─── PUBLIC API ─── */
+/* ─── 10. PUBLIC API (mirrors StreminiRenderer) ──────────────────────── */
 window.StreminiRenderer = {
   render:         renderOutput,
   updateStream,
   finalizeStream,
-  renderDiagram,
-  detectType:     detectOutputType,
-  detectDiagram:  detectDiagramType,
-  injectStyles,
-  DOMAIN_CONFIG,
-  buildDiagramCard,
-  buildProseBlock,
-  buildCodeBlock,
+  detectType,
+  DOMAIN_CFG,
+  BR7,
 };
+
+/* ─── 11. PATCH index.html's renderMd + postRender ──────────────────── */
+/*
+   The renderer above is self-contained but your index.html also calls
+   renderMd() and postRender() inline. Patch those so mermaid diagrams
+   in plain markdown responses also look beautiful.
+*/
+(function patchInlineRenderer() {
+  const _origRenderMd = window.renderMd;
+  if (typeof _origRenderMd !== 'function') return; /* loaded before app.js – nothing to patch yet */
+
+  window.renderMd = function(raw) {
+    if (!raw) return '';
+    /* Let the original produce HTML, then we'll post-process it */
+    return _origRenderMd(raw);
+  };
+})();
+
+/* Improve postRender to run KaTeX more aggressively */
+const _origPostRender = window.postRender;
+window.postRender = function(el) {
+  if (_origPostRender) _origPostRender(el);
+  if (!el) return;
+
+  /* Re-run mermaid on any unwrapped mermaid pres */
+  el.querySelectorAll('pre.mermaid:not([data-processed="true"])').forEach(pre => {
+    const code = pre.textContent.trim();
+    if (!code || !window.mermaid) return;
+    pre.setAttribute('data-processed','true');
+
+    let wrap = pre.closest('.mermaid-wrap');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.className = 'br7-diagram-card';
+      const hd   = document.createElement('div'); hd.className = 'br7-diagram-hd';
+      const lbl  = document.createElement('div'); lbl.className = 'br7-diagram-lbl';
+      const dot  = document.createElement('span'); dot.className = 'br7-diagram-dot';
+      lbl.appendChild(dot); lbl.appendChild(document.createTextNode('Diagram'));
+      hd.appendChild(lbl); wrap.appendChild(hd);
+      const body = document.createElement('div'); body.className = 'br7-diagram-body';
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(body);
+    }
+
+    const body = wrap.querySelector('.br7-diagram-body') || wrap;
+    const uid = 'mmd_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    window.mermaid.render(uid, code).then(r => {
+      body.innerHTML = r.svg || r;
+      const svg = body.querySelector('svg');
+      if (svg) { svg.style.cssText = 'max-width:100%;height:auto;'; svg.removeAttribute('width'); }
+      body.style.backgroundImage = 'radial-gradient(circle, #e5e5ea 1px, transparent 1px)';
+      body.style.backgroundSize  = '24px 24px';
+      body.style.backgroundColor = '#fafafa';
+    }).catch(() => {
+      body.innerHTML = `<div class="br7-diagram-fallback">${BR7.esc(code)}</div>`;
+    });
+  });
+
+  /* KaTeX pass */
+  if (window.renderMathInElement) {
+    try {
+      renderMathInElement(el, {
+        delimiters: [
+          { left:'$$', right:'$$', display:true },
+          { left:'\\[', right:'\\]', display:true },
+          { left:'$', right:'$', display:false },
+          { left:'\\(', right:'\\)', display:false },
+        ],
+        throwOnError: false,
+      });
+    } catch(e) {}
+  }
+};
+
+console.log('[StreminiRenderer v7] Beautiful renderer loaded ✓');
