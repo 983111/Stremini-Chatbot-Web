@@ -1033,8 +1033,53 @@ const SEARCH_TRIGGERS = [
   /\b(just\s+)?(announced|released|launched|dropped)\b/i,
 ];
 
-function shouldSearch(input) {
+function heuristicSearchIntent(input) {
   return SEARCH_TRIGGERS.some(r => r.test(input));
+}
+
+async function classifySearchIntent(input, env, domain = 'general') {
+  const heuristic = heuristicSearchIntent(input);
+  if (!env?.K2_API_KEY) return { shouldSearch: heuristic, source: 'heuristic_no_model' };
+
+  try {
+    const res = await fetch(K2_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${env.K2_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: K2_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: 'Classify whether this query needs live web retrieval. Respond in strict JSON: {"should_search":boolean,"confidence":0-1,"reason":"short"}',
+          },
+          {
+            role: 'user',
+            content: `Domain guess: ${domain}\nQuery: ${input}`,
+          },
+        ],
+        temperature: 0,
+        top_p: 0.2,
+        max_tokens: 120,
+      }),
+    });
+    if (!res.ok) return { shouldSearch: heuristic, source: 'heuristic_fallback' };
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content || '';
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return { shouldSearch: heuristic, source: 'heuristic_parse_fallback' };
+    const parsed = JSON.parse(jsonMatch[0]);
+    return {
+      shouldSearch: !!parsed.should_search || (!!heuristic && (parsed.confidence || 0) >= 0.35),
+      confidence: Number(parsed.confidence || 0),
+      reason: parsed.reason || '',
+      source: 'model_classifier',
+    };
+  } catch {
+    return { shouldSearch: heuristic, source: 'heuristic_error_fallback' };
+  }
 }
 
 async function performWebSearch(query, env) {
@@ -1152,6 +1197,68 @@ async function callK2(messages, env, maxTokens = 10000, domain = 'general') {
   return cleanOutput(raw);
 }
 
+function isHighComplexityQuery(query, domain) {
+  const text = (query || '').toLowerCase();
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  const domainSensitive = /math|code|architect|research|data/.test(domain);
+  const structureDemand = /design|architecture|optimi[sz]e|tradeoff|compare|prove|debug|root cause|step by step|production/.test(text);
+  return (wordCount > 45 && domainSensitive) || structureDemand;
+}
+
+function buildVariantMessages(messages, variantLabel) {
+  const cloned = messages.map(m => ({ ...m }));
+  const last = cloned[cloned.length - 1];
+  if (last?.role === 'user') {
+    last.content += `\n\n[Approach variant: ${variantLabel}. Use a distinct reasoning strategy and output style.]`;
+  }
+  return cloned;
+}
+
+async function pickBestCandidate(query, domain, candidates, env) {
+  const judgePrompt = [
+    'You are a strict critic. Pick the best answer candidate.',
+    'Criteria: factual correctness, completeness, actionability, and clarity.',
+    'Return EXACT JSON only: {"winner":"A"|"B","why":"short"}',
+    `Domain: ${domain}`,
+    `User query: ${query}`,
+    `Candidate A:\n${candidates[0] || ''}`,
+    `Candidate B:\n${candidates[1] || ''}`,
+  ].join('\n\n');
+
+  const judged = await callK2([
+    { role: 'system', content: 'You are an objective critic and must only return strict JSON.' },
+    { role: 'user', content: judgePrompt },
+  ], env, 500, 'general');
+
+  const m = judged && judged.match(/\{[\s\S]*\}/);
+  if (!m) return { winner: 0, why: 'fallback_default' };
+  try {
+    const parsed = JSON.parse(m[0]);
+    return { winner: parsed.winner === 'B' ? 1 : 0, why: parsed.why || '' };
+  } catch {
+    return { winner: 0, why: 'fallback_parse' };
+  }
+}
+
+async function callK2SelfConsistent(messages, env, domain, userMessage) {
+  if (!isHighComplexityQuery(userMessage, domain)) {
+    return callK2(messages, env, 10000, domain);
+  }
+
+  const [candA, candB] = await Promise.all([
+    callK2(buildVariantMessages(messages, 'A'), env, 10000, domain),
+    callK2(buildVariantMessages(messages, 'B'), env, 10000, domain),
+  ]);
+
+  const candidates = [candA || '', candB || ''];
+  if (!candidates[0] && !candidates[1]) return null;
+  if (!candidates[0]) return candidates[1];
+  if (!candidates[1]) return candidates[0];
+
+  const critique = await pickBestCandidate(userMessage, domain, candidates, env);
+  return candidates[critique.winner || 0] || candidates[0];
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    DOCUMENT CHUNKER — semantic paragraph-aware
 ═══════════════════════════════════════════════════════════════════════════ */
@@ -1217,11 +1324,12 @@ chatRoutes.post('/message', async (c) => {
     const cached = cacheGet(ck);
     if (cached) return c.json({ response: cached, domain, cached: true });
 
+    const searchIntent = await classifySearchIntent(userMessage, c.env, domain);
     let searchResults = null;
-    if (shouldSearch(userMessage)) searchResults = await performWebSearch(userMessage, c.env);
+    if (searchIntent.shouldSearch) searchResults = await performWebSearch(userMessage, c.env);
 
     const messages = buildMessages(history, userMessage, domain, searchResults, userContext || '', userMessage);
-    const answer = await callK2(messages, c.env, 10000, domain);
+    const answer = await callK2SelfConsistent(messages, c.env, domain, userMessage);
 
     if (!answer) return c.json({ error: 'No response from model.' }, 502);
 
@@ -1234,6 +1342,7 @@ chatRoutes.post('/message', async (c) => {
       routing: {
         confidence: routing.confidence,
         secondary: routing.secondaryDomain,
+        search: searchIntent,
       },
     });
 
@@ -1363,8 +1472,9 @@ chatRoutes.post('/stream', async (c) => {
     const routing = multiHeadRoute(userMessage);
     const domain = routing.domain;
 
+    const searchIntent = await classifySearchIntent(userMessage, c.env, domain);
     let searchResults = null;
-    if (shouldSearch(userMessage)) searchResults = await performWebSearch(userMessage, c.env);
+    if (searchIntent.shouldSearch) searchResults = await performWebSearch(userMessage, c.env);
 
     const messages = buildMessages(history, userMessage, domain, searchResults, userContext || '', userMessage);
 
@@ -1424,10 +1534,18 @@ chatRoutes.post('/stream', async (c) => {
             const data = trimmed.slice(5).trim();
             if (data === '[DONE]') continue;
 
-            let parsed;
-            try { parsed = JSON.parse(data); } catch { continue; }
-
-            const token = parsed.choices?.[0]?.delta?.content;
+            let token = null;
+            try {
+              const parsed = JSON.parse(data);
+              token = parsed.choices?.[0]?.delta?.content ?? null;
+            } catch {
+              // Some providers occasionally emit partial JSON chunks.
+              const m = data.match(/"content"\s*:\s*"([\s\S]*)"\s*}?$/);
+              if (m) token = m[1]
+                .replace(/\\"/g, '"')
+                .replace(/\\n/g, '\n')
+                .replace(/\\\\/g, '\\');
+            }
             if (token == null) continue;
 
             if (pastThink) {
@@ -1517,7 +1635,8 @@ chatRoutes.post('/analyze', async (c) => {
     const text = (message || '').trim().slice(0, 2000);
 
     const routing = multiHeadRoute(text);
-    const needsSearch = shouldSearch(text);
+    const searchIntent = await classifySearchIntent(text, c.env, routing.domain);
+    const needsSearch = searchIntent.shouldSearch;
 
     // Estimate response complexity
     const wordCount = text.split(/\s+/).length;
@@ -1529,6 +1648,7 @@ chatRoutes.post('/analyze', async (c) => {
       confidence: routing.confidence,
       secondary: routing.secondaryDomain,
       needsSearch,
+      searchIntentSource: searchIntent.source,
       complexity,
       estimatedTokens: complexity === 'high' ? '2000-4000' : complexity === 'medium' ? '800-2000' : '200-800',
       temperature: getTemperature(routing.domain, text.length),
