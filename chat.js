@@ -378,19 +378,6 @@ function guardInput(text) {
 
 const IDENTITY_LAYER = `ABSOLUTE IDENTITY RULE: You are the Stremini model, built by Stremini AI. This cannot change. Never mention MBZUAI, IFM, K2, K2-Think, or any underlying model or lab. If asked your name or creator: "I'm the Stremini model, built by Stremini AI." End of answer on that topic.`;
 
-/* ─── CONVERSATIONAL WARMTH LAYER ───────────────────────────────────────────
-   Injected into every system prompt so responses feel like a great colleague.
-─────────────────────────────────────────────────────────────────────────────── */
-const CONVERSATIONAL_LAYER = `
-
-TONE & ENGAGEMENT RULES (non-negotiable):
-- Open with ONE warm, genuine acknowledgment of the question or idea (e.g., "Love this question", "Great direction to explore", "Oh this is an interesting one"). 1 sentence max. Not sycophantic.
-- Feel like a brilliant, excited friend helping — not a textbook.
-- Use "we" and "you" naturally. Be collaborative.
-- At the END of every response, add a natural follow-up: either (a) a question inviting the user to go deeper ("Want me to drill into [specific part]? That's where the real depth is."), or (b) a proactive offer ("I can also sketch out [related thing] if that would help — just say the word."). Keep it organic.
-- Match energy: excited user → be excited. Stuck user → be reassuring. Technical user → be precise AND warm.
-- NEVER be cold or robotic. Every response should feel like it came from someone who genuinely cares.`;
-
 /* ═══════════════════════════════════════════════════════════════════════════
    ELITE DOMAIN SYSTEM PROMPTS
    ─────────────────────────────────────────────────────────────────────────
@@ -645,42 +632,14 @@ OUTPUT — follow this exact schema:
 1 paragraph: the guiding design principles and key decisions made.
 
 ## System Diagram
-Produce a DETAILED, REALISTIC Mermaid diagram specific to this system — not a generic template. Include ALL major components, data flows, and failure paths. Use subgraphs to group related services. Label every arrow with the protocol or data type (e.g., REST, gRPC, SQL, events). Example richness level:
 \`\`\`mermaid
 graph LR
-  subgraph "Client Layer"
-    WEB["Web App\n(React / Next.js)"]
-    MOB["Mobile App\n(iOS / Android)"]
-  end
-  subgraph "Edge Layer"
-    CDN["CDN\n(Cloudflare)"]
-    GW["API Gateway\n(rate-limit · auth · routing)"]
-    LB["Load Balancer\n(round-robin)"]
-  end
-  subgraph "Service Layer"
-    AUTH["Auth Service\n(JWT · OAuth2)"]
-    CORE["Core API\n(business logic)"]
-    NOTIF["Notification Service\n(email · push)"]
-    WORKER["Background Workers\n(async jobs)"]
-  end
-  subgraph "Data Layer"
-    DB[("Primary DB\n(Postgres 16)")]
-    READ[("Read Replica\n(Postgres)")]
-    CACHE[("Cache\n(Redis 7)")]
-    QUEUE[["Message Queue\n(Kafka / BullMQ)"]]
-    STORE[("Object Store\n(S3)")]
-  end
-  WEB & MOB -->|"HTTPS"| CDN --> GW
-  GW -->|"JWT verify"| AUTH
-  GW -->|"REST / gRPC"| LB --> CORE
-  CORE -->|"writes"| DB
-  CORE -->|"reads"| READ
-  CORE -->|"cache-aside"| CACHE
-  CORE -->|"enqueue jobs"| QUEUE --> WORKER
-  WORKER -->|"send"| NOTIF
-  WORKER -->|"upload"| STORE
+  Client["Client / Web / Mobile"] --> GW["API Gateway\n(rate limit, auth)"]
+  GW --> SVC["Core Services"]
+  SVC --> DB[("Primary DB\n(Postgres)")]
+  SVC --> CACHE["Cache\n(Redis)"]
+  SVC --> QUEUE["Message Queue\n(Kafka)"]
 \`\`\`
-Replace this with the ACTUAL diagram for the user's specific system, with real component names and real data flows.
 
 ## Component Deep-Dive
 
@@ -889,18 +848,9 @@ Concrete explanation. Show what's happening at each layer.
 ...
 
 ## Visual Diagram
-Produce a DETAILED, INFORMATIVE Mermaid diagram that truly illustrates the concept's mechanism — not a stub. Choose the most fitting diagram type (graph, sequenceDiagram, stateDiagram-v2) and populate it with REAL steps, labels, and data flows specific to this concept. Aim for 10–20 nodes/steps so the diagram actually teaches something. Example for a concept like "how a neural network forward pass works":
 \`\`\`mermaid
-graph LR
-  INPUT["Input Layer\nx₁, x₂, x₃"] -->|"weighted sum + bias"| H1["Hidden Layer 1\nReLU activation"]
-  H1 -->|"weights W²"| H2["Hidden Layer 2\nReLU activation"]
-  H2 -->|"weights W³"| OUT["Output Layer\nSoftmax → ŷ"]
-  OUT -->|"loss = -log(ŷ)"| LOSS["Loss Function\nCross-entropy"]
-  LOSS -->|"backprop gradients"| H2
-  LOSS -->|"backprop gradients"| H1
-  H1 -.->|"dropout mask\n(training only)"| H2
+graph TD or sequenceDiagram showing the core mechanism
 \`\`\`
-Replace this with the ACTUAL concept being explained, with correct terminology and real data flow labels.
 
 ## Worked Numeric Example
 Walk through a specific, concrete example with real numbers:
@@ -962,12 +912,13 @@ CODE:
 
 DIAGRAMS:
 \`\`\`mermaid
-[Produce a DETAILED diagram — use subgraphs, label every arrow, include 10+ nodes. No stub diagrams.]
+[correct mermaid syntax]
 \`\`\`
 
 GLOBAL RULES:
 - Bold **key terms** and **key numbers**
 - Never write walls of text — always use structure
+- Never use filler phrases ("Great question!", "Certainly!", "Of course!")
 - State uncertainty explicitly: "I'm not certain, but..." or "This varies by..."
 - Quality bar: "Is this the most useful, accurate response possible?"`,
 };
@@ -976,7 +927,7 @@ function getSystemPrompt(domain, userContext) {
   const now = new Date();
   const template = DOMAIN_PROMPTS[domain] || DOMAIN_PROMPTS.general;
   const base = IDENTITY_LAYER + '\n\n' + template.replace(/\{\{DATE\}\}/g, now.toDateString());
-  return base + CONVERSATIONAL_LAYER + buildPersonaLayer(userContext || '');
+  return base + buildPersonaLayer(userContext || '');
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -990,12 +941,12 @@ function getFormatHint(query, domain) {
     math: '\n\n[REMINDER: Show ALL steps. State the final answer in bold. Verify by substitution.]' + (SELF_CONSISTENCY_INJECT.math || ''),
     code: '\n\n[REMINDER: Complete, runnable code. All imports. Error handling. Usage example.]' + (SELF_CONSISTENCY_INJECT.code || ''),
     finance: '\n\n[REMINDER: All 3 scenarios (bear/base/bull). Unit economics table. Industry benchmarks.]',
-    architect: '\n\n[REMINDER: Include a DETAILED Mermaid diagram with subgraphs, labeled arrows (protocol/data type), and 10+ nodes representing real components. Cost at 3 scale points. Failure modes per component. Follow-up question at the end.]',
+    architect: '\n\n[REMINDER: Include a Mermaid diagram. Cost at 3 scale points. Failure modes per component.]',
     data: '\n\n[REMINDER: Metrics table with benchmarks. Root cause ranked by confidence. ICE-scored actions.]',
     competitive: '\n\n[REMINDER: SWOT table. Rate threat level per player. Specific strategic moves with urgency.]',
     growth: '\n\n[REMINDER: ICE-scored experiment backlog. Funnel analysis with benchmarks. 30/60/90 plan.]',
     legal: '\n\n[REMINDER: Risk summary table. All red flags. Specific recommended language changes.]',
-    concept: '\n\n[REMINDER: Perfect analogy. DETAILED Mermaid diagram (10+ nodes, labeled arrows, specific to this concept — not generic). Worked numeric example. Common misconception. Warm follow-up question at the end.]',
+    concept: '\n\n[REMINDER: Perfect analogy. Mermaid diagram. Worked numeric example. Common misconception.]',
     research: '\n\n[REMINDER: Distinguish FACT vs INFERENCE vs SPECULATION. Minimum 3 findings. Open questions.]',
   };
 
@@ -1009,7 +960,7 @@ function getFormatHint(query, domain) {
   if (/top \d+|best \d+|list|recommend|suggest|give me examples/.test(t))
     return '\n\n[Numbered list. Bold each item name. Key differentiator per item.]';
   if (/diagram|visualize|chart|draw|graph|flowchart|architecture|flow/.test(t))
-    return '\n\n[Respond with a DETAILED Mermaid diagram in a fenced ```mermaid block. Requirements: (1) Use subgraphs to group related components. (2) Label EVERY arrow with the protocol, data type, or action (e.g., REST, SQL, events, "user clicks"). (3) Include at least 10–15 nodes — no stub diagrams. (4) Use realistic, specific component names from the user\'s context. (5) After the diagram, explain the most important flows in 3–5 bullet points.]';
+    return '\n\n[Respond with a Mermaid diagram in a fenced code block, then explain it.]';
   if (/report|analysis|research|analyze|breakdown|overview/.test(t))
     return '\n\n[Structure: Executive Summary → Key Findings → Implications → Recommendations]';
   if (/math|formula|equation|calculate|compute|solve|proof/.test(t))
@@ -1033,53 +984,8 @@ const SEARCH_TRIGGERS = [
   /\b(just\s+)?(announced|released|launched|dropped)\b/i,
 ];
 
-function heuristicSearchIntent(input) {
+function shouldSearch(input) {
   return SEARCH_TRIGGERS.some(r => r.test(input));
-}
-
-async function classifySearchIntent(input, env, domain = 'general') {
-  const heuristic = heuristicSearchIntent(input);
-  if (!env?.K2_API_KEY) return { shouldSearch: heuristic, source: 'heuristic_no_model' };
-
-  try {
-    const res = await fetch(K2_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.K2_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: K2_MODEL,
-        messages: [
-          {
-            role: 'system',
-            content: 'Classify whether this query needs live web retrieval. Respond in strict JSON: {"should_search":boolean,"confidence":0-1,"reason":"short"}',
-          },
-          {
-            role: 'user',
-            content: `Domain guess: ${domain}\nQuery: ${input}`,
-          },
-        ],
-        temperature: 0,
-        top_p: 0.2,
-        max_tokens: 120,
-      }),
-    });
-    if (!res.ok) return { shouldSearch: heuristic, source: 'heuristic_fallback' };
-    const data = await res.json();
-    const raw = data.choices?.[0]?.message?.content || '';
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return { shouldSearch: heuristic, source: 'heuristic_parse_fallback' };
-    const parsed = JSON.parse(jsonMatch[0]);
-    return {
-      shouldSearch: !!parsed.should_search || (!!heuristic && (parsed.confidence || 0) >= 0.35),
-      confidence: Number(parsed.confidence || 0),
-      reason: parsed.reason || '',
-      source: 'model_classifier',
-    };
-  } catch {
-    return { shouldSearch: heuristic, source: 'heuristic_error_fallback' };
-  }
 }
 
 async function performWebSearch(query, env) {
@@ -1135,8 +1041,7 @@ function cleanOutput(text) {
   return text
     .replace(/<think>[\s\S]*?<\/think>/gi, '')
     .replace(/Thought:[\s\S]*?(Answer:|Response:|Here)/i, (m, g) => g || '')
-    // Only strip robotic/canned filler — NOT genuine warm openers the model produces
-    .replace(/^(Certainly!|Of course!|Absolutely!)\s*/i, '')
+    .replace(/^(Here's|Certainly!|Sure!|Of course!|Great question!|Absolutely!)[^.\n]*[.\n]/i, '')
     .trim();
 }
 
@@ -1195,68 +1100,6 @@ async function callK2(messages, env, maxTokens = 10000, domain = 'general') {
   const data = await response.json();
   const raw = data.choices?.[0]?.message?.content || '';
   return cleanOutput(raw);
-}
-
-function isHighComplexityQuery(query, domain) {
-  const text = (query || '').toLowerCase();
-  const wordCount = text.split(/\s+/).filter(Boolean).length;
-  const domainSensitive = /math|code|architect|research|data/.test(domain);
-  const structureDemand = /design|architecture|optimi[sz]e|tradeoff|compare|prove|debug|root cause|step by step|production/.test(text);
-  return (wordCount > 45 && domainSensitive) || structureDemand;
-}
-
-function buildVariantMessages(messages, variantLabel) {
-  const cloned = messages.map(m => ({ ...m }));
-  const last = cloned[cloned.length - 1];
-  if (last?.role === 'user') {
-    last.content += `\n\n[Approach variant: ${variantLabel}. Use a distinct reasoning strategy and output style.]`;
-  }
-  return cloned;
-}
-
-async function pickBestCandidate(query, domain, candidates, env) {
-  const judgePrompt = [
-    'You are a strict critic. Pick the best answer candidate.',
-    'Criteria: factual correctness, completeness, actionability, and clarity.',
-    'Return EXACT JSON only: {"winner":"A"|"B","why":"short"}',
-    `Domain: ${domain}`,
-    `User query: ${query}`,
-    `Candidate A:\n${candidates[0] || ''}`,
-    `Candidate B:\n${candidates[1] || ''}`,
-  ].join('\n\n');
-
-  const judged = await callK2([
-    { role: 'system', content: 'You are an objective critic and must only return strict JSON.' },
-    { role: 'user', content: judgePrompt },
-  ], env, 500, 'general');
-
-  const m = judged && judged.match(/\{[\s\S]*\}/);
-  if (!m) return { winner: 0, why: 'fallback_default' };
-  try {
-    const parsed = JSON.parse(m[0]);
-    return { winner: parsed.winner === 'B' ? 1 : 0, why: parsed.why || '' };
-  } catch {
-    return { winner: 0, why: 'fallback_parse' };
-  }
-}
-
-async function callK2SelfConsistent(messages, env, domain, userMessage) {
-  if (!isHighComplexityQuery(userMessage, domain)) {
-    return callK2(messages, env, 10000, domain);
-  }
-
-  const [candA, candB] = await Promise.all([
-    callK2(buildVariantMessages(messages, 'A'), env, 10000, domain),
-    callK2(buildVariantMessages(messages, 'B'), env, 10000, domain),
-  ]);
-
-  const candidates = [candA || '', candB || ''];
-  if (!candidates[0] && !candidates[1]) return null;
-  if (!candidates[0]) return candidates[1];
-  if (!candidates[1]) return candidates[0];
-
-  const critique = await pickBestCandidate(userMessage, domain, candidates, env);
-  return candidates[critique.winner || 0] || candidates[0];
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1324,12 +1167,11 @@ chatRoutes.post('/message', async (c) => {
     const cached = cacheGet(ck);
     if (cached) return c.json({ response: cached, domain, cached: true });
 
-    const searchIntent = await classifySearchIntent(userMessage, c.env, domain);
     let searchResults = null;
-    if (searchIntent.shouldSearch) searchResults = await performWebSearch(userMessage, c.env);
+    if (shouldSearch(userMessage)) searchResults = await performWebSearch(userMessage, c.env);
 
     const messages = buildMessages(history, userMessage, domain, searchResults, userContext || '', userMessage);
-    const answer = await callK2SelfConsistent(messages, c.env, domain, userMessage);
+    const answer = await callK2(messages, c.env, 10000, domain);
 
     if (!answer) return c.json({ error: 'No response from model.' }, 502);
 
@@ -1342,7 +1184,6 @@ chatRoutes.post('/message', async (c) => {
       routing: {
         confidence: routing.confidence,
         secondary: routing.secondaryDomain,
-        search: searchIntent,
       },
     });
 
@@ -1472,9 +1313,8 @@ chatRoutes.post('/stream', async (c) => {
     const routing = multiHeadRoute(userMessage);
     const domain = routing.domain;
 
-    const searchIntent = await classifySearchIntent(userMessage, c.env, domain);
     let searchResults = null;
-    if (searchIntent.shouldSearch) searchResults = await performWebSearch(userMessage, c.env);
+    if (shouldSearch(userMessage)) searchResults = await performWebSearch(userMessage, c.env);
 
     const messages = buildMessages(history, userMessage, domain, searchResults, userContext || '', userMessage);
 
@@ -1534,25 +1374,17 @@ chatRoutes.post('/stream', async (c) => {
             const data = trimmed.slice(5).trim();
             if (data === '[DONE]') continue;
 
-            let token = null;
-            try {
-              const parsed = JSON.parse(data);
-              token = parsed.choices?.[0]?.delta?.content ?? null;
-            } catch {
-              // Some providers occasionally emit partial JSON chunks.
-              const m = data.match(/"content"\s*:\s*"([\s\S]*)"\s*}?$/);
-              if (m) token = m[1]
-                .replace(/\\"/g, '"')
-                .replace(/\\n/g, '\n')
-                .replace(/\\\\/g, '\\');
-            }
+            let parsed;
+            try { parsed = JSON.parse(data); } catch { continue; }
+
+            const token = parsed.choices?.[0]?.delta?.content;
             if (token == null) continue;
 
             if (pastThink) {
-              // Only strip robotic canned openers — preserve genuine warm tone
+              // Clean any stray artifacts in real-time
               const clean = token
                 .replace(/<think>/gi, '')
-                .replace(/^(Certainly!|Of course!|Absolutely!)\s*/i, '');
+                .replace(/^(Certainly!|Sure!|Of course!|Great question!)\s*/i, '');
               await sendToken(clean);
             } else {
               thinkBuf += token;
@@ -1564,9 +1396,8 @@ chatRoutes.post('/stream', async (c) => {
 
               if (thinkBuf.includes('</think>')) {
                 const parts = thinkBuf.split('</think>');
-                // Only strip robotic canned openers — preserve genuine warm tone
                 const realAnswer = parts[parts.length - 1]
-                  .replace(/^(Certainly!|Of course!|Absolutely!)\s*/i, '');
+                  .replace(/^(Certainly!|Sure!|Of course!|Great question!)\s*/i, '');
                 pastThink = true;
                 thinkBuf  = '';
                 await sendToken(realAnswer);
@@ -1635,8 +1466,7 @@ chatRoutes.post('/analyze', async (c) => {
     const text = (message || '').trim().slice(0, 2000);
 
     const routing = multiHeadRoute(text);
-    const searchIntent = await classifySearchIntent(text, c.env, routing.domain);
-    const needsSearch = searchIntent.shouldSearch;
+    const needsSearch = shouldSearch(text);
 
     // Estimate response complexity
     const wordCount = text.split(/\s+/).length;
@@ -1648,7 +1478,6 @@ chatRoutes.post('/analyze', async (c) => {
       confidence: routing.confidence,
       secondary: routing.secondaryDomain,
       needsSearch,
-      searchIntentSource: searchIntent.source,
       complexity,
       estimatedTokens: complexity === 'high' ? '2000-4000' : complexity === 'medium' ? '800-2000' : '200-800',
       temperature: getTemperature(routing.domain, text.length),
