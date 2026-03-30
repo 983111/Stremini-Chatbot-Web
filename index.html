@@ -404,6 +404,19 @@ html, body {
   position: relative;
 }
 
+#workspace {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+#chat-shell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Clean white — very subtle accent glow at top */
 #main::before {
   content: '';
@@ -460,6 +473,45 @@ html, body {
    CHAT AREA
 ═══════════════════════════════════ */
 #chat-area { flex:1; overflow-y:auto; display:flex; flex-direction:column; position:relative; z-index:1; scroll-behavior:smooth; }
+
+#artifacts-panel {
+  width: 0;
+  opacity: 0;
+  border-left: 1px solid #f2f2f7;
+  background: #fafafa;
+  transition: width 0.24s ease, opacity 0.2s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+#artifacts-panel.open {
+  width: min(40vw, 520px);
+  opacity: 1;
+}
+.art-head {
+  height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid #ececf1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tx2);
+}
+#artifacts-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.artifact-empty {
+  border: 1px dashed #d9d9e0;
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 12px;
+  color: var(--tx3);
+}
+.artifact-card { border: 1px solid #e5e5ea; border-radius: 10px; background: #fff; overflow: hidden; }
+.artifact-meta { display: flex; justify-content: space-between; gap: 8px; padding: 8px 10px; border-bottom: 1px solid #f2f2f7; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tx3); }
+.artifact-preview { padding: 10px; max-height: 320px; overflow: auto; }
+.artifact-preview pre { margin: 0; background: #1c1c1e; color: #f5f5f7; padding: 10px; border-radius: 7px; font-size: 12px; }
 
 /* ── WELCOME ── */
 #welcome {
@@ -1051,12 +1103,17 @@ pre.mermaid { background:rgba(255,255,255,0.50); border:1px dashed var(--acc-bdr
       <div class="mpill"><span class="mdot"></span>StreminiAI</div>
       <div id="domain-pill" style="display:none;"></div>
       <div style="flex:1"></div>
+      <button class="ib" onclick="toggleArtifactsPanel()" title="Toggle artifacts panel" style="color:var(--tx2);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+      </button>
       <button id="theme-toggle" onclick="toggleTheme()" title="Toggle theme" style="position:relative;">
         <svg class="i-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg class="i-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
       </button>
     </div>
 
+    <div id="workspace">
+    <div id="chat-shell">
     <div id="chat-area">
       <div id="welcome">
         <div class="w-orb-wrap">
@@ -1178,6 +1235,19 @@ pre.mermaid { background:rgba(255,255,255,0.50); border:1px dashed var(--acc-bdr
         <p class="disc">StreminiAI can make mistakes. Verify important information.</p>
       </div>
     </div>
+    </div>
+    <aside id="artifacts-panel">
+      <div class="art-head">
+        <span>Artifacts</span>
+        <button class="ib" onclick="toggleArtifactsPanel(false)" title="Close artifacts panel">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="artifacts-body">
+        <div class="artifact-empty">Artifacts from code blocks and Mermaid diagrams will appear here.</div>
+      </div>
+    </aside>
+    </div>
   </main>
 </div>
 
@@ -1254,6 +1324,8 @@ var messages = [], busy = false, stopFlag = false;
 var _lastUserQuery = "";
 var docFile = null, streamRdr = null, userContext = '', sbOpen = true, booted = false;
 var _activeTab = 'signin';
+var artifactsOpen = false;
+var autoMemory = { projects: [], preferences: [], expertise: [] };
 
 var ROUTER_AGENT_IDS = [
   'DATASET_BUILDER','DATA_INTELLIGENCE','KNOWLEDGE_GRAPH','RESEARCH_MATH','CONCEPT_EXPLAINER',
@@ -1432,10 +1504,46 @@ async function upsertUser() {
 }
 
 function ctxKey() { return 'sai_ctx_' + currentUser.id; }
+function memoryKey() { return 'sai_auto_memory_' + currentUser.id; }
+function loadAutoMemory() {
+  try {
+    var raw = localStorage.getItem(memoryKey());
+    if (raw) autoMemory = JSON.parse(raw);
+  } catch (e) {}
+  autoMemory = autoMemory || { projects: [], preferences: [], expertise: [] };
+}
+function persistAutoMemory() {
+  try { localStorage.setItem(memoryKey(), JSON.stringify(autoMemory)); } catch (e) {}
+}
+function uniquePush(arr, value, max) {
+  if (!value) return;
+  if (arr.indexOf(value) === -1) arr.unshift(value);
+  if (arr.length > max) arr.length = max;
+}
+function updateAutoMemory(userText, assistantText) {
+  var text = (userText + ' ' + assistantText).toLowerCase();
+  var projectHits = text.match(/\b(khetiai|stremini|chatbot|rag|knowledge graph)\b/g) || [];
+  projectHits.forEach(function(p) { uniquePush(autoMemory.projects, p, 8); });
+  if (/prefer|i like|tone|concise|detailed|step-by-step|bullets|table/.test(text)) {
+    uniquePush(autoMemory.preferences, userText.trim().slice(0, 120), 10);
+  }
+  if (/i am|i'm|as a|my role/.test(text)) {
+    uniquePush(autoMemory.expertise, userText.trim().slice(0, 120), 8);
+  }
+  persistAutoMemory();
+}
+function buildMemoryContext() {
+  var parts = [];
+  if (autoMemory.projects.length) parts.push('Projects: ' + autoMemory.projects.join(', '));
+  if (autoMemory.preferences.length) parts.push('Preferences: ' + autoMemory.preferences.join(' | '));
+  if (autoMemory.expertise.length) parts.push('Expertise signals: ' + autoMemory.expertise.join(' | '));
+  return parts.join('\n');
+}
 async function loadContext() {
   try { var l = localStorage.getItem(ctxKey()); if (l) { userContext = l; document.getElementById('ctx-text').value = l; } } catch(e){}
   var res = await sb.from('users').select('context').eq('id', currentUser.id).single();
   if (!res.error && res.data && res.data.context) { userContext = res.data.context; document.getElementById('ctx-text').value = userContext; try { localStorage.setItem(ctxKey(), userContext); } catch(e){} }
+  loadAutoMemory();
 }
 async function saveContext() {
   userContext = document.getElementById('ctx-text').value.trim();
@@ -1512,6 +1620,7 @@ function renderSidebar() {
 function newChat() { activeId=null; messages=[]; docFile=null; updateDocBar(); showWelcome(); renderSidebar(); document.getElementById('inp').focus(); }
 async function openChat(id) {
   activeId=id; docFile=null; updateDocBar();
+  renderArtifacts([]);
   document.getElementById('welcome').style.display='none';
   var mw=document.getElementById('msgs-wrap'); mw.style.display='flex'; mw.innerHTML='';
   renderSidebar();
@@ -1522,6 +1631,47 @@ async function openChat(id) {
 function showWelcome() {
   document.getElementById('welcome').style.display='flex';
   var mw=document.getElementById('msgs-wrap'); mw.style.display='none'; mw.innerHTML='';
+  renderArtifacts([]);
+}
+
+function toggleArtifactsPanel(forceState) {
+  var panel = document.getElementById('artifacts-panel');
+  if (!panel) return;
+  artifactsOpen = typeof forceState === 'boolean' ? forceState : !artifactsOpen;
+  panel.classList.toggle('open', artifactsOpen);
+}
+
+function extractArtifacts(content) {
+  var items = [];
+  if (!content) return items;
+  var codeRegex = /```([\w-]*)\n?([\s\S]*?)```/g, m;
+  while ((m = codeRegex.exec(content)) !== null) {
+    var lang = (m[1] || 'text').toLowerCase();
+    items.push({ type: lang === 'mermaid' ? 'diagram' : 'code', lang: lang, content: m[2].trim() });
+  }
+  return items.slice(0, 6);
+}
+
+function renderArtifacts(items) {
+  var body = document.getElementById('artifacts-body');
+  if (!body) return;
+  if (!items || !items.length) {
+    body.innerHTML = '<div class="artifact-empty">Artifacts from code blocks and Mermaid diagrams will appear here.</div>';
+    return;
+  }
+  body.innerHTML = '';
+  items.forEach(function(item, idx) {
+    var card = document.createElement('div');
+    card.className = 'artifact-card';
+    var safe = escHtml(item.content);
+    card.innerHTML =
+      '<div class="artifact-meta"><span>' + (item.type === 'diagram' ? 'Mermaid Diagram' : 'Code Block') + '</span><span>#' + (idx + 1) + (item.lang ? ' · ' + escHtml(item.lang) : '') + '</span></div>' +
+      '<div class="artifact-preview">' +
+      (item.type === 'diagram' ? '<div class="mermaid-wrap"><pre class="mermaid">' + safe + '</pre></div>' : '<pre><code>' + safe + '</code></pre>') +
+      '</div>';
+    body.appendChild(card);
+    postRender(card);
+  });
 }
 
 /* ═══════════════════════════════════
@@ -1543,6 +1693,7 @@ function addMsgRow(role, content, animate, domain) {
   var mc = row.querySelector('.mc');
   mc.innerHTML = renderMd(content);
   postRender(mc);
+  if (isAI) renderArtifacts(extractArtifacts(content));
   return row;
 }
 function addStreamRow() {
@@ -1554,7 +1705,7 @@ function addStreamRow() {
 }
 function updateStream(text) {
   var el = document.getElementById('sc');
-  if (el) { el.innerHTML = renderMd(text); scrollBottom(); }
+  if (el) { el.innerHTML = renderMd(normalizeStreamingMarkdown(text)); scrollBottom(); }
 }
 function finalizeStream(text, domain) {
   var row = document.getElementById('srow');
@@ -1568,6 +1719,7 @@ function finalizeStream(text, domain) {
     a.innerHTML = '<button class="abt" onclick="copyMsg(this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy</button>';
     body.appendChild(a);
   }
+  renderArtifacts(extractArtifacts(text));
 }
 function scrollBottom(){ var a=document.getElementById('chat-area'); a.scrollTop=a.scrollHeight; }
 
@@ -1755,6 +1907,13 @@ function renderMd(raw) {
   return out.join('\n');
 }
 
+function normalizeStreamingMarkdown(raw) {
+  var text = raw || '';
+  if (((text.match(/```/g) || []).length % 2) !== 0) text += '\n```';
+  if (((text.match(/`/g) || []).length % 2) !== 0) text += '`';
+  return text;
+}
+
 /* After rendering, run mermaid + hljs */
 function postRender(el) {
   if (!el) return;
@@ -1875,6 +2034,7 @@ async function sendMsg() {
       answer = docAnswer || 'No response.';
       finalizeStream(answer, detectedDomain);
       await saveMessage(activeId, 'assistant', answer);
+      updateAutoMemory(text, answer);
       setBusy(false);
       return;
     }
@@ -1885,6 +2045,7 @@ async function sendMsg() {
     if (!answer || !answer.trim()) answer = 'No response from model. Please try again.';
     finalizeStream(answer, detectedDomain);
     await saveMessage(activeId, 'assistant', answer);
+    updateAutoMemory(text, answer);
   } catch (err) {
     var em = err.message === 'stopped' ? '*(Generation stopped)*' : 'Error: ' + escHtml(err.message);
     finalizeStream(em, detectedDomain);
@@ -1896,8 +2057,9 @@ async function sendMsg() {
    API CALLERS
 ═══════════════════════════════════ */
 async function callStream(message, history, onDomain) {
+  var mergedUserContext = [userContext || '', buildMemoryContext()].filter(Boolean).join('\n');
   var res;
-  try { res = await fetch(API + '/chat/stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: message, history: history, userContext: userContext || '' }) }); }
+  try { res = await fetch(API + '/chat/stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message: message, history: history, userContext: mergedUserContext }) }); }
   catch (e) { throw new Error('Network error: ' + e.message); }
   if (!res.ok) { console.warn('Stream failed ' + res.status + ', fallback'); return await callMessage(message, history); }
   var reader = res.body.getReader(); streamRdr = reader;
@@ -1920,8 +2082,8 @@ async function callStream(message, history, onDomain) {
   if (!full.trim()) return await callMessage(message, history);
   return full;
 }
-async function callMessage(message,history){updateStream('Thinking…');var res;try{res=await fetch(API+'/chat/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:message,history:history})});}catch(e){throw new Error('Network error: '+e.message);}if(!res.ok){var t=await res.text().catch(function(){return '';});throw new Error('API '+res.status+(t?': '+t:''));}var d=await res.json();if(d.error)throw new Error(d.error);return d.response||'';}
-async function callDoc(question,documentText){updateStream('Analyzing document…');var res;try{res=await fetch(API+'/chat/document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:question,documentText:documentText})});}catch(e){throw new Error('Network error: '+e.message);}if(!res.ok){var t=await res.text().catch(function(){return '';});throw new Error('API '+res.status+(t?': '+t:''));}var d=await res.json();if(d.error)throw new Error(d.error);return d.response||'No response.';}
+async function callMessage(message,history){updateStream('Thinking…');var mergedUserContext=[userContext||'',buildMemoryContext()].filter(Boolean).join('\n');var res;try{res=await fetch(API+'/chat/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:message,history:history,userContext:mergedUserContext})});}catch(e){throw new Error('Network error: '+e.message);}if(!res.ok){var t=await res.text().catch(function(){return '';});throw new Error('API '+res.status+(t?': '+t:''));}var d=await res.json();if(d.error)throw new Error(d.error);return d.response||'';}
+async function callDoc(question,documentText){updateStream('Analyzing document…');var mergedUserContext=[userContext||'',buildMemoryContext()].filter(Boolean).join('\n');var res;try{res=await fetch(API+'/chat/document',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:question,documentText:documentText,userContext:mergedUserContext})});}catch(e){throw new Error('Network error: '+e.message);}if(!res.ok){var t=await res.text().catch(function(){return '';});throw new Error('API '+res.status+(t?': '+t:''));}var d=await res.json();if(d.error)throw new Error(d.error);return d.response||'No response.';}
 
 /* ═══════════════════════════════════
    FILE HANDLING
